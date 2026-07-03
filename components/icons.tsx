@@ -37,6 +37,21 @@ export const IconPlus = (p: P) => (
   </Svg>
 );
 
+export const IconList = (p: P) => (
+  <Svg {...p}>
+    <path d="M8 6h13M8 12h13M8 18h13" />
+    <path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01" />
+  </Svg>
+);
+
+export const IconColumns = (p: P) => (
+  <Svg {...p}>
+    <rect x="3" y="4" width="5.5" height="16" rx="1.5" />
+    <rect x="9.75" y="4" width="5.5" height="16" rx="1.5" />
+    <rect x="16.5" y="4" width="4.5" height="16" rx="1.5" />
+  </Svg>
+);
+
 export const IconSearch = (p: P) => (
   <Svg {...p}>
     <circle cx="11" cy="11" r="7" />

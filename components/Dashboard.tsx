@@ -14,7 +14,9 @@ import {
   IconArrowRight,
   IconBox,
   IconCheckCircle,
+  IconColumns,
   IconGrid,
+  IconList,
   IconPlane,
   IconPlus,
   IconSearch,
@@ -32,6 +34,7 @@ const VIEWS: { id: View; label: string; icon: (p: { width?: number; height?: num
   { id: "bin", label: "Bin", icon: IconTrash },
 ];
 import {
+  STATUS_LABEL,
   flightStatus,
   hoursUntilArrival,
   jobAgent,
@@ -51,6 +54,21 @@ const FILTERS: { id: JobStatus | "all"; label: string }[] = [
   { id: "ready", label: "Ready" },
 ];
 
+type Layout = "list" | "board" | "grid";
+
+const LAYOUTS: {
+  id: Layout;
+  label: string;
+  icon: (p: { width?: number; height?: number }) => JSX.Element;
+}[] = [
+  { id: "list", label: "List", icon: IconList },
+  { id: "board", label: "Board", icon: IconColumns },
+  { id: "grid", label: "Grid", icon: IconGrid },
+];
+
+/** Kanban columns, in workflow order. */
+const BOARD_COLUMNS: JobStatus[] = ["new", "extracted", "in_progress", "ready"];
+
 export function Dashboard() {
   const {
     jobs,
@@ -65,9 +83,15 @@ export function Dashboard() {
   const { canEdit, user, toast } = usePrefs();
   const router = useRouter();
   const [view, setView] = useState<View>("jobs");
+  const [layout, setLayout] = useState<Layout>("list");
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<JobStatus | "all">("all");
   const [mineOnly, setMineOnly] = useState(false);
+
+  const handleDelete = (id: string) => {
+    deleteJob(id);
+    toast("Moved to bin");
+  };
 
   const now = useMemo(() => new Date(), []);
   const activeJobs = useMemo(() => jobs.filter((j) => !j.deletedAt), [jobs]);
@@ -262,6 +286,30 @@ export function Dashboard() {
             My jobs
           </button>
         </div>
+
+        {/* Layout switcher */}
+        <div className="ml-auto flex items-center gap-0.5 rounded-full border border-line bg-white p-0.5">
+          {LAYOUTS.map((l) => {
+            const Icon = l.icon;
+            const active = layout === l.id;
+            return (
+              <button
+                key={l.id}
+                onClick={() => setLayout(l.id)}
+                title={`${l.label} view`}
+                aria-pressed={active}
+                className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-medium transition-all ${
+                  active
+                    ? "bg-brand text-white shadow-glow"
+                    : "text-ink-soft hover:text-ink"
+                }`}
+              >
+                <Icon width={14} height={14} />
+                <span className="hidden sm:inline">{l.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Jobs list */}
@@ -272,6 +320,20 @@ export function Dashboard() {
             canEdit={canEdit}
             onReset={resetDemo}
           />
+        ) : layout === "board" ? (
+          <JobBoard jobs={visible} canEdit={canEdit} onDelete={handleDelete} />
+        ) : layout === "grid" ? (
+          <div className="stagger grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {visible.map((job) => (
+              <JobCard
+                key={job.id}
+                job={job}
+                canEdit={canEdit}
+                onDelete={handleDelete}
+                showStatus
+              />
+            ))}
+          </div>
         ) : (
           <div className="stagger space-y-2.5">
             {visible.map((job) => (
@@ -279,10 +341,7 @@ export function Dashboard() {
                 key={job.id}
                 job={job}
                 canEdit={canEdit}
-                onDelete={() => {
-                  deleteJob(job.id);
-                  toast("Moved to bin");
-                }}
+                onDelete={() => handleDelete(job.id)}
               />
             ))}
           </div>
@@ -431,6 +490,149 @@ function JobRow({
       {canEdit && (
         <button
           onClick={onDelete}
+          title="Delete job"
+          className="absolute -right-2 -top-2 hidden h-7 w-7 items-center justify-center rounded-full border border-line bg-white text-ink-faint shadow-card transition-colors hover:text-red group-hover:flex"
+        >
+          <IconTrash width={14} height={14} />
+        </button>
+      )}
+    </div>
+  );
+}
+
+function JobBoard({
+  jobs,
+  canEdit,
+  onDelete,
+}: {
+  jobs: Job[];
+  canEdit: boolean;
+  onDelete: (id: string) => void;
+}) {
+  const columns = useMemo(() => {
+    const map: Record<JobStatus, Job[]> = {
+      new: [],
+      extracted: [],
+      in_progress: [],
+      ready: [],
+    };
+    for (const job of jobs) map[jobStatus(job)].push(job);
+    return map;
+  }, [jobs]);
+
+  return (
+    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+      {BOARD_COLUMNS.map((col) => (
+        <div
+          key={col}
+          className="rounded-card border border-line bg-panel/50 p-2.5"
+        >
+          <div className="mb-2.5 flex items-center justify-between px-1">
+            <span className="text-[12px] font-semibold text-ink">
+              {STATUS_LABEL[col]}
+            </span>
+            <span className="rounded-full bg-bg px-2 py-0.5 font-mono text-[10px] font-semibold text-ink-soft">
+              {columns[col].length}
+            </span>
+          </div>
+          <div className="stagger space-y-2.5">
+            {columns[col].length === 0 ? (
+              <div className="rounded-xl border border-dashed border-line px-3 py-6 text-center text-[11px] text-ink-faint">
+                Nothing here
+              </div>
+            ) : (
+              columns[col].map((job) => (
+                <JobCard
+                  key={job.id}
+                  job={job}
+                  canEdit={canEdit}
+                  onDelete={onDelete}
+                />
+              ))
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function JobCard({
+  job,
+  canEdit,
+  onDelete,
+  showStatus = false,
+}: {
+  job: Job;
+  canEdit: boolean;
+  onDelete: (id: string) => void;
+  showStatus?: boolean;
+}) {
+  const status = jobStatus(job);
+  const open = openCount(job);
+  const isHorses = job.booking?.isHorses;
+  const fs = flightStatus(job);
+  return (
+    <div className="group relative">
+      <Link
+        href={`/jobs/${job.id}`}
+        className="lift block rounded-card border border-line bg-panel p-3.5 shadow-card hover:border-primary/40 hover:shadow-lift"
+      >
+        <div className="flex items-start gap-3">
+          <CommodityArt commodity={jobCommodity(job)} size={36} />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-[13px] font-semibold text-ink">
+                {jobAwb(job)}
+              </span>
+              {isHorses && (
+                <span className="rounded-full bg-primary-soft px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wide text-primary">
+                  OKTF
+                </span>
+              )}
+            </div>
+            <div className="mt-0.5 truncate text-[12px] text-ink-soft">
+              {jobAgent(job)} · {jobCommodity(job)}
+            </div>
+          </div>
+          {showStatus && <StatusBadge status={status} />}
+        </div>
+
+        <div className="mt-3 flex items-center justify-between border-t border-line pt-2.5">
+          <div className="min-w-0">
+            <div className="font-mono text-[12px] text-ink">
+              {job.booking?.flight || "—"}
+            </div>
+            <div className="font-mono text-[11px] text-ink-faint">
+              {job.booking?.arrivalDate || "—"}
+            </div>
+          </div>
+          <div className="flex flex-col items-end gap-1">
+            {fs && <FlightStatusChip state={fs.state} label={fs.label} />}
+            {job.booking ? (
+              open > 0 ? (
+                <span className="font-mono text-[12px] font-semibold text-amber">
+                  {open} open
+                </span>
+              ) : (
+                <span className="font-mono text-[12px] font-semibold text-green">
+                  cleared
+                </span>
+              )
+            ) : null}
+          </div>
+        </div>
+
+        {job.assignee && (
+          <div className="mt-2 inline-flex rounded-full bg-primary-soft px-2 py-0.5 font-mono text-[10px] text-primary">
+            {job.assignee.split(" ")[0]}
+          </div>
+        )}
+      </Link>
+
+      {canEdit && (
+        <button
+          onClick={() => onDelete(job.id)}
           title="Delete job"
           className="absolute -right-2 -top-2 hidden h-7 w-7 items-center justify-center rounded-full border border-line bg-white text-ink-faint shadow-card transition-colors hover:text-red group-hover:flex"
         >
