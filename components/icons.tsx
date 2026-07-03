@@ -37,6 +37,22 @@ export const IconPlus = (p: P) => (
   </Svg>
 );
 
+export const IconReport = (p: P) => (
+  <Svg {...p}>
+    <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+    <path d="M14 3v5h5" />
+    <path d="M9 13h6M9 17h4" />
+  </Svg>
+);
+
+export const IconDownload = (p: P) => (
+  <Svg {...p}>
+    <path d="M12 3v12" />
+    <path d="m7 10 5 5 5-5" />
+    <path d="M5 21h14" />
+  </Svg>
+);
+
 export const IconList = (p: P) => (
   <Svg {...p}>
     <path d="M8 6h13M8 12h13M8 18h13" />

@@ -9,6 +9,7 @@ import { Button, Card, CountUp, FlightStatusChip, StatusBadge } from "./ui";
 import { CommodityArt } from "./CommodityArt";
 import { Calendar } from "./Calendar";
 import { Insights } from "./Insights";
+import { Report } from "./Report";
 import {
   IconAlert,
   IconArrowRight,
@@ -19,18 +20,20 @@ import {
   IconList,
   IconPlane,
   IconPlus,
+  IconReport,
   IconSearch,
   IconSparkles,
   IconTrash,
 } from "./icons";
 import type { FlightManagerLead } from "@/lib/types";
 
-type View = "jobs" | "calendar" | "insights" | "bin";
+type View = "jobs" | "calendar" | "insights" | "report" | "bin";
 
 const VIEWS: { id: View; label: string; icon: (p: { width?: number; height?: number }) => JSX.Element }[] = [
   { id: "jobs", label: "Jobs", icon: IconGrid },
   { id: "calendar", label: "Calendar", icon: IconPlane },
   { id: "insights", label: "Insights", icon: IconCheckCircle },
+  { id: "report", label: "Report", icon: IconReport },
   { id: "bin", label: "Bin", icon: IconTrash },
 ];
 import {
@@ -185,6 +188,7 @@ export function Dashboard() {
 
       {view === "calendar" && <Calendar />}
       {view === "insights" && <Insights />}
+      {view === "report" && <Report />}
       {view === "bin" && (
         <BinView
           jobs={deletedJobs}
