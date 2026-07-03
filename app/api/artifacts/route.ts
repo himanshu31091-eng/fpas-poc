@@ -3,7 +3,7 @@ import { callClaudeJSON, hasApiKey } from "@/lib/anthropic";
 import type { Booking, DraftArtifact } from "@/lib/types";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 const SYSTEM = `You draft internal operational documents for FPAS Amsterdam live-animal imports. Every document you produce is a DRAFT that must be reviewed by a human before use. You never claim a document is final or valid.`;
 

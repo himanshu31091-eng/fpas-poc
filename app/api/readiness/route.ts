@@ -11,7 +11,7 @@ import type {
 } from "@/lib/types";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 const SYSTEM = `You are a compliance-readiness assistant for FPAS live-animal imports at Amsterdam Schiphol. You assess a booking against a fixed regulatory sequence and report what is outstanding, ordered by urgency, with a plain-language justification for each. You are a decision-support tool only: you never submit anything to a regulator and you always assume a human makes the final call.`;
 

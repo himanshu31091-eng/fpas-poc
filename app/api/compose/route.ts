@@ -3,7 +3,7 @@ import { callClaudeJSON, hasApiKey } from "@/lib/anthropic";
 import type { Booking } from "@/lib/types";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 const SYSTEM = `You draft internal operational and regulatory text for FPAS live-animal shipments at Amsterdam Schiphol. Everything you produce is a DRAFT for human review before it is sent. You are precise, plain, and never invent facts not present in the booking.`;
 

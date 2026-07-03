@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { callClaude, hasApiKey } from "@/lib/anthropic";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 const SYSTEM = `You are the operations copilot for FPAS, a live-animal air-transport company at Amsterdam Schiphol. You answer questions about the current jobs and can draft short operational text (notices, customer updates) on request. Be concise and specific, cite AWB/flight where relevant, and never invent shipments or facts not present in the provided data. You are decision-support only — a human acts on your answers.`;
 

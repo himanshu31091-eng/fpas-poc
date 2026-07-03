@@ -4,7 +4,7 @@ import { AGENT_EMAILS, SHIPPING_AGENTS } from "@/lib/mockData";
 import type { ExtractionResult } from "@/lib/types";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 const SYSTEM = `You are an intake assistant for FPAS, an animal-transport company handling live-animal imports at Amsterdam Schiphol Border Inspection Post. You extract structured shipment data from unstructured agent emails. You never invent data: if a value is not stated, leave it empty and mark confidence "low". You are conservative with confidence — approximate or hedged values ("around", "~", "will confirm") are "low" or "medium", never "high".`;
 
