@@ -4,10 +4,21 @@
 //
 // Only ever imported from API routes (server), never from client components,
 // so the API key stays out of the browser.
+//
+// Processing notes:
+//  - Every call is bounded by an AbortController timeout so one slow generation
+//    can't consume the whole request budget (the cause of occasional 504s).
+//  - callClaudeJSON keeps retries low and repairs malformed JSON in-place
+//    rather than paying for a whole new generation on a formatting hiccup.
+//  - The (stable) system prompt is sent as a cache_control block so repeat
+//    calls skip re-processing it — lower latency and cost.
 // ---------------------------------------------------------------------------
 
 const API_URL = "https://api.anthropic.com/v1/messages";
 const MODEL = process.env.ANTHROPIC_MODEL || "claude-sonnet-4-6";
+
+/** Per-call ceiling. Two attempts stay well under the routes' 300s budget. */
+const DEFAULT_TIMEOUT_MS = 90_000;
 
 /** Whether a server-side API key is configured. AI routes require this. */
 export function hasApiKey(): boolean {
@@ -17,6 +28,8 @@ export function hasApiKey(): boolean {
 interface CallOptions {
   system?: string;
   maxTokens?: number;
+  /** Abort the call after this many ms (default 90s). */
+  timeoutMs?: number;
 }
 
 /** User content: plain text, or an array of content blocks (e.g. a PDF document). */
@@ -30,31 +43,60 @@ export async function callClaude(
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) throw new Error("ANTHROPIC_API_KEY not set");
 
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "x-api-key": key,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: MODEL,
-      max_tokens: opts.maxTokens ?? 1500,
-      system: opts.system,
-      messages: [{ role: "user", content: userContent }],
-    }),
-  });
+  const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
 
-  if (!res.ok) {
-    const detail = await res.text();
-    throw new Error(`Anthropic API ${res.status}: ${detail}`);
+  // Cache the stable system prompt: identical across requests, so the model
+  // skips re-reading it. Below the model's minimum cacheable size this is a
+  // harmless no-op.
+  const system = opts.system
+    ? [
+        {
+          type: "text",
+          text: opts.system,
+          cache_control: { type: "ephemeral" },
+        },
+      ]
+    : undefined;
+
+  try {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": key,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        max_tokens: opts.maxTokens ?? 1500,
+        system,
+        messages: [{ role: "user", content: userContent }],
+      }),
+      signal: controller.signal,
+    });
+
+    if (!res.ok) {
+      const detail = await res.text();
+      throw new Error(`Anthropic API ${res.status}: ${detail}`);
+    }
+
+    const data = await res.json();
+    return (data.content || [])
+      .filter((b: { type: string }) => b.type === "text")
+      .map((b: { text: string }) => b.text)
+      .join("\n");
+  } catch (err) {
+    if (err instanceof Error && err.name === "AbortError") {
+      throw new Error(
+        `Anthropic API timed out after ${Math.round(timeoutMs / 1000)}s`
+      );
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
   }
-
-  const data = await res.json();
-  return (data.content || [])
-    .filter((b: { type: string }) => b.type === "text")
-    .map((b: { text: string }) => b.text)
-    .join("\n");
 }
 
 /**
@@ -81,44 +123,105 @@ function escapeControlChars(s: string): string {
 }
 
 /**
+ * Extract the first *balanced* {...} object from a string. Tolerates prose or
+ * fences around the JSON and ignores braces inside string values. Returns null
+ * if the object never closes (i.e. the output was truncated).
+ */
+function balancedObject(s: string): string | null {
+  const start = s.indexOf("{");
+  if (start === -1) return null;
+  let depth = 0;
+  let inStr = false;
+  let esc = false;
+  for (let i = start; i < s.length; i++) {
+    const c = s[i];
+    if (inStr) {
+      if (esc) esc = false;
+      else if (c === "\\") esc = true;
+      else if (c === '"') inStr = false;
+    } else if (c === '"') {
+      inStr = true;
+    } else if (c === "{") {
+      depth++;
+    } else if (c === "}") {
+      depth--;
+      if (depth === 0) return s.slice(start, i + 1);
+    }
+  }
+  return null;
+}
+
+/**
  * Parse a JSON object from a model response, tolerating code fences and the
- * most common malformed-JSON case (raw control chars inside strings). Repairs
- * rather than failing the whole call.
+ * most common malformed-JSON cases (prose around the object, raw control
+ * characters inside strings). Repairs in-place rather than failing the call —
+ * which avoids paying for a whole new generation on a formatting hiccup.
  */
 export function parseJson<T>(text: string): T {
   const cleaned = text
     .replace(/```json/gi, "")
     .replace(/```/g, "")
     .trim();
+
+  // Candidate JSON substrings, best first: the first balanced object, then the
+  // greedy first-{ … last-} slice as a fallback.
+  const candidates: string[] = [];
+  const balanced = balancedObject(cleaned);
+  if (balanced) candidates.push(balanced);
   const start = cleaned.indexOf("{");
   const end = cleaned.lastIndexOf("}");
-  if (start === -1 || end === -1) {
+  if (start !== -1 && end !== -1 && end > start) {
+    candidates.push(cleaned.slice(start, end + 1));
+  }
+  if (candidates.length === 0) {
     throw new Error("No JSON object found in model response");
   }
-  const candidate = cleaned.slice(start, end + 1);
-  try {
-    return JSON.parse(candidate) as T;
-  } catch {
-    return JSON.parse(escapeControlChars(candidate)) as T;
+
+  let lastErr: unknown;
+  for (const candidate of candidates) {
+    try {
+      return JSON.parse(candidate) as T;
+    } catch (err) {
+      lastErr = err;
+    }
+    try {
+      return JSON.parse(escapeControlChars(candidate)) as T;
+    } catch (err) {
+      lastErr = err;
+    }
   }
+  throw lastErr instanceof Error
+    ? lastErr
+    : new Error("Failed to parse JSON from model response");
 }
 
 /**
- * Call Claude and parse a JSON response, retrying a few times. Model JSON can
- * be intermittently malformed (especially from reasoning models); a couple of
- * retries plus the repair pass above make the AI screens reliable for a demo.
+ * Call Claude and parse a JSON response. Keeps retries low: a fresh generation
+ * is only worth it for a genuine call/timeout failure, and parseJson already
+ * repairs the common malformed-JSON cases in-place, so most formatting hiccups
+ * never cost a second call. Two attempts (each timeout-bounded) stay under the
+ * routes' request budget, so slow calls can't stack into a 504.
  */
 export async function callClaudeJSON<T>(
   userContent: UserContent,
   opts: CallOptions = {},
-  attempts = 3
+  attempts = 2
 ): Promise<T> {
   let lastErr: unknown;
   for (let i = 0; i < attempts; i++) {
+    let raw: string;
     try {
-      const raw = await callClaude(userContent, opts);
+      raw = await callClaude(userContent, opts);
+    } catch (err) {
+      // Transient call/timeout error — a fresh attempt may succeed.
+      lastErr = err;
+      continue;
+    }
+    try {
       return parseJson<T>(raw);
     } catch (err) {
+      // Output arrived but couldn't be parsed even after repair; only a
+      // regeneration might help, so fall through to the next attempt (if any).
       lastErr = err;
     }
   }

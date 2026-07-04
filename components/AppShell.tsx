@@ -92,6 +92,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       ? "nav-copilot"
                       : item.href === "/guide"
                       ? "nav-guide"
+                      : item.href === "/requirements"
+                      ? "nav-requirements"
                       : undefined
                   }
                   className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-sm font-medium transition-all ${
