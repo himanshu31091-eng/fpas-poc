@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { useStore } from "./store";
 import { BrandLoader } from "./ui";
 import { usePrefs } from "./prefs";
@@ -19,6 +20,8 @@ import {
   IconHorseshoe,
   IconSparkles,
   IconClipboard,
+  IconMenu,
+  IconClose,
 } from "./icons";
 
 const NAV = [
@@ -34,6 +37,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { hydrated: prefsHydrated, signedIn, canEdit } = usePrefs();
   const pathname = usePathname();
   const nav = NAV.filter((n) => n.href !== "/jobs/new" || canEdit);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Close the mobile menu on navigation.
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
 
   // Wait for prefs to hydrate before deciding auth (avoids a login flash).
   if (!prefsHydrated) {
@@ -59,7 +68,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* Top nav */}
       <header className="no-print sticky top-0 z-20 border-b border-line glass">
-        <div className="mx-auto flex max-w-[1200px] items-center gap-6 px-6 py-3">
+        <div className="mx-auto flex max-w-[1200px] items-center gap-3 px-4 py-3 sm:gap-4 sm:px-6">
           <Link href="/" className="mr-2 flex shrink-0 items-center gap-2.5">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand text-white shadow-glow">
               <IconHorseshoe width={20} height={20} />
@@ -74,7 +83,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </span>
           </Link>
 
-          <nav className="flex items-center gap-1">
+          <nav className="hidden items-center gap-1 lg:flex">
             {nav.map((item) => {
               const active =
                 item.href === "/"
@@ -109,26 +118,78 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             })}
           </nav>
 
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
             <button
               onClick={() => window.dispatchEvent(new Event("fpas:start-tour"))}
-              className="hidden items-center gap-1.5 rounded-full border border-line bg-white px-3 py-1.5 text-[12px] font-medium text-ink-soft transition-colors hover:border-primary/40 hover:text-ink sm:inline-flex"
+              className="hidden items-center gap-1.5 rounded-full border border-line bg-white px-3 py-1.5 text-[12px] font-medium text-ink-soft transition-colors hover:border-primary/40 hover:text-ink xl:inline-flex"
             >
               <IconSparkles width={14} height={14} />
               Take a tour
             </button>
-            <span className="hidden sm:block">
+            <span className="hidden xl:block">
               <LiveTag />
             </span>
             <NotificationsBell />
             <AccessibilityMenu />
             <AccountMenu />
+            <button
+              onClick={() => setMenuOpen((o) => !o)}
+              aria-label={menuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={menuOpen}
+              className="flex h-9 w-9 items-center justify-center rounded-xl text-ink-soft transition-colors hover:bg-white hover:text-ink lg:hidden"
+            >
+              {menuOpen ? (
+                <IconClose width={20} height={20} />
+              ) : (
+                <IconMenu width={20} height={20} />
+              )}
+            </button>
           </div>
         </div>
+
+        {/* Mobile / tablet menu */}
+        {menuOpen && (
+          <div className="border-t border-line bg-panel lg:hidden">
+            <nav className="mx-auto flex max-w-[1200px] flex-col gap-1 px-4 py-3 sm:px-6">
+              {nav.map((item) => {
+                const active =
+                  item.href === "/"
+                    ? pathname === "/"
+                    : pathname.startsWith(item.href);
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMenuOpen(false)}
+                    className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
+                      active
+                        ? "bg-primary-soft text-primary"
+                        : "text-ink-soft hover:bg-white hover:text-ink"
+                    }`}
+                  >
+                    <Icon width={17} height={17} />
+                    {item.label}
+                  </Link>
+                );
+              })}
+              <button
+                onClick={() => {
+                  setMenuOpen(false);
+                  window.dispatchEvent(new Event("fpas:start-tour"));
+                }}
+                className="mt-1 flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-ink-soft transition-colors hover:bg-white hover:text-ink"
+              >
+                <IconSparkles width={17} height={17} />
+                Take a tour
+              </button>
+            </nav>
+          </div>
+        )}
       </header>
 
       {/* Content */}
-      <main className="mx-auto min-w-0 max-w-[1200px] px-6 py-8">
+      <main className="mx-auto min-w-0 max-w-[1200px] px-4 py-6 sm:px-6 sm:py-8">
         {hydrated ? (
           <div key={pathname} className="animate-fade-up">
             {children}

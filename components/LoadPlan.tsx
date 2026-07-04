@@ -81,7 +81,8 @@ export function LoadPlan({ jobId }: { jobId: string }) {
             No stalls yet. Add the animals, genders and weights the airline needs.
           </p>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[520px] text-sm">
             <thead>
               <tr className="border-b border-line text-left font-mono text-[11px] uppercase tracking-wide text-ink-faint">
                 <th className="px-4 py-2 font-medium">Stall</th>
@@ -133,6 +134,7 @@ export function LoadPlan({ jobId }: { jobId: string }) {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </Card>
 
