@@ -16,9 +16,11 @@ const config: Config = {
         "ink-faint": "#697784",
         line: "#E4E9E7",
         "line-strong": "#C7D0CC",
-        // Brand: deep teal-blue (aviation/freight trust) + warm gold accent (animal warmth).
-        primary: "#12657E",
-        "primary-soft": "#DEEDF1",
+        // Brand accent — driven by CSS variables so the whole app can be
+        // re-themed from Settings (see globals.css [data-theme]). Alpha-value
+        // placeholder keeps opacity modifiers (e.g. text-primary/40) working.
+        primary: "rgb(var(--c-primary) / <alpha-value>)",
+        "primary-soft": "rgb(var(--c-primary-soft) / <alpha-value>)",
         // Gradient stops (navy → teal → aqua).
         navy: "#123C63",
         teal: "#166C86",
@@ -40,7 +42,8 @@ const config: Config = {
         mono: ['"IBM Plex Mono"', "ui-monospace", "SFMono-Regular", "monospace"],
       },
       backgroundImage: {
-        brand: "linear-gradient(135deg,#123C63 0%,#166C86 52%,#2AA79A 100%)",
+        brand:
+          "linear-gradient(135deg,rgb(var(--c-grad1)) 0%,rgb(var(--c-grad2)) 52%,rgb(var(--c-grad3)) 100%)",
         "brand-soft":
           "linear-gradient(135deg,#E7EFF3 0%,#E4F1F0 50%,#EEF3E9 100%)",
       },
@@ -48,7 +51,7 @@ const config: Config = {
         panel: "0 1px 2px rgba(15,34,51,0.04), 0 1px 1px rgba(15,34,51,0.03)",
         card: "0 1px 3px rgba(15,34,51,0.06), 0 6px 20px -8px rgba(15,34,51,0.10)",
         lift: "0 10px 30px -10px rgba(15,34,51,0.22)",
-        glow: "0 10px 34px -8px rgba(18,101,126,0.45)",
+        glow: "0 10px 34px -8px rgb(var(--c-primary) / 0.45)",
       },
       borderRadius: {
         card: "14px",
