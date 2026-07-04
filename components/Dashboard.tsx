@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useStore } from "./store";
 import { usePrefs } from "./prefs";
 import { Button, Card, CountUp, FlightStatusChip, StatusBadge } from "./ui";
@@ -25,7 +25,8 @@ import {
   IconSparkles,
   IconTrash,
 } from "./icons";
-import type { FlightManagerLead } from "@/lib/types";
+import { SHIPPING_AGENTS } from "@/lib/mockData";
+import type { FlightManagerLead, JobType } from "@/lib/types";
 
 type View = "jobs" | "calendar" | "insights" | "report" | "bin";
 
@@ -513,6 +514,11 @@ function JobBoard({
   canEdit: boolean;
   onDelete: (id: string) => void;
 }) {
+  const router = useRouter();
+  const { createQuickJob } = useStore();
+  const { toast } = usePrefs();
+  const [quickOpen, setQuickOpen] = useState(false);
+
   const columns = useMemo(() => {
     const map: Record<JobStatus, Job[]> = {
       new: [],
@@ -525,8 +531,24 @@ function JobBoard({
   }, [jobs]);
 
   return (
-    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-      {BOARD_COLUMNS.map((col) => (
+    <div>
+      {canEdit && (
+        <div className="mb-3 flex flex-wrap items-center gap-3">
+          <Button size="sm" onClick={() => setQuickOpen(true)}>
+            <IconPlus width={15} height={15} />
+            New job
+          </Button>
+          <Link
+            href="/jobs/new"
+            className="text-[13px] font-medium text-ink-soft transition-colors hover:text-primary"
+          >
+            Use full intake →
+          </Link>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+        {BOARD_COLUMNS.map((col) => (
         <div
           key={col}
           className="rounded-card border border-line bg-panel/50 p-2.5"
@@ -557,7 +579,218 @@ function JobBoard({
           </div>
         </div>
       ))}
+      </div>
+
+      {quickOpen && (
+        <QuickCreateModal
+          onClose={() => setQuickOpen(false)}
+          onCreate={(fields) => {
+            const id = createQuickJob(fields);
+            setQuickOpen(false);
+            toast("Job created", "success");
+            router.push(`/jobs/${id}`);
+          }}
+        />
+      )}
     </div>
+  );
+}
+
+interface QuickCreateFields {
+  jobType: JobType;
+  awb: string;
+  shippingAgent: string;
+  commodity: string;
+  animalCount: string;
+  flight: string;
+  origin: string;
+  arrivalDate: string;
+  arrivalTime: string;
+}
+
+function QuickCreateModal({
+  onClose,
+  onCreate,
+}: {
+  onClose: () => void;
+  onCreate: (fields: QuickCreateFields) => void;
+}) {
+  const [jobType, setJobType] = useState<JobType>("import");
+  const [awb, setAwb] = useState("");
+  const [shippingAgent, setShippingAgent] = useState("");
+  const [commodity, setCommodity] = useState("");
+  const [animalCount, setAnimalCount] = useState("");
+  const [flight, setFlight] = useState("");
+  const [origin, setOrigin] = useState("");
+  const [arrivalDate, setArrivalDate] = useState("");
+  const [arrivalTime, setArrivalTime] = useState("");
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  const canSubmit = awb.trim() !== "" || commodity.trim() !== "";
+  const inputCls =
+    "w-full rounded-xl border border-line-strong bg-white px-3 py-2 text-sm text-ink shadow-sm transition-shadow focus:outline-none focus:ring-2 focus:ring-primary/30";
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!canSubmit) return;
+    onCreate({
+      jobType,
+      awb,
+      shippingAgent,
+      commodity,
+      animalCount,
+      flight,
+      origin,
+      arrivalDate,
+      arrivalTime,
+    });
+  }
+
+  return (
+    <div className="no-print fixed inset-0 z-[70] flex items-start justify-center p-4 pt-[10vh]">
+      <div className="absolute inset-0 bg-ink/40" onClick={onClose} />
+      <div className="relative w-full max-w-lg overflow-hidden rounded-xl2 border border-line bg-panel shadow-lift">
+        <div className="flex items-center justify-between border-b border-line px-4 py-3">
+          <div className="text-sm font-semibold text-ink">New job</div>
+          <button
+            onClick={onClose}
+            className="rounded border border-line px-1.5 py-0.5 font-mono text-[10px] text-ink-faint transition-colors hover:text-ink"
+          >
+            ESC
+          </button>
+        </div>
+        <form onSubmit={submit} className="p-4">
+          <div className="mb-3 flex gap-1.5">
+            {(["import", "export"] as JobType[]).map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setJobType(t)}
+                className={`rounded-full px-3 py-1 text-[12px] font-medium capitalize transition-all ${
+                  jobType === t
+                    ? "bg-brand text-white shadow-glow"
+                    : "border border-line bg-white text-ink-soft hover:text-ink"
+                }`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Field label="AWB">
+              <input
+                autoFocus
+                value={awb}
+                onChange={(e) => setAwb(e.target.value)}
+                placeholder="157-00000000"
+                className={inputCls}
+              />
+            </Field>
+            <Field label="Shipping agent">
+              <input
+                list="qc-agents"
+                value={shippingAgent}
+                onChange={(e) => setShippingAgent(e.target.value)}
+                placeholder="Agent"
+                className={inputCls}
+              />
+              <datalist id="qc-agents">
+                {SHIPPING_AGENTS.map((a) => (
+                  <option key={a} value={a} />
+                ))}
+              </datalist>
+            </Field>
+            <Field label="Commodity">
+              <input
+                value={commodity}
+                onChange={(e) => setCommodity(e.target.value)}
+                placeholder="Live horses"
+                className={inputCls}
+              />
+            </Field>
+            <Field label="Animal count">
+              <input
+                value={animalCount}
+                onChange={(e) => setAnimalCount(e.target.value)}
+                placeholder="4"
+                className={inputCls}
+              />
+            </Field>
+            <Field label="Flight">
+              <input
+                value={flight}
+                onChange={(e) => setFlight(e.target.value)}
+                placeholder="EK9021"
+                className={inputCls}
+              />
+            </Field>
+            <Field label="Origin">
+              <input
+                value={origin}
+                onChange={(e) => setOrigin(e.target.value)}
+                placeholder="DXB (Dubai)"
+                className={inputCls}
+              />
+            </Field>
+            <Field label="Arrival date">
+              <input
+                type="date"
+                value={arrivalDate}
+                onChange={(e) => setArrivalDate(e.target.value)}
+                className={inputCls}
+              />
+            </Field>
+            <Field label="Arrival time">
+              <input
+                type="time"
+                value={arrivalTime}
+                onChange={(e) => setArrivalTime(e.target.value)}
+                className={inputCls}
+              />
+            </Field>
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+            <span className="text-[11px] text-ink-faint">
+              Lands in “In progress”. AWB or commodity required.
+            </span>
+            <div className="flex gap-2">
+              <Button variant="ghost" size="sm" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button size="sm" type="submit" disabled={!canSubmit}>
+                Create job
+              </Button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1 block font-mono text-[10px] font-medium uppercase tracking-wide text-ink-faint">
+        {label}
+      </span>
+      {children}
+    </label>
   );
 }
 
