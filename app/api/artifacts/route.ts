@@ -44,7 +44,7 @@ export async function POST(req: Request) {
   try {
     const parsed = await callClaudeJSON<{ artifacts: DraftArtifact[] }>(
       buildPrompt(booking),
-      { system: SYSTEM, maxTokens: 2000 }
+      { system: SYSTEM, maxTokens: 3500 }
     );
     return NextResponse.json({ artifacts: parsed.artifacts });
   } catch (err) {

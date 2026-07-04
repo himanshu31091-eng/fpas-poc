@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useStore } from "./store";
 import { usePrefs } from "./prefs";
 import {
@@ -41,6 +41,21 @@ export function ComplianceReadiness({
   const job = getJob(jobId);
   const state = ui[jobId] ?? {};
 
+  // The rail is derived deterministically from the booking facts (works with
+  // or without AI). The AI call only supplies the reasoned summary. Memoised so
+  // it isn't re-evaluated and re-sorted on every unrelated re-render.
+  const facts = job?.booking?.facts;
+  const isHorses = job?.booking?.isHorses ?? false;
+  const items = useMemo(
+    () =>
+      facts
+        ? evaluateReadiness(facts, isHorses).sort(
+            (a, b) => ORDER.indexOf(a.factKey) - ORDER.indexOf(b.factKey)
+          )
+        : [],
+    [facts, isHorses]
+  );
+
   if (!job?.booking) {
     return (
       <Card className="p-10 text-center text-sm text-ink-soft">
@@ -50,12 +65,6 @@ export function ComplianceReadiness({
     );
   }
 
-  // The rail is derived deterministically from the booking facts (works with
-  // or without AI). The AI call only supplies the reasoned summary.
-  const items = evaluateReadiness(
-    job.booking.facts,
-    job.booking.isHorses
-  ).sort((a, b) => ORDER.indexOf(a.factKey) - ORDER.indexOf(b.factKey));
   const outstanding = items.filter((i) => i.status === "outstanding");
   const cleared = outstanding.length === 0;
   const summary = job.readiness?.summary;

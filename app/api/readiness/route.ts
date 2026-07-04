@@ -13,21 +13,27 @@ import type {
 export const runtime = "nodejs";
 export const maxDuration = 300;
 
-const SYSTEM = `You are a compliance-readiness assistant for FPAS live-animal imports at Amsterdam Schiphol. You assess a booking against a fixed regulatory sequence and report what is outstanding, ordered by urgency, with a plain-language justification for each. You are a decision-support tool only: you never submit anything to a regulator and you always assume a human makes the final call.`;
-
-function buildPrompt(booking: Booking): string {
-  const rules = IMPORT_SEQUENCE.map((r) => ({
+// The regulatory sequence is fixed ground truth — build it once and put it in
+// the (cached) system prompt so it isn't re-sent and re-processed per request.
+const RULES_JSON = JSON.stringify(
+  IMPORT_SEQUENCE.map((r) => ({
     factKey: r.factKey,
     title: r.title,
     justification: r.justification,
     urgency: r.urgency,
     horsesOnly: r.horsesOnly ?? false,
-  }));
+  })),
+  null,
+  2
+);
 
-  return `Assess this Amsterdam import booking for arrival readiness.
+const SYSTEM = `You are a compliance-readiness assistant for FPAS live-animal imports at Amsterdam Schiphol. You assess a booking against a fixed regulatory sequence and report what is outstanding, ordered by urgency, with a plain-language justification for each. You are a decision-support tool only: you never submit anything to a regulator and you always assume a human makes the final call.
 
 REGULATORY SEQUENCE (ground truth — do not invent steps):
-${JSON.stringify(rules, null, 2)}
+${RULES_JSON}`;
+
+function buildPrompt(booking: Booking): string {
+  return `Assess this Amsterdam import booking for arrival readiness against the REGULATORY SEQUENCE in your instructions.
 
 BOOKING:
 ${JSON.stringify(
@@ -86,7 +92,7 @@ export async function POST(req: Request) {
   try {
     const result = await callClaudeJSON<ReadinessResult>(buildPrompt(booking), {
       system: SYSTEM,
-      maxTokens: 2000,
+      maxTokens: 3500,
     });
     // Trust the deterministic item list + cleared flag as the source of truth;
     // keep the model's reasoned summary.

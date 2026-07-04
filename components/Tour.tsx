@@ -55,6 +55,11 @@ const STEPS: Step[] = [
     body: "Ask questions across all shipments — ‘what's arriving in 48 hours?’ or ‘draft the NVWA notice’.",
   },
   {
+    target: "nav-requirements",
+    title: "Requirements & traceability",
+    body: "See how the POC maps to the FPAS brief — every requirement with a Built / Simulated / Future status, plus the extras we added. Exportable as a PDF.",
+  },
+  {
     target: "nav-guide",
     title: "Full guide",
     body: "The complete how-it-works guide lives here and can be saved as a PDF. That's the tour — enjoy!",

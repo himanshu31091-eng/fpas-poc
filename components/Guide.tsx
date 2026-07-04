@@ -5,6 +5,7 @@ import {
   IconArrowRight,
   IconBox,
   IconCheckCircle,
+  IconClipboard,
   IconClock,
   IconDoc,
   IconGrid,
@@ -139,7 +140,7 @@ export function Guide() {
           <Step
             icon={IconGrid}
             title="Dashboard"
-            body="Every job with search, filters, live stats, mock flight-status chips, and the live Amsterdam arrival-day weather (with a welfare flag when it's too hot or cold). View jobs as a List, a Kanban Board (create a job inline from the Board), or a Grid. Switch views: Jobs, Calendar (arrivals & departures), Insights (charts), Report (export to Excel), and Bin (deleted jobs — restore or delete forever). The Flight Manager “Pending” queue sits at the top, and one button gives you an AI daily briefing of what's at risk — weather included."
+            body="Every job with search, filters, live stats, mock flight-status chips, and the live Amsterdam arrival-day weather (with a welfare flag when it's too hot or cold). View jobs as a List, a Kanban Board (create a job inline from the Board), or a Grid. Switch views: Jobs, Calendar (arrivals & departures), Insights (charts), Report (export to Excel or PDF), and Bin (deleted jobs — restore or delete forever). The Flight Manager “Pending” queue sits at the top, and one button gives you an AI daily briefing of what's at risk — weather included."
           />
           <Step
             icon={IconPlus}
@@ -185,6 +186,11 @@ export function Guide() {
             icon={IconSparkles}
             title="Copilot"
             body="Ask questions across all jobs — “what's arriving in 48 hours?”, “what's blocking the EQUITRANS job?”, or “draft the NVWA notice.” It only sees your jobs; it's decision-support, not an autonomous agent."
+          />
+          <Step
+            icon={IconClipboard}
+            title="Requirements & Traceability"
+            body="A live, in-app map of how the POC covers the FPAS brief: every requirement with a Built / Simulated / Future status and a coverage summary, plus the extras added on top. Export it as a PDF."
           />
         </div>
       </div>
@@ -257,6 +263,15 @@ export function Guide() {
           <li>
             <strong>Spreadsheet migration.</strong> Import CSV turns an existing
             spreadsheet into jobs in one step.
+          </li>
+          <li>
+            <strong>Arrival weather.</strong> Each job shows the live Amsterdam
+            arrival-day forecast with a welfare flag when it&apos;s too hot or
+            cold for live animals; the daily briefing factors it in.
+          </li>
+          <li>
+            <strong>Traceability.</strong> The Requirements page maps the POC to
+            the brief in-app — Built / Simulated / Future — so scope is explicit.
           </li>
           <li>
             <strong>Print to PDF.</strong> The guide and each job&apos;s Timeline
