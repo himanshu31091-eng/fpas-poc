@@ -89,13 +89,14 @@ export function Guide() {
           Getting around
         </h2>
         <p className="mt-1 text-[13.5px] text-ink-soft">
-          The top bar has four areas:
+          The top bar has five areas:
         </p>
         <ul className="mt-2 grid grid-cols-1 gap-1.5 text-[13.5px] text-ink-soft sm:grid-cols-2">
           <li><strong>Dashboard</strong> — jobs (List / Board / Grid), plus Calendar, Insights and an exportable Report.</li>
           <li><strong>New booking</strong> — six ways to create a job.</li>
           <li><strong>Copilot</strong> — ask questions about your shipments.</li>
           <li><strong>How it works</strong> — this page.</li>
+          <li><strong>Requirements</strong> — how the POC traces to the brief.</li>
         </ul>
         <p className="mt-2 text-[13px] text-ink-faint">
           You sign in by picking a role on the landing page. Top-right: a{" "}

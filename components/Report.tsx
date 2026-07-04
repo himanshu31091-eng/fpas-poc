@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { useStore } from "./store";
 import { usePrefs } from "./prefs";
 import { Button, Card } from "./ui";
-import { IconDownload, IconReport } from "./icons";
+import { IconDownload, IconPrinter, IconReport } from "./icons";
 import { buildReport, exportReportXlsx } from "@/lib/report";
 
 /**
@@ -24,6 +24,10 @@ export function Report() {
     toast("Report exported to Excel", "success");
   }
 
+  function handlePrint() {
+    if (typeof window !== "undefined") window.print();
+  }
+
   const summaryTiles: { label: string; value: number | string }[] = [
     { label: "Total jobs", value: model.totals.total },
     { label: "Booked", value: model.totals.booked },
@@ -36,7 +40,7 @@ export function Report() {
   return (
     <div className="animate-fade-up space-y-4">
       {/* Header + export */}
-      <Card className="flex flex-wrap items-center justify-between gap-3 border-primary/20 p-4">
+      <Card className="print-plain flex flex-wrap items-center justify-between gap-3 border-primary/20 p-4">
         <div className="flex items-center gap-2">
           <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-brand text-white shadow-glow">
             <IconReport width={16} height={16} />
@@ -50,10 +54,20 @@ export function Report() {
             </div>
           </div>
         </div>
-        <Button onClick={handleExport} disabled={model.totals.total === 0}>
-          <IconDownload width={15} height={15} />
-          Export to Excel
-        </Button>
+        <div className="no-print flex items-center gap-2">
+          <Button
+            variant="ghost"
+            onClick={handlePrint}
+            disabled={model.totals.total === 0}
+          >
+            <IconPrinter width={15} height={15} />
+            Export to PDF
+          </Button>
+          <Button onClick={handleExport} disabled={model.totals.total === 0}>
+            <IconDownload width={15} height={15} />
+            Export to Excel
+          </Button>
+        </div>
       </Card>
 
       {model.totals.total === 0 ? (
@@ -67,7 +81,7 @@ export function Report() {
           {/* Summary tiles */}
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
             {summaryTiles.map((t) => (
-              <Card key={t.label} className="p-4">
+              <Card key={t.label} className="print-plain p-4">
                 <div className="font-display text-2xl font-bold text-ink">
                   {t.value}
                 </div>
@@ -77,7 +91,7 @@ export function Report() {
           </div>
 
           {/* Jobs table */}
-          <Card className="p-4">
+          <Card className="print-plain p-4">
             <div className="mb-3 text-sm font-semibold text-ink">
               Jobs ({model.jobs.length})
             </div>
@@ -126,7 +140,7 @@ export function Report() {
           </Card>
 
           {/* Outstanding steps */}
-          <Card className="p-4">
+          <Card className="print-plain p-4">
             <div className="mb-3 text-sm font-semibold text-ink">
               Outstanding steps ({model.steps.length})
             </div>
