@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useStore } from "./store";
-import { Button, Card, ErrorRetry } from "./ui";
+import { Button, Card, ErrorRetry, SimTag } from "./ui";
 import { IconPlane, IconPlus, IconTrash } from "./icons";
 import { AIRLINES, AIRLINE_RECIPIENTS } from "@/lib/jobs";
 import type { LoadPlanRow } from "@/lib/types";
@@ -141,6 +141,7 @@ export function LoadPlan({ jobId }: { jobId: string }) {
         <div className="flex items-center gap-2 text-sm font-semibold text-ink">
           <IconPlane width={16} height={16} className="text-primary" />
           Send load list to airline
+          <SimTag />
         </div>
         <p className="mt-1 text-[13px] text-ink-soft">
           The assistant drafts the load list from the plan above and sends it to

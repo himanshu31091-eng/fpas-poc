@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useStore } from "./store";
-import { Button, Card } from "./ui";
+import { Button, Card, SimTag } from "./ui";
 import { IconSparkles } from "./icons";
 import type { JobType, SubmissionStatus } from "@/lib/types";
 
@@ -72,6 +72,12 @@ export function Submissions({ jobId }: { jobId: string }) {
 
   return (
     <div className="space-y-3">
+      <div className="flex items-center gap-2">
+        <span className="text-sm font-semibold text-ink">
+          Regulatory submissions
+        </span>
+        <SimTag />
+      </div>
       <p className="text-[13px] text-ink-soft">
         Regulatory touchpoints across the shipment lifecycle. Draft each
         notification with the assistant, then record it as submitted for the

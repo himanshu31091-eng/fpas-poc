@@ -104,6 +104,27 @@ export function UrgencyBadge({ level }: { level: Urgency }) {
   );
 }
 
+/**
+ * Marks a surface that is demonstrated with mock data / no live integration.
+ * Mirrors the "Simulated" status in the requirements traceability document.
+ */
+export function SimTag({
+  label = "Simulated",
+  className = "",
+}: {
+  label?: string;
+  className?: string;
+}) {
+  return (
+    <span
+      title="Demonstrated with mock data — no live integration in this POC"
+      className={`inline-flex items-center gap-1 rounded-full border border-dashed border-amber/50 bg-amber-soft px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wide text-amber ${className}`}
+    >
+      {label}
+    </span>
+  );
+}
+
 export function Spinner({ label }: { label: string }) {
   return (
     <div className="flex items-center gap-3 text-sm text-ink-soft">

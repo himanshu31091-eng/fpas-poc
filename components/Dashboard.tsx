@@ -7,7 +7,7 @@ import { useStore } from "./store";
 import { usePrefs } from "./prefs";
 import { WeatherChip, WelfareBadge, useWeather } from "./weather";
 import { weatherLabel, welfareFlag } from "@/lib/weather";
-import { Button, Card, CountUp, FlightStatusChip, StatusBadge } from "./ui";
+import { Button, Card, CountUp, FlightStatusChip, SimTag, StatusBadge } from "./ui";
 import { CommodityArt } from "./CommodityArt";
 import { Calendar } from "./Calendar";
 import { Insights } from "./Insights";
@@ -140,7 +140,7 @@ export function Dashboard() {
       {/* Gradient hero */}
       <div
         data-tour="hero"
-        className="relative mb-6 overflow-hidden rounded-xl2 bg-brand px-7 py-7 text-white shadow-glow"
+        className="no-print relative mb-6 overflow-hidden rounded-xl2 bg-brand px-7 py-7 text-white shadow-glow"
       >
         <div className="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
         <div className="pointer-events-none absolute -bottom-24 right-24 h-56 w-56 rounded-full bg-white/10 blur-2xl" />
@@ -169,7 +169,7 @@ export function Dashboard() {
       </div>
 
       {/* View switcher */}
-      <div data-tour="views" className="mb-5 flex flex-wrap gap-1.5">
+      <div data-tour="views" className="no-print mb-5 flex flex-wrap gap-1.5">
         {VIEWS.map((v) => {
           const Icon = v.icon;
           return (
@@ -220,9 +220,10 @@ export function Dashboard() {
             <span className="text-sm font-semibold text-ink">
               Pending from Flight Manager
             </span>
-            <span className="rounded-full bg-amber-soft px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide text-amber">
+            <span className="rounded-full bg-primary-soft px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide text-primary">
               {leads.length} to review
             </span>
+            <SimTag />
           </div>
           <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
             {leads.map((lead) => (

@@ -12,13 +12,21 @@ import { NotificationsBell } from "./NotificationsBell";
 import { SupportWidget } from "./SupportWidget";
 import { CommandPalette } from "./CommandPalette";
 import { Tour } from "./Tour";
-import { IconGrid, IconPlus, IconDoc, IconHorseshoe, IconSparkles } from "./icons";
+import {
+  IconGrid,
+  IconPlus,
+  IconDoc,
+  IconHorseshoe,
+  IconSparkles,
+  IconClipboard,
+} from "./icons";
 
 const NAV = [
   { href: "/", label: "Dashboard", icon: IconGrid },
   { href: "/jobs/new", label: "New booking", icon: IconPlus },
   { href: "/copilot", label: "Copilot", icon: IconSparkles },
   { href: "/guide", label: "How it works", icon: IconDoc },
+  { href: "/requirements", label: "Requirements", icon: IconClipboard },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
