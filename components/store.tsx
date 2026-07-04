@@ -58,6 +58,17 @@ interface StoreState {
   createFromText: (text: string) => string;
   createFromPdf: (filename: string, data: string) => string;
   createManual: () => string;
+  createQuickJob: (fields: {
+    jobType: JobType;
+    awb: string;
+    shippingAgent: string;
+    commodity: string;
+    animalCount: string;
+    flight: string;
+    origin: string;
+    arrivalDate: string;
+    arrivalTime: string;
+  }) => string;
   updateJob: (id: string, patch: Partial<Job>) => void;
   updateBooking: (id: string, patch: Partial<Booking>) => void;
   assignJob: (id: string, assignee: string) => void;
@@ -280,6 +291,42 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       origin: "",
       arrivalDate: "",
       arrivalTime: "",
+      govtVetInspectionTime: "",
+      warehouseArrivalTime: "",
+      specialCargo: "",
+      facts: { ...DEFAULT_FACTS, bookingCreated: true },
+    };
+    return addJob(job);
+  }
+
+  /**
+   * Quick-create a booked job from a handful of fields (used by the Kanban
+   * board). Same shape as a confirmed booking with bookingCreated set, so it
+   * lands in the "In progress" column ready to work the readiness steps.
+   */
+  function createQuickJob(fields: {
+    jobType: JobType;
+    awb: string;
+    shippingAgent: string;
+    commodity: string;
+    animalCount: string;
+    flight: string;
+    origin: string;
+    arrivalDate: string;
+    arrivalTime: string;
+  }): string {
+    const job = blankJob({ manual: true });
+    job.booking = {
+      awb: fields.awb.trim(),
+      shippingAgent: fields.shippingAgent.trim(),
+      commodity: fields.commodity.trim(),
+      isHorses: /horse/i.test(fields.commodity),
+      jobType: fields.jobType,
+      animalCount: fields.animalCount.trim(),
+      flight: fields.flight.trim(),
+      origin: fields.origin.trim(),
+      arrivalDate: fields.arrivalDate.trim(),
+      arrivalTime: fields.arrivalTime.trim(),
       govtVetInspectionTime: "",
       warehouseArrivalTime: "",
       specialCargo: "",
@@ -725,6 +772,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       createFromText,
       createFromPdf,
       createManual,
+      createQuickJob,
       updateJob,
       updateBooking,
       assignJob,
