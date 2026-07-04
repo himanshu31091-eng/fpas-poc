@@ -69,6 +69,12 @@ export const IconClipboard = (p: P) => (
   </Svg>
 );
 
+export const IconFilter = (p: P) => (
+  <Svg {...p}>
+    <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" />
+  </Svg>
+);
+
 export const IconMenu = (p: P) => (
   <Svg {...p}>
     <path d="M4 6h16M4 12h16M4 18h16" />
