@@ -1,11 +1,13 @@
 import type { AgentEmail } from "./types";
 
 // ---------------------------------------------------------------------------
-// Curated demo inputs. Three samples, deliberately different so the demo has
+// Curated demo inputs. Deliberately different flavours so the demo has
 // something for the readiness gate to catch:
 //   - clean:      well-structured, most fields present
 //   - messy:      details buried in prose, informal
 //   - incomplete: missing HC endorsement + arrival time (readiness will flag)
+// Mix of commodities (horses, cattle, pets, CITES birds) and agents drawn
+// from SHIPPING_AGENTS below.
 //
 // All data is fictional. Nothing here connects to a live system.
 // ---------------------------------------------------------------------------
@@ -125,5 +127,101 @@ Merci de confirmer le créneau d'inspection vétérinaire officielle.
 
 Cordialement,
 Stock Air — Service Opérations`,
+  },
+  {
+    id: "email-5",
+    from: "dispatch@livestockaircorp.example",
+    agent: "LIVESTOCK AIR CORP",
+    subject: "Import AMS — 22 breeding cattle, QR8177",
+    receivedAt: "2026-07-03 06:20",
+    attachment: "HC_endorsed_QR8177.pdf",
+    flavour: "clean",
+    body: `Dear FPAS Amsterdam,
+
+Please handle the following import at Schiphol:
+
+AWB: 157-60094321
+Commodity: Live cattle — 22 breeding heifers
+Flight: QR8177 from Doha (DOH)
+Arrival: 05 July 2026, 14:40 local
+Special handling: bedding replenishment required on arrival, water on stand
+
+The health certificate has been endorsed by NVWA (endorsed copy attached).
+Please confirm the border inspection slot and the unloading dock.
+
+Best regards,
+Livestock Air Corp — Dispatch`,
+  },
+  {
+    id: "email-6",
+    from: "bookings@skyepettravel.example",
+    agent: "SKYE PET TRAVEL",
+    subject: "pets coming in — need help",
+    receivedAt: "2026-07-03 09:12",
+    attachment: undefined,
+    flavour: "messy",
+    body: `hi there! so we have a bunch of pets flying into schiphol, think it's
+7 dogs and a couple of cats but let me double check the exact count. coming
+from bangkok on thai, flight TG932 i believe, lands sometime around midday
+on the 7th? maybe 12:30ish, not 100% sure yet.
+
+awb should be 217 55810022 — commodity companion animals. one of the dogs is
+a snub-nose breed so temperature care please.
+
+no HC scan yet, vet is finalising it, and we haven't gone to NVWA for the
+endorsement — is that something you handle or do we? new to this route sorry!
+
+thanks so much
+Priya`,
+  },
+  {
+    id: "email-7",
+    from: "ops@instone.example",
+    agent: "Instone UK",
+    subject: "Import booking — 6 horses, awaiting details",
+    receivedAt: "2026-07-03 10:48",
+    attachment: undefined,
+    flavour: "incomplete",
+    body: `Good afternoon,
+
+Requesting import handling at Amsterdam for:
+
+AWB: 125-33470091
+Commodity: Live horses (6 head)
+Flight: BA9440 from London (LHR)
+Origin: LHR
+
+Health certificate to follow — the endorsement has not yet been submitted to
+NVWA. Arrival is planned for 8 July 2026; the confirmed slot and arrival time
+will follow once the airline releases them.
+
+Kindly outline the required steps on your side.
+
+Regards,
+Instone UK Operations`,
+  },
+  {
+    id: "email-8",
+    from: "cargo@nzb.example",
+    agent: "NZB",
+    subject: "Import AMS — CITES birds, CX0271, docs endorsed",
+    receivedAt: "2026-07-03 11:30",
+    attachment: "HC_and_CITES_CX0271.pdf",
+    flavour: "clean",
+    body: `Hello FPAS Amsterdam,
+
+Please arrange import handling for the following consignment into Schiphol:
+
+AWB: 160-71203355
+Commodity: Live birds — 30 parrots (CITES Appendix II)
+Flight: CX0271 from Hong Kong (HKG)
+Arrival: 06 July 2026, 05:55 local
+Special handling: quiet, low-light holding; CITES permit accompanies the HC
+
+The health certificate is endorsed by NVWA and attached together with the
+CITES documentation. Please confirm the inspection slot and CITES check.
+
+Kind regards,
+NZB Cargo`,
   },
 ];
