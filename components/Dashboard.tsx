@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useStore } from "./store";
 import { usePrefs } from "./prefs";
+import { WeatherChip, WelfareBadge, useWeather } from "./weather";
+import { weatherLabel, welfareFlag } from "@/lib/weather";
 import { Button, Card, CountUp, FlightStatusChip, StatusBadge } from "./ui";
 import { CommodityArt } from "./CommodityArt";
 import { Calendar } from "./Calendar";
@@ -437,6 +439,7 @@ function JobRow({
                 OKTF
               </span>
             )}
+            <WelfareBadge date={job.booking?.arrivalDate} />
           </div>
           <div className="mt-0.5 flex items-center gap-2 truncate text-[13px] text-ink-soft">
             <span className="truncate">
@@ -465,6 +468,11 @@ function JobRow({
               </div>
             ) : null;
           })()}
+          {job.booking?.arrivalDate && (
+            <div className="mt-1">
+              <WeatherChip date={job.booking.arrivalDate} />
+            </div>
+          )}
         </div>
 
         <div className="hidden w-24 shrink-0 text-center sm:block">
@@ -831,6 +839,9 @@ function JobCard({
             <div className="mt-0.5 truncate text-[12px] text-ink-soft">
               {jobAgent(job)} · {jobCommodity(job)}
             </div>
+            <div className="mt-1">
+              <WelfareBadge date={job.booking?.arrivalDate} />
+            </div>
           </div>
           {showStatus && <StatusBadge status={status} />}
         </div>
@@ -845,6 +856,9 @@ function JobCard({
             </div>
           </div>
           <div className="flex flex-col items-end gap-1">
+            {job.booking?.arrivalDate && (
+              <WeatherChip date={job.booking.arrivalDate} />
+            )}
             {fs && <FlightStatusChip state={fs.state} label={fs.label} />}
             {job.booking ? (
               open > 0 ? (
@@ -944,9 +958,32 @@ function BinView({
 }
 
 function BriefingCard({ jobs }: { jobs: Job[] }) {
+  const { getDay } = useWeather();
   const [text, setText] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  /** AMS arrival-day weather lines, so the briefing can flag welfare/embargo risk. */
+  function weatherContext(): string {
+    const lines = jobs
+      .filter((j) => j.booking?.arrivalDate)
+      .map((j) => {
+        const day = getDay(j.booking!.arrivalDate);
+        if (!day) return null;
+        const flag = welfareFlag(day);
+        return (
+          `AWB ${jobAwb(j)}: AMS ${day.date} ${weatherLabel(day.code).label}, ` +
+          `${Math.round(day.tempMinC)}–${Math.round(day.tempMaxC)}°C` +
+          (flag.level !== "ok" ? ` [${flag.label}]` : "")
+        );
+      })
+      .filter(Boolean);
+    return lines.length
+      ? `\n\nAMS weather at arrival (heat >=27°C or cold <=4°C is a welfare/embargo risk):\n${lines.join(
+          "\n"
+        )}`
+      : "";
+  }
 
   async function generate() {
     setBusy(true);
@@ -957,8 +994,8 @@ function BriefingCard({ jobs }: { jobs: Job[] }) {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           question:
-            "Give me today's operations briefing. In 4-6 short bullet points, call out shipments at risk and why (missing NVWA approval, missing arrival time, load list not sent, arriving soon with open steps), most urgent first. End with one line on overall readiness.",
-          context: jobsContext(jobs, new Date()),
+            "Give me today's operations briefing. In 4-6 short bullet points, call out shipments at risk and why (missing NVWA approval, missing arrival time, load list not sent, arriving soon with open steps, adverse arrival-day weather at AMS), most urgent first. End with one line on overall readiness.",
+          context: jobsContext(jobs, new Date()) + weatherContext(),
         }),
       });
       if (!res.ok) {

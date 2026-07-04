@@ -15,6 +15,7 @@ import { Submissions } from "./Submissions";
 import { CustomerUpdate } from "./CustomerUpdate";
 import { Timeline } from "./Timeline";
 import { CommodityArt } from "./CommodityArt";
+import { WeatherPanel } from "./weather";
 import {
   IconBox,
   IconChevronLeft,
@@ -206,6 +207,13 @@ export function JobWorkspace({ jobId }: { jobId: string }) {
           )}
         </div>
       </div>
+
+      {job.booking?.arrivalDate && (
+        <WeatherPanel
+          date={job.booking.arrivalDate}
+          arrivalTime={job.booking.arrivalTime}
+        />
+      )}
 
       {/* Tab rail — freely navigable */}
       <div className="no-print mb-5 flex flex-wrap gap-1.5">

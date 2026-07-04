@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { StoreProvider } from "@/components/store";
 import { AppProvider } from "@/components/prefs";
+import { WeatherProvider } from "@/components/weather";
 import { AppShell } from "@/components/AppShell";
 
 export const metadata: Metadata = {
@@ -32,7 +33,9 @@ export default function RootLayout({
       <body>
         <StoreProvider>
           <AppProvider>
-            <AppShell>{children}</AppShell>
+            <WeatherProvider>
+              <AppShell>{children}</AppShell>
+            </WeatherProvider>
           </AppProvider>
         </StoreProvider>
       </body>
