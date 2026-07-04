@@ -80,7 +80,8 @@ export function Calendar() {
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-1">
+      <div className="-mx-1 overflow-x-auto px-1">
+      <div className="grid min-w-[560px] grid-cols-7 gap-1">
         {DOW.map((d) => (
           <div
             key={d}
@@ -135,6 +136,7 @@ export function Calendar() {
             </div>
           );
         })}
+      </div>
       </div>
 
       <div className="mt-3 flex items-center gap-4 font-mono text-[10px] uppercase tracking-wide text-ink-faint">
