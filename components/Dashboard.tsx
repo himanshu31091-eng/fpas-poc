@@ -7,6 +7,12 @@ import { useStore } from "./store";
 import { usePrefs } from "./prefs";
 import { WeatherChip, WelfareBadge, useWeather } from "./weather";
 import { weatherLabel, welfareFlag } from "@/lib/weather";
+import {
+  JobFilters,
+  EMPTY_FACETS,
+  type JobFacets,
+  type CommodityGroup,
+} from "./JobFilters";
 import { Button, Card, CountUp, FlightStatusChip, SimTag, StatusBadge } from "./ui";
 import { CommodityArt } from "./CommodityArt";
 import { Calendar } from "./Calendar";
@@ -93,6 +99,7 @@ export function Dashboard() {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<JobStatus | "all">("all");
   const [mineOnly, setMineOnly] = useState(false);
+  const [facets, setFacets] = useState<JobFacets>(EMPTY_FACETS);
 
   const handleDelete = (id: string) => {
     deleteJob(id);
@@ -117,11 +124,49 @@ export function Dashboard() {
     return { total: activeJobs.length, ready, blocked, arriving };
   }, [activeJobs, now]);
 
+  const agentOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(activeJobs.map(jobAgent).filter((a) => a && a !== "—"))
+      ).sort(),
+    [activeJobs]
+  );
+
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
     return activeJobs.filter((job) => {
       if (filter !== "all" && jobStatus(job) !== filter) return false;
       if (mineOnly && job.assignee !== user) return false;
+
+      // Facet: job type
+      if (facets.jobType && job.booking?.jobType !== facets.jobType) return false;
+
+      // Facet: commodity group
+      if (facets.commodities.length) {
+        const c = jobCommodity(job).toLowerCase();
+        const g: CommodityGroup = /horse/.test(c)
+          ? "horses"
+          : /dog|cat|companion|pet/.test(c)
+          ? "companion"
+          : "other";
+        if (!facets.commodities.includes(g)) return false;
+      }
+
+      // Facet: shipping agent
+      if (facets.agents.length && !facets.agents.includes(jobAgent(job)))
+        return false;
+
+      // Facet: arrival window
+      if (facets.arrival) {
+        const h = hoursUntilArrival(job, now);
+        if (facets.arrival === "48h" && !(h !== null && h >= 0 && h <= 48))
+          return false;
+        if (facets.arrival === "week" && !(h !== null && h >= 0 && h <= 168))
+          return false;
+        if (facets.arrival === "overdue" && !(h !== null && h < 0)) return false;
+      }
+
+      // Text search
       if (!q) return true;
       const hay = [
         jobAwb(job),
@@ -133,7 +178,7 @@ export function Dashboard() {
         .toLowerCase();
       return hay.includes(q);
     });
-  }, [activeJobs, query, filter, mineOnly, user]);
+  }, [activeJobs, query, filter, mineOnly, user, facets, now]);
 
   return (
     <div>
@@ -293,6 +338,7 @@ export function Dashboard() {
           >
             My jobs
           </button>
+          <JobFilters facets={facets} setFacets={setFacets} agents={agentOptions} />
         </div>
 
         {/* Layout switcher */}
