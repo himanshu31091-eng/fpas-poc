@@ -2,15 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useStore } from "./store";
-import { usePrefs } from "./prefs";
+import { usePrefs, THEMES } from "./prefs";
 import { Button, Card, Eyebrow } from "./ui";
-import { IconMoon, IconSun } from "./icons";
+import { IconCheck, IconMoon, IconSun } from "./icons";
 
 const LOCATIONS = ["Amsterdam (Schiphol BIP)", "Melbourne", "New Zealand (PAQ)", "Chicago"];
 
 export function Settings() {
   const { jobs, resetDemo } = useStore();
-  const { role, user, dark, toggleDark, toast } = usePrefs();
+  const { role, user, dark, toggleDark, theme, setTheme, toast } = usePrefs();
   const [location, setLocation] = useState(LOCATIONS[0]);
 
   useEffect(() => {
@@ -89,11 +89,52 @@ export function Settings() {
 
         <Card className="p-5">
           <h2 className="text-sm font-semibold text-ink">Appearance</h2>
-          <div className="mt-3 flex items-center justify-between">
+
+          {/* Theme picker */}
+          <div className="mt-3">
+            <div className="text-[13px] font-medium text-ink">Theme</div>
+            <div className="text-[12px] text-ink-soft">
+              Set the workspace accent colour. Applies everywhere and is
+              remembered on this device.
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2.5">
+              {THEMES.map((t) => {
+                const active = theme === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    onClick={() => {
+                      setTheme(t.id);
+                      toast(`Theme set to ${t.label}`, "success");
+                    }}
+                    title={t.label}
+                    aria-pressed={active}
+                    className={`flex items-center gap-2 rounded-xl border px-2.5 py-2 text-[12px] font-medium transition-all ${
+                      active
+                        ? "border-primary bg-primary-soft text-primary"
+                        : "border-line bg-white text-ink-soft hover:border-primary/40 hover:text-ink"
+                    }`}
+                  >
+                    <span
+                      className="flex h-6 w-6 items-center justify-center rounded-lg text-white shadow-sm"
+                      style={{ backgroundColor: t.swatch }}
+                    >
+                      {active && <IconCheck width={13} height={13} />}
+                    </span>
+                    {t.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Dark mode */}
+          <div className="mt-5 flex items-center justify-between border-t border-line pt-4">
             <div>
               <div className="text-[13px] font-medium text-ink">Dark mode</div>
               <div className="text-[12px] text-ink-soft">
-                Larger text & high contrast live in the ♿ menu in the top bar.
+                Works with any theme. Larger text & high contrast live in the ♿
+                menu in the top bar.
               </div>
             </div>
             <Button variant="ghost" size="sm" onClick={toggleDark}>

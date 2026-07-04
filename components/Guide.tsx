@@ -295,6 +295,11 @@ export function Guide() {
             page or action.
           </li>
           <li>
+            <strong>Themes.</strong> Settings → Appearance offers six accent
+            themes plus dark mode; the choice applies everywhere and is
+            remembered on this device.
+          </li>
+          <li>
             <strong>Accessibility.</strong> The ♿ button in the top bar offers
             larger text and high-contrast mode, plus a dark theme — remembered on
             this device.

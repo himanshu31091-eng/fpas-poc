@@ -21,6 +21,18 @@ export const ROLES: { id: Role; label: string; desc: string }[] = [
 /** Demo staff for assignments. First entry is the signed-in user. */
 export const STAFF = ["Himanshu Pandey", "Sanne de Vries", "Diederik Bakker", "Marta Ruiz"];
 
+/** Selectable colour themes (accent driven by CSS vars in globals.css). */
+export type ThemeId = "teal" | "indigo" | "violet" | "forest" | "sunset" | "slate";
+
+export const THEMES: { id: ThemeId; label: string; swatch: string }[] = [
+  { id: "teal", label: "Teal", swatch: "#12657E" },
+  { id: "indigo", label: "Indigo", swatch: "#314EA0" },
+  { id: "violet", label: "Violet", swatch: "#7C3AAD" },
+  { id: "forest", label: "Forest", swatch: "#227A47" },
+  { id: "sunset", label: "Sunset", swatch: "#C0601E" },
+  { id: "slate", label: "Slate", swatch: "#475569" },
+];
+
 type Tone = "default" | "success" | "error";
 interface ToastItem {
   id: number;
@@ -40,6 +52,8 @@ interface PrefsValue {
   user: string;
   dark: boolean;
   toggleDark: () => void;
+  theme: ThemeId;
+  setTheme: (t: ThemeId) => void;
   toast: (msg: string, tone?: Tone) => void;
 }
 
@@ -50,6 +64,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [role, setRoleState] = useState<Role>("admin");
   const [signedIn, setSignedIn] = useState(false);
   const [dark, setDark] = useState(false);
+  const [theme, setThemeState] = useState<ThemeId>("teal");
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
   useEffect(() => {
@@ -60,6 +75,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (window.localStorage.getItem("fpas.dark") === "1") {
         setDark(true);
         document.documentElement.classList.add("dark");
+      }
+      const t = window.localStorage.getItem("fpas.theme") as ThemeId | null;
+      if (t && THEMES.some((x) => x.id === t)) {
+        setThemeState(t);
+        document.documentElement.setAttribute("data-theme", t);
       }
     } catch {
       /* ignore */
@@ -111,6 +131,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const setTheme = useCallback((t: ThemeId) => {
+    setThemeState(t);
+    document.documentElement.setAttribute("data-theme", t);
+    try {
+      window.localStorage.setItem("fpas.theme", t);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
   const toast = useCallback((msg: string, tone: Tone = "default") => {
     const id = Date.now() + Math.random();
     setToasts((t) => [...t, { id, msg, tone }]);
@@ -130,9 +160,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
       user: STAFF[0],
       dark,
       toggleDark,
+      theme,
+      setTheme,
       toast,
     }),
-    [hydrated, role, setRole, signedIn, signIn, signOut, dark, toggleDark, toast]
+    [
+      hydrated,
+      role,
+      setRole,
+      signedIn,
+      signIn,
+      signOut,
+      dark,
+      toggleDark,
+      theme,
+      setTheme,
+      toast,
+    ]
   );
 
   return (

@@ -4,6 +4,49 @@
 
 :root {
   color-scheme: light;
+  /* Themeable accent (RGB channels for rgb(var() / alpha)). Default: Teal. */
+  --c-primary: 18 101 126;
+  --c-primary-soft: 222 237 241;
+  --c-grad1: 18 60 99;
+  --c-grad2: 22 108 134;
+  --c-grad3: 42 167 154;
+}
+
+/* Selectable themes — applied via <html data-theme="…"> from Settings. */
+html[data-theme="indigo"] {
+  --c-primary: 49 78 160;
+  --c-primary-soft: 224 229 247;
+  --c-grad1: 30 41 99;
+  --c-grad2: 49 78 160;
+  --c-grad3: 79 129 214;
+}
+html[data-theme="violet"] {
+  --c-primary: 124 58 173;
+  --c-primary-soft: 237 227 247;
+  --c-grad1: 74 32 122;
+  --c-grad2: 124 58 173;
+  --c-grad3: 168 106 214;
+}
+html[data-theme="forest"] {
+  --c-primary: 34 122 71;
+  --c-primary-soft: 219 240 226;
+  --c-grad1: 20 74 45;
+  --c-grad2: 34 122 71;
+  --c-grad3: 74 168 110;
+}
+html[data-theme="sunset"] {
+  --c-primary: 192 96 30;
+  --c-primary-soft: 248 231 213;
+  --c-grad1: 140 50 30;
+  --c-grad2: 192 96 30;
+  --c-grad3: 224 160 60;
+}
+html[data-theme="slate"] {
+  --c-primary: 71 85 105;
+  --c-primary-soft: 226 232 240;
+  --c-grad1: 30 41 59;
+  --c-grad2: 71 85 105;
+  --c-grad3: 120 137 160;
 }
 
 html,
@@ -21,11 +64,11 @@ body {
   text-rendering: optimizeLegibility;
   letter-spacing: -0.005em;
   line-height: 1.5;
-  /* Soft equine-logistics mesh: teal/aqua with a warm gold wash. */
+  /* Soft equine-logistics mesh: themed accent with a warm gold wash. */
   background-color: #f5f7f5;
   background-image:
-    radial-gradient(1100px 560px at 100% -8%, rgba(18, 101, 126, 0.1), transparent 60%),
-    radial-gradient(1000px 520px at -8% 4%, rgba(42, 167, 154, 0.1), transparent 55%),
+    radial-gradient(1100px 560px at 100% -8%, rgb(var(--c-primary) / 0.1), transparent 60%),
+    radial-gradient(1000px 520px at -8% 4%, rgb(var(--c-grad3) / 0.1), transparent 55%),
     radial-gradient(900px 500px at 50% 120%, rgba(192, 135, 46, 0.09), transparent 60%);
   background-attachment: fixed;
 }
@@ -36,7 +79,7 @@ body {
 
 @layer utilities {
   .text-gradient {
-    background-image: linear-gradient(120deg, #123c63, #166c86 45%, #2aa79a);
+    background-image: linear-gradient(120deg, rgb(var(--c-grad1)), rgb(var(--c-grad2)) 45%, rgb(var(--c-grad3)));
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -93,8 +136,8 @@ html.dark body {
   color: #e6edf3;
   background-color: #0a141d;
   background-image:
-    radial-gradient(1100px 560px at 100% -8%, rgba(18, 101, 126, 0.22), transparent 60%),
-    radial-gradient(1000px 520px at -8% 4%, rgba(42, 167, 154, 0.16), transparent 55%),
+    radial-gradient(1100px 560px at 100% -8%, rgb(var(--c-primary) / 0.22), transparent 60%),
+    radial-gradient(1000px 520px at -8% 4%, rgb(var(--c-grad3) / 0.16), transparent 55%),
     radial-gradient(900px 500px at 50% 120%, rgba(192, 135, 46, 0.12), transparent 60%);
 }
 html.dark .bg-panel { background-color: #101d29 !important; }
@@ -129,7 +172,7 @@ html.a11y-contrast .border-line-strong {
 
 /* Always-visible keyboard focus for accessibility. */
 :focus-visible {
-  outline: 2px solid #12657e;
+  outline: 2px solid rgb(var(--c-primary));
   outline-offset: 2px;
 }
 html.a11y-contrast :focus-visible {
