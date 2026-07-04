@@ -295,7 +295,10 @@ export function Dashboard() {
         </div>
 
         {/* Layout switcher */}
-        <div className="ml-auto flex items-center gap-0.5 rounded-full border border-line bg-white p-0.5">
+        <div
+          data-tour="layouts"
+          className="ml-auto flex items-center gap-0.5 rounded-full border border-line bg-white p-0.5"
+        >
           {LAYOUTS.map((l) => {
             const Icon = l.icon;
             const active = layout === l.id;

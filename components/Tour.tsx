@@ -21,13 +21,13 @@ const STEPS: Step[] = [
   },
   {
     target: "views",
-    title: "Three ways to view work",
-    body: "Switch between the Jobs list, a Calendar of arrivals & departures, and an Insights analytics dashboard.",
+    title: "Five ways to view work",
+    body: "Switch between the Jobs list, a Calendar of arrivals & departures, an Insights dashboard, a Report you can export to Excel (.xlsx), and a Bin for deleted jobs.",
   },
   {
     target: "briefing",
     title: "AI daily briefing",
-    body: "One click and the assistant reads the whole operation and tells you what's at risk — most urgent first.",
+    body: "One click and the assistant reads the whole operation and tells you what's at risk — most urgent first, now including adverse arrival-day weather at Schiphol.",
   },
   {
     target: "flightmanager",
@@ -35,9 +35,14 @@ const STEPS: Step[] = [
     body: "Booked horse shipments arrive here as ‘Pending’. Click ‘Accept’ to turn one into a job.",
   },
   {
+    target: "layouts",
+    title: "List, Board & Grid",
+    body: "View the same jobs three ways — a detailed List, a Kanban Board grouped by status, or a card Grid. On the Board you can create a job inline with ‘+ New job’, or jump to the full intake.",
+  },
+  {
     target: "joblist",
     title: "Your shipments",
-    body: "Every job with its status, open steps and (mock) flight status. Click any row to open its workspace — extraction, readiness, load plan, submissions, documents.",
+    body: "Every job with its status, open steps, (mock) flight status, and the live Amsterdam arrival-day weather — with a welfare flag when it's too hot or cold for live animals. Click any row to open its workspace — extraction, readiness, load plan, submissions, documents.",
   },
   {
     target: "nav-new",

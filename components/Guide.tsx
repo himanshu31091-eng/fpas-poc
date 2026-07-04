@@ -92,7 +92,7 @@ export function Guide() {
           The top bar has four areas:
         </p>
         <ul className="mt-2 grid grid-cols-1 gap-1.5 text-[13.5px] text-ink-soft sm:grid-cols-2">
-          <li><strong>Dashboard</strong> — jobs, plus Calendar and Insights views.</li>
+          <li><strong>Dashboard</strong> — jobs (List / Board / Grid), plus Calendar, Insights and an exportable Report.</li>
           <li><strong>New booking</strong> — six ways to create a job.</li>
           <li><strong>Copilot</strong> — ask questions about your shipments.</li>
           <li><strong>How it works</strong> — this page.</li>
@@ -138,12 +138,12 @@ export function Guide() {
           <Step
             icon={IconGrid}
             title="Dashboard"
-            body="Every job with search, filters, live stats and mock flight-status chips. Switch views: Jobs, Calendar (arrivals & departures), Insights (charts), and Bin (deleted jobs — restore or delete forever). The Flight Manager “Pending” queue sits at the top, and one button gives you an AI daily briefing of what's at risk."
+            body="Every job with search, filters, live stats, mock flight-status chips, and the live Amsterdam arrival-day weather (with a welfare flag when it's too hot or cold). View jobs as a List, a Kanban Board (create a job inline from the Board), or a Grid. Switch views: Jobs, Calendar (arrivals & departures), Insights (charts), Report (export to Excel), and Bin (deleted jobs — restore or delete forever). The Flight Manager “Pending” queue sits at the top, and one button gives you an AI daily briefing of what's at risk — weather included."
           />
           <Step
             icon={IconPlus}
             title="New booking"
-            body="Create a job the five ways above. AI-based ones (email/paste) run extraction; enquiry/manual/CSV create the booking directly."
+            body="Create a job the six ways above. AI-based ones (email/paste/PDF) run extraction; enquiry/manual/CSV create the booking directly."
           />
           <Step
             icon={IconSparkles}
