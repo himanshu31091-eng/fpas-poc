@@ -4,13 +4,31 @@ import { useEffect, useState } from "react";
 import { useStore } from "./store";
 import { usePrefs, THEMES } from "./prefs";
 import { Button, Card, Eyebrow } from "./ui";
-import { IconCheck, IconMoon, IconSun } from "./icons";
+import { IconCheck, IconFMark, IconMoon, IconSun } from "./icons";
 
 const LOCATIONS = ["Amsterdam (Schiphol BIP)", "Melbourne", "New Zealand (PAQ)", "Chicago"];
 
 export function Settings() {
   const { jobs, resetDemo } = useStore();
-  const { role, user, dark, toggleDark, theme, setTheme, toast } = usePrefs();
+  const { role, user, dark, toggleDark, theme, setTheme, logo, setLogo, toast } =
+    usePrefs();
+
+  function onLogoFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (file.size > 1024 * 1024) {
+      toast("Logo too large — max 1 MB", "error");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setLogo(String(reader.result));
+      toast("Logo updated", "success");
+    };
+    reader.onerror = () => toast("Could not read that file", "error");
+    reader.readAsDataURL(file);
+  }
   const [location, setLocation] = useState(LOCATIONS[0]);
 
   useEffect(() => {
@@ -125,6 +143,56 @@ export function Settings() {
                   </button>
                 );
               })}
+            </div>
+          </div>
+
+          {/* Logo */}
+          <div className="mt-5 border-t border-line pt-4">
+            <div className="text-[13px] font-medium text-ink">Logo</div>
+            <div className="text-[12px] text-ink-soft">
+              Upload your organisation&apos;s logo (SVG or PNG, max 1 MB). Shown
+              in the top bar; falls back to the built-in mark.
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-3">
+              <div className="flex h-11 items-center justify-center rounded-xl border border-line bg-white px-3">
+                {logo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={logo}
+                    alt="Current logo"
+                    className="h-8 w-auto max-w-[160px] object-contain"
+                  />
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent">
+                      <IconFMark width={16} height={16} className="text-fpasnavy" />
+                    </span>
+                    <span className="font-mono text-[10px] uppercase tracking-wide text-ink-faint">
+                      Default
+                    </span>
+                  </span>
+                )}
+              </div>
+              <label className="cursor-pointer rounded-xl border border-line-strong bg-white px-3 py-1.5 text-[12px] text-ink-soft transition-colors hover:border-primary/40 hover:text-ink">
+                Upload logo
+                <input
+                  type="file"
+                  accept="image/svg+xml,image/png,image/jpeg"
+                  onChange={onLogoFile}
+                  className="hidden"
+                />
+              </label>
+              {logo && (
+                <button
+                  onClick={() => {
+                    setLogo(null);
+                    toast("Logo reset to default");
+                  }}
+                  className="text-[12px] text-ink-faint transition-colors hover:text-red"
+                >
+                  Reset to default
+                </button>
+              )}
             </div>
           </div>
 
