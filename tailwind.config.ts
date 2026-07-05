@@ -21,6 +21,10 @@ const config: Config = {
         // placeholder keeps opacity modifiers (e.g. text-primary/40) working.
         primary: "rgb(var(--c-primary) / <alpha-value>)",
         "primary-soft": "rgb(var(--c-primary-soft) / <alpha-value>)",
+        // FPAS brand marks (fixed, from the brand pack): yellow accent + navy.
+        accent: "#FFC40C",
+        "accent-soft": "#FFF3D0",
+        fpasnavy: "#231F5C",
         // Gradient stops (navy → teal → aqua).
         navy: "#123C63",
         teal: "#166C86",

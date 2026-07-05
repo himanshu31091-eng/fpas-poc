@@ -26,7 +26,7 @@ export function Guide() {
         <div>
           <Eyebrow>How it works</Eyebrow>
           <h1 className="mt-1 font-display text-3xl font-bold tracking-tight text-ink">
-            Using FPAS Job Manager
+            Using First Point Animal Services
           </h1>
           <p className="mt-1.5 max-w-2xl text-sm text-ink-soft">
             A quick guide to what this tool does and how to operate it — from an

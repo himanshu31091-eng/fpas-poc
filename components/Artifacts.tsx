@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useStore } from "./store";
 import { BrandLoader, Button, Card, ErrorRetry } from "./ui";
-import { IconDoc, IconHorseshoe } from "./icons";
+import { IconDoc, IconFMark } from "./icons";
 import type { DraftArtifact } from "@/lib/types";
 
 export function Artifacts({ jobId }: { jobId: string }) {
@@ -91,8 +91,8 @@ export function Artifacts({ jobId }: { jobId: string }) {
           <div key={a.id} className="mb-8" style={{ pageBreakAfter: "always" }}>
             <div className="mb-3 flex items-center justify-between border-b-2 border-primary pb-2">
               <div className="flex items-center gap-2">
-                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand text-white">
-                  <IconHorseshoe width={16} height={16} />
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent">
+                  <IconFMark width={15} height={15} className="text-fpasnavy" />
                 </span>
                 <div>
                   <div className="font-display text-sm font-bold text-ink">

@@ -17,7 +17,7 @@ import {
   IconGrid,
   IconPlus,
   IconDoc,
-  IconHorseshoe,
+  IconFMark,
   IconSparkles,
   IconClipboard,
   IconMenu,
@@ -70,15 +70,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <header className="no-print sticky top-0 z-20 border-b border-line glass">
         <div className="mx-auto flex max-w-[1200px] items-center gap-3 px-4 py-3 sm:gap-4 sm:px-6">
           <Link href="/" className="mr-2 flex shrink-0 items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand text-white shadow-glow">
-              <IconHorseshoe width={20} height={20} />
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent shadow-glow">
+              <IconFMark width={17} height={17} className="text-fpasnavy" />
             </span>
             <span>
               <span className="block font-display text-[15px] font-bold leading-none tracking-tight text-ink">
-                FPAS Job Manager
+                First Point
               </span>
               <span className="block font-mono text-[10px] uppercase tracking-[0.14em] text-ink-faint">
-                Amsterdam · Import
+                Animal Services
               </span>
             </span>
           </Link>

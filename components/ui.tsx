@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { Confidence, JobStatus, Urgency } from "@/lib/types";
-import { IconHorseshoe } from "./icons";
+import { IconFMark } from "./icons";
 
 export function Button({
   children,
@@ -134,12 +134,12 @@ export function Spinner({ label }: { label: string }) {
   );
 }
 
-/** Themed full-panel loader: a bobbing horseshoe over trotting dots. */
+/** Themed full-panel loader: a bobbing FPAS mark over trotting dots. */
 export function BrandLoader({ label = "Loading…" }: { label?: string }) {
   return (
     <div className="flex flex-col items-center justify-center gap-4 py-6">
-      <span className="flex h-14 w-14 animate-bob items-center justify-center rounded-xl2 bg-brand text-white shadow-glow">
-        <IconHorseshoe width={28} height={28} />
+      <span className="flex h-14 w-14 animate-bob items-center justify-center rounded-xl2 bg-accent shadow-glow">
+        <IconFMark width={26} height={26} className="text-fpasnavy" />
       </span>
       <div className="flex items-center gap-1.5">
         {[0, 1, 2].map((i) => (
