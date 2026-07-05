@@ -8,9 +8,11 @@
      Brand navy #231F5C as the UI accent; brand yellow #FFC40C as --c-accent. */
   --c-primary: 35 31 92;
   --c-primary-soft: 230 229 241;
-  --c-grad1: 25 22 66;
+  /* Strict FPAS palette: tonal steps of the brand navy only (no off-brand
+     tints). Brand yellow #FFC40C is the accent (--c-accent). */
+  --c-grad1: 27 23 71;
   --c-grad2: 35 31 92;
-  --c-grad3: 74 68 150;
+  --c-grad3: 44 38 108;
   --c-accent: 255 196 12;
 }
 
@@ -18,9 +20,9 @@
 html[data-theme="fpas"] {
   --c-primary: 35 31 92;
   --c-primary-soft: 230 229 241;
-  --c-grad1: 25 22 66;
+  --c-grad1: 27 23 71;
   --c-grad2: 35 31 92;
-  --c-grad3: 74 68 150;
+  --c-grad3: 44 38 108;
 }
 html[data-theme="teal"] {
   --c-primary: 18 101 126;
@@ -85,7 +87,7 @@ body {
   background-image:
     radial-gradient(1100px 560px at 100% -8%, rgb(var(--c-primary) / 0.1), transparent 60%),
     radial-gradient(1000px 520px at -8% 4%, rgb(var(--c-grad3) / 0.1), transparent 55%),
-    radial-gradient(900px 500px at 50% 120%, rgba(192, 135, 46, 0.09), transparent 60%);
+    radial-gradient(900px 500px at 50% 120%, rgb(var(--c-accent) / 0.07), transparent 60%);
   background-attachment: fixed;
 }
 
@@ -154,7 +156,7 @@ html.dark body {
   background-image:
     radial-gradient(1100px 560px at 100% -8%, rgb(var(--c-primary) / 0.22), transparent 60%),
     radial-gradient(1000px 520px at -8% 4%, rgb(var(--c-grad3) / 0.16), transparent 55%),
-    radial-gradient(900px 500px at 50% 120%, rgba(192, 135, 46, 0.12), transparent 60%);
+    radial-gradient(900px 500px at 50% 120%, rgb(var(--c-accent) / 0.1), transparent 60%);
 }
 html.dark .bg-panel { background-color: #101d29 !important; }
 html.dark .bg-bg { background-color: #0a141d !important; }
