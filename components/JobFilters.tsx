@@ -193,7 +193,7 @@ export function JobFilters({
             </button>
             <button
               onClick={() => setOpen(false)}
-              className="rounded-lg bg-brand px-3 py-1 text-[12px] font-medium text-white"
+              className="rounded-lg bg-accent px-3 py-1 text-[12px] font-semibold text-fpasnavy"
             >
               Done
             </button>

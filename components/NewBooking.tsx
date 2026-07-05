@@ -174,7 +174,7 @@ export function NewBooking() {
               assistant reads the document itself and fills the booking — the
               &quot;PDF → form&quot; flow from the target architecture.
             </p>
-            <label className="mx-auto inline-flex cursor-pointer items-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white shadow-glow transition-all hover:-translate-y-0.5">
+            <label className="mx-auto inline-flex cursor-pointer items-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-fpasnavy shadow-glow transition-all hover:-translate-y-0.5 hover:brightness-105">
               Choose a PDF…
               <input
                 type="file"
