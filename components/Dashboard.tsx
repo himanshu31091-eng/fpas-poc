@@ -191,7 +191,7 @@ export function Dashboard() {
         <div className="pointer-events-none absolute -bottom-24 right-24 h-56 w-56 rounded-full bg-white/10 blur-2xl" />
         <div className="relative flex flex-wrap items-end justify-between gap-4">
           <div>
-            <div className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-white/70">
+            <div className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-accent">
               Import jobs · Amsterdam Schiphol
             </div>
             <h1 className="mt-2 font-display text-3xl font-bold tracking-tight">
@@ -204,7 +204,7 @@ export function Dashboard() {
           </div>
           {canEdit && (
             <Link href="/jobs/new">
-              <span className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-primary shadow-lg transition-all hover:-translate-y-0.5 active:scale-[0.98]">
+              <span className="inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-fpasnavy shadow-lg transition-all hover:-translate-y-0.5 active:scale-[0.98]">
                 <IconPlus width={16} height={16} />
                 New booking
               </span>
