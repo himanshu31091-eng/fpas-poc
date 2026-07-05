@@ -27,7 +27,7 @@ export function Button({
   }[size];
   const styles = {
     primary:
-      "bg-brand text-white shadow-glow hover:brightness-110 hover:-translate-y-0.5",
+      "bg-accent text-fpasnavy shadow-glow hover:brightness-105 hover:-translate-y-0.5",
     ghost:
       "border border-line-strong bg-white/70 text-ink hover:border-primary/50 hover:bg-white hover:-translate-y-0.5",
     subtle: "text-primary hover:bg-primary-soft",
