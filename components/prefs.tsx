@@ -62,6 +62,9 @@ interface PrefsValue {
   toggleDark: () => void;
   theme: ThemeId;
   setTheme: (t: ThemeId) => void;
+  /** Custom logo (data URL) shown in the top bar; null = built-in F mark. */
+  logo: string | null;
+  setLogo: (v: string | null) => void;
   toast: (msg: string, tone?: Tone) => void;
 }
 
@@ -73,6 +76,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [signedIn, setSignedIn] = useState(false);
   const [dark, setDark] = useState(false);
   const [theme, setThemeState] = useState<ThemeId>("fpas");
+  const [logo, setLogoState] = useState<string | null>(null);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
   useEffect(() => {
@@ -89,6 +93,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setThemeState(t);
         document.documentElement.setAttribute("data-theme", t);
       }
+      const lg = window.localStorage.getItem("fpas.logo");
+      if (lg) setLogoState(lg);
     } catch {
       /* ignore */
     }
@@ -149,6 +155,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const setLogo = useCallback((v: string | null) => {
+    setLogoState(v);
+    try {
+      if (v) window.localStorage.setItem("fpas.logo", v);
+      else window.localStorage.removeItem("fpas.logo");
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
   const toast = useCallback((msg: string, tone: Tone = "default") => {
     const id = Date.now() + Math.random();
     setToasts((t) => [...t, { id, msg, tone }]);
@@ -170,6 +186,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       toggleDark,
       theme,
       setTheme,
+      logo,
+      setLogo,
       toast,
     }),
     [
@@ -183,6 +201,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       toggleDark,
       theme,
       setTheme,
+      logo,
+      setLogo,
       toast,
     ]
   );
