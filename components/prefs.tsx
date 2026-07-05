@@ -22,9 +22,17 @@ export const ROLES: { id: Role; label: string; desc: string }[] = [
 export const STAFF = ["Himanshu Pandey", "Sanne de Vries", "Diederik Bakker", "Marta Ruiz"];
 
 /** Selectable colour themes (accent driven by CSS vars in globals.css). */
-export type ThemeId = "teal" | "indigo" | "violet" | "forest" | "sunset" | "slate";
+export type ThemeId =
+  | "fpas"
+  | "teal"
+  | "indigo"
+  | "violet"
+  | "forest"
+  | "sunset"
+  | "slate";
 
 export const THEMES: { id: ThemeId; label: string; swatch: string }[] = [
+  { id: "fpas", label: "FPAS", swatch: "#231F5C" },
   { id: "teal", label: "Teal", swatch: "#12657E" },
   { id: "indigo", label: "Indigo", swatch: "#314EA0" },
   { id: "violet", label: "Violet", swatch: "#7C3AAD" },
@@ -64,7 +72,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [role, setRoleState] = useState<Role>("admin");
   const [signedIn, setSignedIn] = useState(false);
   const [dark, setDark] = useState(false);
-  const [theme, setThemeState] = useState<ThemeId>("teal");
+  const [theme, setThemeState] = useState<ThemeId>("fpas");
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
   useEffect(() => {

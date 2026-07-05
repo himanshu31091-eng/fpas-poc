@@ -4,7 +4,7 @@ import { useState } from "react";
 import { usePrefs, ROLES, type Role } from "./prefs";
 import { FlightAnimation } from "./FlightAnimation";
 import {
-  IconHorseshoe,
+  IconFMark,
   IconGear,
   IconBox,
   IconDoc,
@@ -38,14 +38,14 @@ export function Login() {
       <div className="relative mx-auto flex min-h-screen max-w-3xl flex-col items-center justify-center px-6 py-12">
         {/* Brand */}
         <div className="mb-8 text-center text-white">
-          <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 ring-1 ring-white/30">
-            <IconHorseshoe width={28} height={28} />
+          <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-accent shadow-glow">
+            <IconFMark width={28} height={28} className="text-fpasnavy" />
           </span>
           <h1 className="font-display text-3xl font-bold tracking-tight">
-            FPAS Job Manager
+            First Point <span className="text-accent">Animal Services</span>
           </h1>
           <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.18em] text-white/70">
-            Amsterdam · Live-animal import & export
+            Job Manager · Amsterdam live-animal import &amp; export
           </p>
           <p className="mx-auto mt-3 max-w-md text-sm text-white/85">
             Choose a role to sign in. This is a proof-of-concept demo — no

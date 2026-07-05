@@ -16,7 +16,7 @@ interface Step {
 const STEPS: Step[] = [
   {
     target: "hero",
-    title: "Welcome to FPAS Job Manager",
+    title: "Welcome to First Point Animal Services",
     body: "A quick tour of the AI-assisted workflow. Each section is highlighted as we go — the rest of the screen stays visible so you keep your bearings.",
   },
   {

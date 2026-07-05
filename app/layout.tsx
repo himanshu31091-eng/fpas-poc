@@ -6,7 +6,7 @@ import { WeatherProvider } from "@/components/weather";
 import { AppShell } from "@/components/AppShell";
 
 export const metadata: Metadata = {
-  title: "FPAS Job Manager — Amsterdam Import (POC)",
+  title: "First Point Animal Services — Job Manager (POC)",
   description:
     "AI-assisted intake, compliance readiness, and artifact drafting for FPAS Amsterdam imports. Proof of concept — mock data only.",
 };

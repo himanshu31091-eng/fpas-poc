@@ -69,6 +69,15 @@ export const IconClipboard = (p: P) => (
   </Svg>
 );
 
+/** FPAS "F" mark — three left-aligned rounded elements (long bar, short bar, dot). */
+export const IconFMark = (p: P) => (
+  <svg viewBox="0 0 24 24" width={18} height={18} fill="currentColor" {...p}>
+    <rect x="3" y="5" width="18" height="3.4" rx="1.7" />
+    <rect x="3" y="10.6" width="10.6" height="3.4" rx="1.7" />
+    <rect x="3" y="16.2" width="3.6" height="3.6" rx="1.8" />
+  </svg>
+);
+
 export const IconFilter = (p: P) => (
   <Svg {...p}>
     <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" />

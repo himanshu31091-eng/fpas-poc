@@ -4,15 +4,31 @@
 
 :root {
   color-scheme: light;
-  /* Themeable accent (RGB channels for rgb(var() / alpha)). Default: Teal. */
+  /* Themeable accent (RGB channels for rgb(var() / alpha)). Default: FPAS.
+     Brand navy #231F5C as the UI accent; brand yellow #FFC40C as --c-accent. */
+  --c-primary: 35 31 92;
+  --c-primary-soft: 230 229 241;
+  --c-grad1: 25 22 66;
+  --c-grad2: 35 31 92;
+  --c-grad3: 74 68 150;
+  --c-accent: 255 196 12;
+}
+
+/* Selectable themes — applied via <html data-theme="…"> from Settings. */
+html[data-theme="fpas"] {
+  --c-primary: 35 31 92;
+  --c-primary-soft: 230 229 241;
+  --c-grad1: 25 22 66;
+  --c-grad2: 35 31 92;
+  --c-grad3: 74 68 150;
+}
+html[data-theme="teal"] {
   --c-primary: 18 101 126;
   --c-primary-soft: 222 237 241;
   --c-grad1: 18 60 99;
   --c-grad2: 22 108 134;
   --c-grad3: 42 167 154;
 }
-
-/* Selectable themes — applied via <html data-theme="…"> from Settings. */
 html[data-theme="indigo"] {
   --c-primary: 49 78 160;
   --c-primary-soft: 224 229 247;
