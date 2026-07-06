@@ -274,6 +274,25 @@ function SourceView({ job }: { job: Job }) {
   const email = job.source.email;
   const text = job.source.text;
   const pdf = job.source.pdf;
+  const enquiry = job.source.enquiry;
+
+  if (enquiry && text) {
+    return (
+      <Card className="flex flex-col">
+        <div className="border-b border-line px-4 py-3">
+          <div className="text-sm font-semibold text-ink">Online enquiry</div>
+          <div className="mt-0.5 font-mono text-[11px] text-ink-faint">
+            {[enquiry.customerName, enquiry.phone, enquiry.contactEmail]
+              .filter(Boolean)
+              .join(" · ")}
+          </div>
+        </div>
+        <pre className="whitespace-pre-wrap px-4 py-3 font-mono text-[12.5px] leading-relaxed text-ink-soft">
+          {text}
+        </pre>
+      </Card>
+    );
+  }
 
   if (pdf) {
     return (
