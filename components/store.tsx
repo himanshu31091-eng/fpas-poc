@@ -116,6 +116,13 @@ interface StoreState {
     flight: string;
     arrivalDate: string;
   }) => string;
+  /** Website-style enquiry: contact details + a free-text enquiry the AI reads. */
+  createWebEnquiry: (fields: {
+    name: string;
+    phone: string;
+    email: string;
+    enquiry: string;
+  }) => string;
 
   // Customer movement update (AI)
   draftCustomerUpdate: (id: string) => Promise<void>;
@@ -535,6 +542,26 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return addJob(job);
   }
 
+  // Mirrors the fpas.com "Online Enquiry" form: contact details + a free-text
+  // enquiry. The free text becomes the job source so AI extraction can read it
+  // and propose the booking (no structured fields captured up front).
+  function createWebEnquiry(fields: {
+    name: string;
+    phone: string;
+    email: string;
+    enquiry: string;
+  }): string {
+    const job = blankJob({
+      text: fields.enquiry.trim(),
+      enquiry: {
+        customerName: fields.name.trim() || undefined,
+        contactEmail: fields.email.trim() || undefined,
+        phone: fields.phone.trim() || undefined,
+      },
+    });
+    return addJob(job);
+  }
+
   // --- Customer movement update ---------------------------------------------
 
   async function draftCustomerUpdate(id: string) {
@@ -793,6 +820,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       draftNotice,
       markSubmitted,
       createEnquiry,
+      createWebEnquiry,
       draftCustomerUpdate,
       markUpdateSent,
       importCsvJobs,

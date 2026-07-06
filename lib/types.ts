@@ -195,7 +195,7 @@ export interface Job {
     /** Uploaded PDF: filename for display + base64 data for (re-)extraction. */
     pdf?: { filename: string; data: string };
     manual?: boolean;
-    enquiry?: { customerName?: string; contactEmail?: string };
+    enquiry?: { customerName?: string; contactEmail?: string; phone?: string };
     flightManager?: boolean;
   };
   extraction: ExtractionResult | null;

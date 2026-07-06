@@ -16,14 +16,11 @@ const CSV_SAMPLE = `awb,agent,commodity,type,animalCount,flight,origin,arrivalDa
 176-30055066,EQUINE LOGISTICS,Live horses,export,2,KL644,AMS,2026-07-13,`;
 
 const EMPTY_ENQUIRY = {
-  customerName: "",
-  contactEmail: "",
-  jobType: "import" as "import" | "export",
-  commodity: "",
-  animalCount: "",
-  origin: "",
-  flight: "",
-  arrivalDate: "",
+  name: "",
+  phone: "",
+  email: "",
+  enquiry: "",
+  terms: false,
 };
 
 export function NewBooking() {
@@ -33,7 +30,7 @@ export function NewBooking() {
     createFromText,
     createFromPdf,
     createManual,
-    createEnquiry,
+    createWebEnquiry,
     importCsvJobs,
     runExtraction,
   } = useStore();
@@ -95,8 +92,11 @@ export function NewBooking() {
   }
 
   function startEnquiry() {
-    if (!enquiry.commodity.trim()) return;
-    const id = createEnquiry(enquiry);
+    const { name, phone, email, enquiry: text, terms } = enquiry;
+    if (!name.trim() || !phone.trim() || !email.trim() || !text.trim() || !terms)
+      return;
+    const id = createWebEnquiry({ name, phone, email, enquiry: text });
+    void runExtraction(id);
     router.push(`/jobs/${id}`);
   }
 
@@ -218,36 +218,74 @@ export function NewBooking() {
       {mode === "enquiry" && (
         <div>
           <Card className="p-5">
-            <p className="mb-4 text-[13px] text-ink-soft">
-              The customer-facing enquiry form (from the website / booking email).
-              Submitting creates a job for ops to review.
-            </p>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <EnqField label="Customer name" value={enquiry.customerName} onChange={(v) => setEnquiry({ ...enquiry, customerName: v })} />
-              <EnqField label="Contact email" value={enquiry.contactEmail} onChange={(v) => setEnquiry({ ...enquiry, contactEmail: v })} />
-              <label className="block">
-                <span className="mb-1 block text-[12px] text-ink-soft">Direction</span>
-                <select
-                  value={enquiry.jobType}
-                  onChange={(e) => setEnquiry({ ...enquiry, jobType: e.target.value as "import" | "export" })}
-                  className="w-full rounded-md border border-line-strong bg-white px-2.5 py-1.5 text-[13px] text-ink focus:outline-none focus:ring-2 focus:ring-primary/30"
-                >
-                  <option value="import">Import</option>
-                  <option value="export">Export</option>
-                </select>
-              </label>
-              <EnqField label="Commodity" value={enquiry.commodity} onChange={(v) => setEnquiry({ ...enquiry, commodity: v })} placeholder="e.g. Live horses" />
-              <EnqField label="Animal count" value={enquiry.animalCount} onChange={(v) => setEnquiry({ ...enquiry, animalCount: v })} />
-              <EnqField label="Origin" value={enquiry.origin} onChange={(v) => setEnquiry({ ...enquiry, origin: v })} />
-              <EnqField label="Flight" value={enquiry.flight} onChange={(v) => setEnquiry({ ...enquiry, flight: v })} mono />
-              <EnqField label="Arrival / travel date" value={enquiry.arrivalDate} onChange={(v) => setEnquiry({ ...enquiry, arrivalDate: v })} mono />
+            <div className="mb-4">
+              <div className="text-sm font-semibold text-ink">Online Enquiry</div>
+              <p className="mt-1 text-[13px] text-ink-soft">
+                The customer-facing enquiry form from the FPAS website. The
+                assistant reads the free-text enquiry and proposes the booking
+                for ops to review.
+              </p>
             </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <EnqField
+                label="Name *"
+                value={enquiry.name}
+                onChange={(v) => setEnquiry({ ...enquiry, name: v })}
+              />
+              <EnqField
+                label="Phone *"
+                value={enquiry.phone}
+                onChange={(v) => setEnquiry({ ...enquiry, phone: v })}
+                mono
+              />
+              <EnqField
+                label="Email *"
+                value={enquiry.email}
+                onChange={(v) => setEnquiry({ ...enquiry, email: v })}
+              />
+            </div>
+            <label className="mt-3 block">
+              <span className="mb-1 block text-[12px] text-ink-soft">
+                Enquiry *
+              </span>
+              <textarea
+                value={enquiry.enquiry}
+                onChange={(e) => setEnquiry({ ...enquiry, enquiry: e.target.value })}
+                rows={7}
+                placeholder="Describe the shipment — e.g. '4 horses from Dubai on EK9021, arriving 11 July, health certificate to follow. 2 mares in foal.'"
+                className="w-full rounded-md border border-line-strong bg-white px-3 py-2 text-[13px] leading-relaxed text-ink focus:outline-none focus:ring-2 focus:ring-primary/30"
+              />
+            </label>
+            <label className="mt-3 flex items-start gap-2 text-[12px] text-ink-soft">
+              <input
+                type="checkbox"
+                checked={enquiry.terms}
+                onChange={(e) => setEnquiry({ ...enquiry, terms: e.target.checked })}
+                className="mt-0.5 h-4 w-4 rounded border-line-strong text-primary focus:ring-primary/30"
+              />
+              <span>
+                I have read the Terms &amp; Conditions{" "}
+                <span className="text-red">*</span>
+              </span>
+            </label>
+            <p className="mt-2 font-mono text-[11px] text-ink-faint">
+              * Required fields
+            </p>
           </Card>
           <div className="mt-4 flex items-center justify-end gap-3">
             <span className="text-[12px] text-ink-faint">
-              Creates a job from the enquiry for ops review.
+              Creates a job and runs AI extraction on the enquiry.
             </span>
-            <Button onClick={startEnquiry} disabled={!enquiry.commodity.trim()}>
+            <Button
+              onClick={startEnquiry}
+              disabled={
+                !enquiry.name.trim() ||
+                !enquiry.phone.trim() ||
+                !enquiry.email.trim() ||
+                !enquiry.enquiry.trim() ||
+                !enquiry.terms
+              }
+            >
               Submit enquiry →
             </Button>
           </div>
