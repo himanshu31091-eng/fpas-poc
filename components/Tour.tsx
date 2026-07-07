@@ -50,6 +50,11 @@ const STEPS: Step[] = [
     body: "Start a job from a sample email, an uploaded PDF (the AI reads it), the customer enquiry form, a CSV import, or manually.",
   },
   {
+    target: "nav-staffing",
+    title: "Staff planning",
+    body: "The FPAS Amsterdam roster: a weekly availability board, a leave request-and-approve calendar, and an AI import that reads the planning spreadsheet. Each shipment can request and assign staff from those available that day.",
+  },
+  {
     target: "nav-copilot",
     title: "Ask the AI Copilot",
     body: "Ask questions across all shipments — ‘what's arriving in 48 hours?’ or ‘draft the NVWA notice’.",

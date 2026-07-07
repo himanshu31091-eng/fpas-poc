@@ -110,6 +110,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   data-tour={
                     item.href === "/jobs/new"
                       ? "nav-new"
+                      : item.href === "/staffing"
+                      ? "nav-staffing"
                       : item.href === "/copilot"
                       ? "nav-copilot"
                       : item.href === "/guide"

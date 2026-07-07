@@ -523,6 +523,16 @@ function ImportTab() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  function onCsvFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setText(String(reader.result ?? ""));
+    reader.onerror = () => setError("Could not read that file.");
+    reader.readAsText(file);
+  }
+
   async function parse() {
     if (!text.trim()) return;
     setBusy(true);
@@ -570,6 +580,15 @@ function ImportTab() {
           <IconSparkles width={15} height={15} />
           {busy ? "Reading roster…" : "Parse with AI"}
         </Button>
+        <label className="cursor-pointer rounded-xl border border-line-strong bg-white px-3 py-1.5 text-[12px] text-ink-soft transition-colors hover:border-primary/40 hover:text-ink">
+          Upload .csv
+          <input
+            type="file"
+            accept=".csv,text/csv,text/plain"
+            onChange={onCsvFile}
+            className="hidden"
+          />
+        </label>
         <button
           onClick={() => {
             resetRoster();
