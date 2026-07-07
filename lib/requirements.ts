@@ -118,6 +118,7 @@ export const BEYOND: ReqSection = {
     { id: "EX-05", text: "“Simulated” markers across the app, reinforcing the Built / Simulated / Future boundary.", origin: "Recommended", status: "built" },
     { id: "EX-06", text: "This in-app Requirements & Traceability view.", origin: "Recommended", status: "built" },
     { id: "EX-07", text: "Additional sample intake emails (cattle, companion animals, CITES birds).", origin: "Recommended", status: "built" },
+    { id: "EX-08", text: "Staff planning: weekly roster/availability board, leave request-and-approve calendar, AI import of the planning spreadsheet, and per-shipment staff assignment.", origin: "Client-stated", status: "built", note: "From the FPAS Amsterdam staff-planning spreadsheet." },
   ],
 };
 

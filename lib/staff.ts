@@ -195,13 +195,14 @@ export function seedRoster(today: Date): RosterEntry[] {
       const date = dateStr(addDays(monday, d));
       const dow = d % 7; // 0 = Mon
       const key = si * 31 + d;
-      // Weekends: most staff blank (not scheduled).
-      if (dow >= 5 && (si + d) % 3 !== 0) continue;
+      // Weekends: about half the team is scheduled on a rotation.
+      if (dow >= 5 && (si + Math.floor(d / 7)) % 2 !== 0) continue;
       let status: ShiftStatus = "working";
       if (si === 2 && d <= 1) status = "leave"; // Maud on leave to start
       else if (si === 3 && d === 2) status = "sick"; // Esther sick Wed
       else if (si === 6 && d >= 7) status = "leave"; // Chiara leave next week
-      else if (key % 11 === 0 && dow < 5) status = "off";
+      else if (si === 4 && d === 9) status = "training"; // Maya training
+      else if (key % 13 === 0 && dow < 5) status = "off";
       const [start, end] = SHIFTS[(si + d) % SHIFTS.length];
       out.push({
         id: `seed-${staff}-${date}`,
@@ -213,6 +214,11 @@ export function seedRoster(today: Date): RosterEntry[] {
     }
   });
   return out;
+}
+
+/** One sample shipment-staffing assignment (job-1 is the horse import seed). */
+export function seedStaffing(): StaffingAssignment[] {
+  return [{ jobId: "job-1", needed: 3, assigned: ["Lotte", "Maya"] }];
 }
 
 export function seedLeave(today: Date): LeaveRequest[] {

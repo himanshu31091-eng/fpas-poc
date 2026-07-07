@@ -18,6 +18,7 @@ import {
   saveStaffing,
   seedRoster,
   seedLeave,
+  seedStaffing,
   type RosterEntry,
   type LeaveRequest,
   type LeaveType,
@@ -45,6 +46,7 @@ interface StaffState {
   }) => void;
   decideLeave: (id: string, status: LeaveStatus, by: string) => void;
   importRoster: (entries: RosterEntry[]) => number;
+  upsertRosterEntry: (entry: Omit<RosterEntry, "id">) => void;
   resetRoster: () => void;
 
   getStaffing: (jobId: string) => StaffingAssignment | undefined;
@@ -71,7 +73,7 @@ export function StaffProvider({ children }: { children: ReactNode }) {
     const now = new Date();
     setRoster(loadRoster() ?? seedRoster(now));
     setLeave(loadLeave() ?? seedLeave(now));
-    setStaffing(loadStaffing() ?? []);
+    setStaffing(loadStaffing() ?? seedStaffing());
     setHydrated(true);
   }, []);
 
@@ -131,11 +133,20 @@ export function StaffProvider({ children }: { children: ReactNode }) {
         return entries.length;
       },
 
+      upsertRosterEntry: (entry) => {
+        setRoster((prev) => {
+          const key = `${entry.staff}|${entry.date}`;
+          const existing = prev.find((r) => `${r.staff}|${r.date}` === key);
+          const next: RosterEntry = { ...entry, id: existing?.id ?? uid("r") };
+          return [...prev.filter((r) => `${r.staff}|${r.date}` !== key), next];
+        });
+      },
+
       resetRoster: () => {
         const now = new Date();
         setRoster(seedRoster(now));
         setLeave(seedLeave(now));
-        setStaffing([]);
+        setStaffing(seedStaffing());
       },
 
       getStaffing: (jobId) => staffing.find((s) => s.jobId === jobId),

@@ -103,6 +103,7 @@ function RosterTab() {
   return (
     <div className="space-y-4">
       <CoverageCard weekStart={weekStart} />
+      <AddShift />
 
       <Card className="p-4">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
@@ -230,6 +231,126 @@ function RosterCell({
     >
       {st.status === "working" ? times : meta.label}
     </span>
+  );
+}
+
+function AddShift() {
+  const { upsertRosterEntry } = useStaff();
+  const { canEdit, toast } = usePrefs();
+  const [open, setOpen] = useState(false);
+  const [f, setF] = useState({
+    staff: STAFF_MEMBERS[0],
+    date: dateStr(new Date()),
+    status: "working" as ShiftStatus,
+    start: "09:00",
+    end: "17:00",
+    note: "",
+  });
+
+  if (!canEdit) return null;
+
+  function add() {
+    if (!f.date) return;
+    upsertRosterEntry({
+      staff: f.staff,
+      date: f.date,
+      status: f.status,
+      ...(f.status === "working" ? { start: f.start, end: f.end } : {}),
+      ...(f.note.trim() ? { note: f.note.trim() } : {}),
+    });
+    toast("Roster updated", "success");
+  }
+
+  return (
+    <Card className="p-4">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center justify-between text-left"
+      >
+        <span className="text-sm font-semibold text-ink">
+          Add / update a shift
+        </span>
+        <span className="font-mono text-ink-faint">{open ? "−" : "+"}</span>
+      </button>
+      {open && (
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          <Field label="Staff">
+            <select
+              value={f.staff}
+              onChange={(e) => setF({ ...f, staff: e.target.value })}
+              className={selectCls}
+            >
+              {STAFF_MEMBERS.map((s) => (
+                <option key={s}>{s}</option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Date">
+            <input
+              type="date"
+              value={f.date}
+              onChange={(e) => setF({ ...f, date: e.target.value })}
+              className={selectCls}
+            />
+          </Field>
+          <Field label="Status">
+            <select
+              value={f.status}
+              onChange={(e) =>
+                setF({ ...f, status: e.target.value as ShiftStatus })
+              }
+              className={selectCls}
+            >
+              {(
+                [
+                  "working",
+                  "off",
+                  "leave",
+                  "sick",
+                  "holiday",
+                  "training",
+                ] as ShiftStatus[]
+              ).map((s) => (
+                <option key={s} value={s}>
+                  {STATUS_META[s].label}
+                </option>
+              ))}
+            </select>
+          </Field>
+          {f.status === "working" ? (
+            <>
+              <Field label="Start">
+                <input
+                  type="time"
+                  value={f.start}
+                  onChange={(e) => setF({ ...f, start: e.target.value })}
+                  className={selectCls}
+                />
+              </Field>
+              <Field label="End">
+                <input
+                  type="time"
+                  value={f.end}
+                  onChange={(e) => setF({ ...f, end: e.target.value })}
+                  className={selectCls}
+                />
+              </Field>
+            </>
+          ) : (
+            <Field label="Note">
+              <input
+                value={f.note}
+                onChange={(e) => setF({ ...f, note: e.target.value })}
+                className={selectCls}
+              />
+            </Field>
+          )}
+          <div className="flex items-end">
+            <Button onClick={add}>Save</Button>
+          </div>
+        </div>
+      )}
+    </Card>
   );
 }
 
