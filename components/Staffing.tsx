@@ -4,7 +4,8 @@ import { useMemo, useState } from "react";
 import { useStaff } from "./staffStore";
 import { usePrefs } from "./prefs";
 import { Button, Card, Eyebrow, BrandLoader } from "./ui";
-import { IconSparkles, IconChevronLeft } from "./icons";
+import { IconSparkles, IconChevronLeft, IconDownload } from "./icons";
+import { downloadXlsx } from "@/lib/xlsx";
 import {
   STAFF_MEMBERS,
   STATUS_META,
@@ -84,9 +85,17 @@ export function Staffing() {
 
 function RosterTab() {
   const { roster, leave } = useStaff();
-  const [weekStart, setWeekStart] = useState<Date>(() => mondayOf(new Date()));
-  const days = useMemo(() => weekDates(weekStart), [weekStart]);
+  const [mode, setMode] = useState<"week" | "month">("week");
+  const [anchor, setAnchor] = useState<Date>(() => new Date());
   const todayStr = dateStr(new Date());
+
+  const days = useMemo(() => {
+    if (mode === "week") return weekDates(mondayOf(anchor));
+    const y = anchor.getFullYear();
+    const m = anchor.getMonth();
+    const n = new Date(y, m + 1, 0).getDate();
+    return Array.from({ length: n }, (_, i) => new Date(y, m, i + 1));
+  }, [mode, anchor]);
 
   const avail = useMemo(
     () =>
@@ -100,64 +109,141 @@ function RosterTab() {
     [days, roster, leave]
   );
 
+  function prev() {
+    setAnchor((a) =>
+      mode === "week"
+        ? addDays(a, -7)
+        : new Date(a.getFullYear(), a.getMonth() - 1, 1)
+    );
+  }
+  function next() {
+    setAnchor((a) =>
+      mode === "week"
+        ? addDays(a, 7)
+        : new Date(a.getFullYear(), a.getMonth() + 1, 1)
+    );
+  }
+
+  function cellText(s: string, d: Date): string {
+    const st = statusOnDate(s, dateStr(d), roster, leave);
+    if (!st) return "";
+    if (st.status === "working")
+      return "start" in st && st.start ? `${st.start}-${st.end ?? ""}` : "Working";
+    return STATUS_META[st.status].label;
+  }
+
+  function exportXlsx() {
+    const header = [
+      "Staff",
+      ...days.map(
+        (d) =>
+          `${DOW_LABELS[(d.getDay() + 6) % 7]} ${d.getDate()}/${d.getMonth() + 1}`
+      ),
+    ];
+    const rows = STAFF_MEMBERS.map((s) => [s, ...days.map((d) => cellText(s, d))]);
+    const availRow = ["Available", ...avail.map((n) => n)];
+    downloadXlsx(`FPAS-roster-${dateStr(days[0])}`, [
+      {
+        name: mode === "week" ? "Roster (week)" : "Roster (month)",
+        rows: [header, ...rows, availRow],
+      },
+    ]);
+  }
+
+  const label =
+    mode === "week"
+      ? `Week of ${mondayOf(anchor).toLocaleDateString(undefined, {
+          day: "numeric",
+          month: "short",
+        })}`
+      : anchor.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+
+  const compact = mode === "month";
+  const minW = compact ? "min-w-[1500px]" : "min-w-[760px]";
+
   return (
     <div className="space-y-4">
-      <CoverageCard weekStart={weekStart} />
+      <CoverageCard weekStart={mondayOf(anchor)} />
       <AddShift />
 
       <Card className="p-4">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <div className="text-sm font-semibold text-ink">
-            Week of{" "}
-            {weekStart.toLocaleDateString(undefined, {
-              day: "numeric",
-              month: "short",
-            })}
+          <div className="flex items-center gap-3">
+            <div className="text-sm font-semibold text-ink">{label}</div>
+            <div className="flex items-center gap-0.5 rounded-full border border-line bg-white p-0.5">
+              {(["week", "month"] as const).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setMode(m)}
+                  className={`rounded-full px-2.5 py-1 text-[12px] font-medium capitalize transition-all ${
+                    mode === m
+                      ? "bg-brand text-white shadow-glow"
+                      : "text-ink-soft hover:text-ink"
+                  }`}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
           </div>
           <div className="flex items-center gap-1.5">
             <button
-              onClick={() => setWeekStart((w) => addDays(w, -7))}
+              onClick={prev}
               className="flex h-8 w-8 items-center justify-center rounded-lg border border-line text-ink-soft hover:bg-bg"
-              title="Previous week"
+              title="Previous"
             >
               <IconChevronLeft width={16} height={16} />
             </button>
             <button
-              onClick={() => setWeekStart(mondayOf(new Date()))}
+              onClick={() => setAnchor(new Date())}
               className="rounded-lg border border-line px-2.5 py-1.5 text-[12px] text-ink-soft hover:bg-bg"
             >
-              This week
+              Today
             </button>
             <button
-              onClick={() => setWeekStart((w) => addDays(w, 7))}
+              onClick={next}
               className="flex h-8 w-8 rotate-180 items-center justify-center rounded-lg border border-line text-ink-soft hover:bg-bg"
-              title="Next week"
+              title="Next"
             >
               <IconChevronLeft width={16} height={16} />
+            </button>
+            <button
+              onClick={exportXlsx}
+              className="ml-1 inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-2.5 py-1.5 text-[12px] text-ink-soft transition-colors hover:border-primary/40 hover:text-ink"
+              title="Export to Excel"
+            >
+              <IconDownload width={14} height={14} />
+              Export
             </button>
           </div>
         </div>
 
         <div className="-mx-1 overflow-x-auto px-1">
-          <table className="w-full min-w-[760px] border-collapse text-[12px]">
+          <table className={`w-full ${minW} border-collapse text-[12px]`}>
             <thead>
               <tr>
-                <th className="w-28 px-2 py-2 text-left font-medium text-ink-faint">
+                <th className="sticky left-0 z-10 w-28 bg-panel px-2 py-2 text-left font-medium text-ink-faint">
                   Staff
                 </th>
-                {days.map((d, i) => {
+                {days.map((d) => {
                   const ds = dateStr(d);
                   const isToday = ds === todayStr;
+                  const weekend = [0, 6].includes(d.getDay());
                   return (
                     <th
                       key={ds}
-                      className={`px-2 py-2 text-center font-medium ${
-                        isToday ? "text-primary" : "text-ink-faint"
+                      className={`px-1 py-2 text-center font-medium ${
+                        isToday
+                          ? "text-primary"
+                          : weekend
+                          ? "text-ink-faint/60"
+                          : "text-ink-faint"
                       }`}
                     >
-                      <div>{DOW_LABELS[i]}</div>
+                      <div>{DOW_LABELS[(d.getDay() + 6) % 7]}</div>
                       <div className="font-mono text-[10px]">
-                        {d.getDate()}/{d.getMonth() + 1}
+                        {d.getDate()}
+                        {compact ? "" : `/${d.getMonth() + 1}`}
                       </div>
                     </th>
                   );
@@ -167,26 +253,27 @@ function RosterTab() {
             <tbody>
               {STAFF_MEMBERS.map((s) => (
                 <tr key={s} className="border-t border-line">
-                  <td className="px-2 py-1.5 font-medium text-ink">{s}</td>
-                  {days.map((d) => {
-                    const ds = dateStr(d);
-                    const st = statusOnDate(s, ds, roster, leave);
-                    return (
-                      <td key={ds} className="px-1 py-1 text-center">
-                        <RosterCell st={st} />
-                      </td>
-                    );
-                  })}
+                  <td className="sticky left-0 z-10 bg-panel px-2 py-1.5 font-medium text-ink">
+                    {s}
+                  </td>
+                  {days.map((d) => (
+                    <td key={dateStr(d)} className="px-0.5 py-1 text-center">
+                      <RosterCell
+                        st={statusOnDate(s, dateStr(d), roster, leave)}
+                        compact={compact}
+                      />
+                    </td>
+                  ))}
                 </tr>
               ))}
               <tr className="border-t border-line-strong">
-                <td className="px-2 py-1.5 font-mono text-[10px] uppercase tracking-wide text-ink-faint">
+                <td className="sticky left-0 z-10 bg-panel px-2 py-1.5 font-mono text-[10px] uppercase tracking-wide text-ink-faint">
                   Available
                 </td>
                 {avail.map((n, i) => (
                   <td
                     key={i}
-                    className="px-1 py-1.5 text-center font-mono text-[12px] font-semibold text-ink"
+                    className="px-0.5 py-1.5 text-center font-mono text-[12px] font-semibold text-ink"
                   >
                     {n}
                   </td>
@@ -217,19 +304,35 @@ function RosterTab() {
 
 function RosterCell({
   st,
+  compact,
 }: {
   st: RosterEntry | { status: ShiftStatus } | null;
+  compact?: boolean;
 }) {
   if (!st) return <span className="text-ink-faint">·</span>;
   const meta = STATUS_META[st.status];
-  const times =
-    "start" in st && st.start ? `${st.start}–${st.end ?? ""}` : meta.label;
+  const working = st.status === "working";
+  const start = "start" in st ? st.start : undefined;
+  const full = working
+    ? start
+      ? `${start}–${"end" in st && st.end ? st.end : ""}`
+      : "Working"
+    : meta.label;
+  const display = compact
+    ? working
+      ? start ?? "W"
+      : meta.label[0]
+    : working
+    ? full
+    : meta.label;
   return (
     <span
-      className={`inline-block w-full truncate rounded-md px-1.5 py-1 font-mono text-[11px] ${meta.cell}`}
-      title={"note" in st && st.note ? st.note : meta.label}
+      className={`inline-block w-full truncate rounded-md px-1 py-1 font-mono ${
+        compact ? "text-[10px]" : "text-[11px]"
+      } ${meta.cell}`}
+      title={"note" in st && st.note ? `${full} · ${st.note}` : full}
     >
-      {st.status === "working" ? times : meta.label}
+      {display}
     </span>
   );
 }
