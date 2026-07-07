@@ -543,7 +543,9 @@ function JobRow({
           )}
         </div>
 
-        <StatusBadge status={status} />
+        <div className="shrink-0 sm:w-36">
+          <StatusBadge status={status} />
+        </div>
 
         <IconArrowRight
           width={18}
