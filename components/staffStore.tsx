@@ -19,11 +19,19 @@ import {
   seedRoster,
   seedLeave,
   seedStaffing,
+  seedAssets,
+  loadTeam,
+  saveTeam,
+  loadAssets,
+  saveAssets,
+  STAFF_MEMBERS,
   type RosterEntry,
   type LeaveRequest,
   type LeaveType,
   type LeaveStatus,
   type StaffingAssignment,
+  type Asset,
+  type AssetType,
 } from "@/lib/staff";
 
 // ---------------------------------------------------------------------------
@@ -36,6 +44,13 @@ interface StaffState {
   roster: RosterEntry[];
   leave: LeaveRequest[];
   staffing: StaffingAssignment[];
+  team: string[];
+  assets: Asset[];
+
+  addStaff: (name: string) => void;
+  removeStaff: (name: string) => void;
+  addAsset: (a: { name: string; type: AssetType; quantity: number }) => void;
+  removeAsset: (id: string) => void;
 
   requestLeave: (f: {
     staff: string;
@@ -66,6 +81,8 @@ export function StaffProvider({ children }: { children: ReactNode }) {
   const [roster, setRoster] = useState<RosterEntry[]>([]);
   const [leave, setLeave] = useState<LeaveRequest[]>([]);
   const [staffing, setStaffing] = useState<StaffingAssignment[]>([]);
+  const [team, setTeam] = useState<string[]>(STAFF_MEMBERS);
+  const [assets, setAssets] = useState<Asset[]>([]);
   const rosterRef = useRef(roster);
   rosterRef.current = roster;
 
@@ -74,6 +91,8 @@ export function StaffProvider({ children }: { children: ReactNode }) {
     setRoster(loadRoster() ?? seedRoster(now));
     setLeave(loadLeave() ?? seedLeave(now));
     setStaffing(loadStaffing() ?? seedStaffing());
+    setTeam(loadTeam() ?? STAFF_MEMBERS);
+    setAssets(loadAssets() ?? seedAssets());
     setHydrated(true);
   }, []);
 
@@ -86,6 +105,12 @@ export function StaffProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (hydrated) saveStaffing(staffing);
   }, [staffing, hydrated]);
+  useEffect(() => {
+    if (hydrated) saveTeam(team);
+  }, [team, hydrated]);
+  useEffect(() => {
+    if (hydrated) saveAssets(assets);
+  }, [assets, hydrated]);
 
   const value = useMemo<StaffState>(
     () => ({
@@ -93,6 +118,24 @@ export function StaffProvider({ children }: { children: ReactNode }) {
       roster,
       leave,
       staffing,
+      team,
+      assets,
+
+      addStaff: (name) => {
+        const n = name.trim();
+        if (!n) return;
+        setTeam((prev) => (prev.includes(n) ? prev : [...prev, n]));
+      },
+      removeStaff: (name) => setTeam((prev) => prev.filter((s) => s !== name)),
+      addAsset: (a) => {
+        const n = a.name.trim();
+        if (!n) return;
+        setAssets((prev) => [
+          ...prev,
+          { id: uid("as"), name: n, type: a.type, quantity: a.quantity },
+        ]);
+      },
+      removeAsset: (id) => setAssets((prev) => prev.filter((x) => x.id !== id)),
 
       requestLeave: (f) => {
         setLeave((prev) => [
@@ -147,6 +190,8 @@ export function StaffProvider({ children }: { children: ReactNode }) {
         setRoster(seedRoster(now));
         setLeave(seedLeave(now));
         setStaffing(seedStaffing());
+        setTeam(STAFF_MEMBERS);
+        setAssets(seedAssets());
       },
 
       getStaffing: (jobId) => staffing.find((s) => s.jobId === jobId),
@@ -156,7 +201,7 @@ export function StaffProvider({ children }: { children: ReactNode }) {
           return [...others, a];
         }),
     }),
-    [hydrated, roster, leave, staffing]
+    [hydrated, roster, leave, staffing, team, assets]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

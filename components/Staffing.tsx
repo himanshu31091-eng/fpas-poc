@@ -7,10 +7,10 @@ import { Button, Card, Eyebrow, BrandLoader } from "./ui";
 import { IconSparkles, IconChevronLeft, IconDownload } from "./icons";
 import { downloadXlsx } from "@/lib/xlsx";
 import {
-  STAFF_MEMBERS,
   STATUS_META,
   LEAVE_TYPE_LABEL,
   DOW_LABELS,
+  ASSET_TYPES,
   mondayOf,
   addDays,
   weekDates,
@@ -19,13 +19,15 @@ import {
   type RosterEntry,
   type LeaveType,
   type ShiftStatus,
+  type AssetType,
 } from "@/lib/staff";
 
-type Tab = "roster" | "leave" | "import";
+type Tab = "roster" | "leave" | "resources" | "import";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "roster", label: "Roster" },
   { id: "leave", label: "Leave" },
+  { id: "resources", label: "Resources" },
   { id: "import", label: "Import" },
 ];
 
@@ -75,6 +77,7 @@ export function Staffing() {
       <div key={tab} className="animate-fade-up">
         {tab === "roster" && <RosterTab />}
         {tab === "leave" && <LeaveTab />}
+        {tab === "resources" && <ResourcesTab />}
         {tab === "import" && <ImportTab />}
       </div>
     </div>
@@ -84,7 +87,7 @@ export function Staffing() {
 // --- Roster board + coverage Q&A -------------------------------------------
 
 function RosterTab() {
-  const { roster, leave } = useStaff();
+  const { roster, leave, team } = useStaff();
   const [mode, setMode] = useState<"week" | "month">("week");
   const [anchor, setAnchor] = useState<Date>(() => new Date());
   const todayStr = dateStr(new Date());
@@ -101,7 +104,7 @@ function RosterTab() {
     () =>
       days.map((d) => {
         const ds = dateStr(d);
-        return STAFF_MEMBERS.filter((s) => {
+        return team.filter((s) => {
           const st = statusOnDate(s, ds, roster, leave);
           return !st || st.status === "working" || st.status === "training";
         }).length;
@@ -140,7 +143,7 @@ function RosterTab() {
           `${DOW_LABELS[(d.getDay() + 6) % 7]} ${d.getDate()}/${d.getMonth() + 1}`
       ),
     ];
-    const rows = STAFF_MEMBERS.map((s) => [s, ...days.map((d) => cellText(s, d))]);
+    const rows = team.map((s) => [s, ...days.map((d) => cellText(s, d))]);
     const availRow = ["Available", ...avail.map((n) => n)];
     downloadXlsx(`FPAS-roster-${dateStr(days[0])}`, [
       {
@@ -251,7 +254,7 @@ function RosterTab() {
               </tr>
             </thead>
             <tbody>
-              {STAFF_MEMBERS.map((s) => (
+              {team.map((s) => (
                 <tr key={s} className="border-t border-line">
                   <td className="sticky left-0 z-10 bg-panel px-2 py-1.5 font-medium text-ink">
                     {s}
@@ -338,11 +341,11 @@ function RosterCell({
 }
 
 function AddShift() {
-  const { upsertRosterEntry } = useStaff();
+  const { upsertRosterEntry, team } = useStaff();
   const { canEdit, toast } = usePrefs();
   const [open, setOpen] = useState(false);
   const [f, setF] = useState({
-    staff: STAFF_MEMBERS[0],
+    staff: team[0] ?? "",
     date: dateStr(new Date()),
     status: "working" as ShiftStatus,
     start: "09:00",
@@ -383,7 +386,7 @@ function AddShift() {
               onChange={(e) => setF({ ...f, staff: e.target.value })}
               className={selectCls}
             >
-              {STAFF_MEMBERS.map((s) => (
+              {team.map((s) => (
                 <option key={s}>{s}</option>
               ))}
             </select>
@@ -458,7 +461,7 @@ function AddShift() {
 }
 
 function CoverageCard({ weekStart }: { weekStart: Date }) {
-  const { roster, leave } = useStaff();
+  const { roster, leave, team } = useStaff();
   const [q, setQ] = useState("");
   const [answer, setAnswer] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -469,7 +472,7 @@ function CoverageCard({ weekStart }: { weekStart: Date }) {
       const ds = dateStr(d);
       const working: string[] = [];
       const away: string[] = [];
-      for (const s of STAFF_MEMBERS) {
+      for (const s of team) {
         const st = statusOnDate(s, ds, roster, leave);
         if (!st) continue;
         if (st.status === "working" || st.status === "training") working.push(s);
@@ -578,12 +581,12 @@ const STATUS_BADGE: Record<string, string> = {
 };
 
 function LeaveTab() {
-  const { leave, requestLeave, decideLeave } = useStaff();
+  const { leave, requestLeave, decideLeave, team } = useStaff();
   const { canEdit, user, toast } = usePrefs();
 
   const today = dateStr(new Date());
   const [form, setForm] = useState({
-    staff: STAFF_MEMBERS[0],
+    staff: team[0] ?? "",
     startDate: today,
     endDate: today,
     type: "vacation" as LeaveType,
@@ -623,7 +626,7 @@ function LeaveTab() {
               onChange={(e) => setForm({ ...form, staff: e.target.value })}
               className={selectCls}
             >
-              {STAFF_MEMBERS.map((s) => (
+              {team.map((s) => (
                 <option key={s}>{s}</option>
               ))}
             </select>
@@ -733,6 +736,165 @@ function LeaveTab() {
             ))}
           </div>
         )}
+      </Card>
+    </div>
+  );
+}
+
+// --- Resources: team + equipment/assets ------------------------------------
+
+function ResourcesTab() {
+  const { team, assets, addStaff, removeStaff, addAsset, removeAsset } =
+    useStaff();
+  const { canEdit, toast } = usePrefs();
+  const [name, setName] = useState("");
+  const [asset, setAsset] = useState({
+    name: "",
+    type: ASSET_TYPES[0],
+    quantity: 1,
+  });
+
+  return (
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      {/* Team / people */}
+      <Card className="p-5">
+        <div className="text-sm font-semibold text-ink">Team ({team.length})</div>
+        <p className="mt-1 text-[12px] text-ink-soft">
+          People who appear on the roster and can be assigned to shipments.
+        </p>
+        {canEdit && (
+          <div className="mt-3 flex gap-2">
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && name.trim()) {
+                  addStaff(name);
+                  setName("");
+                  toast("Staff added", "success");
+                }
+              }}
+              placeholder="Add a staff member…"
+              className={selectCls}
+            />
+            <Button
+              onClick={() => {
+                if (!name.trim()) return;
+                addStaff(name);
+                setName("");
+                toast("Staff added", "success");
+              }}
+            >
+              Add
+            </Button>
+          </div>
+        )}
+        <div className="mt-3 flex flex-wrap gap-2">
+          {team.map((s) => (
+            <span
+              key={s}
+              className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-2.5 py-1 text-[12px] text-ink-soft"
+            >
+              {s}
+              {canEdit && (
+                <button
+                  onClick={() => {
+                    removeStaff(s);
+                    toast("Staff removed");
+                  }}
+                  title="Remove"
+                  className="text-ink-faint transition-colors hover:text-red"
+                >
+                  ×
+                </button>
+              )}
+            </span>
+          ))}
+        </div>
+      </Card>
+
+      {/* Equipment / assets */}
+      <Card className="p-5">
+        <div className="text-sm font-semibold text-ink">
+          Equipment &amp; assets ({assets.length})
+        </div>
+        <p className="mt-1 text-[12px] text-ink-soft">
+          Trucks, crates, stalls, bays — resources you can request/assign to a
+          shipment.
+        </p>
+        {canEdit && (
+          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <input
+              value={asset.name}
+              onChange={(e) => setAsset({ ...asset, name: e.target.value })}
+              placeholder="Name"
+              className={`${selectCls} col-span-2`}
+            />
+            <select
+              value={asset.type}
+              onChange={(e) =>
+                setAsset({ ...asset, type: e.target.value as AssetType })
+              }
+              className={selectCls}
+            >
+              {ASSET_TYPES.map((t) => (
+                <option key={t}>{t}</option>
+              ))}
+            </select>
+            <input
+              type="number"
+              min={1}
+              value={asset.quantity}
+              onChange={(e) =>
+                setAsset({
+                  ...asset,
+                  quantity: Math.max(1, Number(e.target.value) || 1),
+                })
+              }
+              className={selectCls}
+              title="Quantity"
+            />
+            <div className="col-span-2 sm:col-span-4">
+              <Button
+                onClick={() => {
+                  if (!asset.name.trim()) return;
+                  addAsset(asset);
+                  setAsset({ name: "", type: ASSET_TYPES[0], quantity: 1 });
+                  toast("Resource added", "success");
+                }}
+              >
+                Add resource
+              </Button>
+            </div>
+          </div>
+        )}
+        <div className="mt-3 space-y-2">
+          {assets.map((a) => (
+            <div
+              key={a.id}
+              className="flex items-center justify-between gap-2 rounded-card border border-line bg-panel px-3 py-2"
+            >
+              <div className="min-w-0">
+                <span className="text-[13px] font-medium text-ink">{a.name}</span>
+                <span className="ml-2 font-mono text-[11px] text-ink-faint">
+                  {a.type} · ×{a.quantity}
+                </span>
+              </div>
+              {canEdit && (
+                <button
+                  onClick={() => {
+                    removeAsset(a.id);
+                    toast("Resource removed");
+                  }}
+                  title="Remove"
+                  className="text-ink-faint transition-colors hover:text-red"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
       </Card>
     </div>
   );
