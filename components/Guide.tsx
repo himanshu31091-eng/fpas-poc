@@ -12,6 +12,7 @@ import {
   IconPlane,
   IconPlus,
   IconSparkles,
+  IconUsers,
 } from "./icons";
 
 function download() {
@@ -90,11 +91,12 @@ export function Guide() {
           Getting around
         </h2>
         <p className="mt-1 text-[13.5px] text-ink-soft">
-          The top bar has five areas:
+          The top bar has these areas:
         </p>
         <ul className="mt-2 grid grid-cols-1 gap-1.5 text-[13.5px] text-ink-soft sm:grid-cols-2">
           <li><strong>Dashboard</strong> — jobs (List / Board / Grid), plus Calendar, Insights and an exportable Report.</li>
           <li><strong>New booking</strong> — six ways to create a job.</li>
+          <li><strong>Staffing</strong> — roster, leave requests, and shipment staffing.</li>
           <li><strong>Copilot</strong> — ask questions about your shipments.</li>
           <li><strong>How it works</strong> — this page.</li>
           <li><strong>Requirements</strong> — how the POC traces to the brief.</li>
@@ -181,6 +183,11 @@ export function Guide() {
             icon={IconClock}
             title="Timeline"
             body="The full lifecycle of the shipment, plus a one-click “Print job pack (PDF)” — a clean dossier of the booking and its activity."
+          />
+          <Step
+            icon={IconUsers}
+            title="Staffing"
+            body="The FPAS Amsterdam staff roster: a weekly availability board (working / off / leave / sick / holiday), a leave request-and-approve flow, and an AI import that reads the planning spreadsheet. Each shipment can request and assign staff from those available that day, and the assistant answers coverage questions."
           />
           <Step
             icon={IconSparkles}

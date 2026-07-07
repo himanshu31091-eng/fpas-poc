@@ -20,6 +20,7 @@ import {
   IconFMark,
   IconSparkles,
   IconClipboard,
+  IconUsers,
   IconMenu,
   IconClose,
 } from "./icons";
@@ -27,6 +28,7 @@ import {
 const NAV = [
   { href: "/", label: "Dashboard", icon: IconGrid },
   { href: "/jobs/new", label: "New booking", icon: IconPlus },
+  { href: "/staffing", label: "Staffing", icon: IconUsers },
   { href: "/copilot", label: "Copilot", icon: IconSparkles },
   { href: "/guide", label: "How it works", icon: IconDoc },
   { href: "/requirements", label: "Requirements", icon: IconClipboard },
