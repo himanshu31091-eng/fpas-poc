@@ -3,6 +3,7 @@ import "./globals.css";
 import { StoreProvider } from "@/components/store";
 import { AppProvider } from "@/components/prefs";
 import { WeatherProvider } from "@/components/weather";
+import { StaffProvider } from "@/components/staffStore";
 import { AppShell } from "@/components/AppShell";
 
 export const metadata: Metadata = {
@@ -34,7 +35,9 @@ export default function RootLayout({
         <StoreProvider>
           <AppProvider>
             <WeatherProvider>
-              <AppShell>{children}</AppShell>
+              <StaffProvider>
+                <AppShell>{children}</AppShell>
+              </StaffProvider>
             </WeatherProvider>
           </AppProvider>
         </StoreProvider>
