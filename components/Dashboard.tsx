@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useStore } from "./store";
 import { usePrefs } from "./prefs";
 import { WeatherChip, WelfareBadge, useWeather } from "./weather";
+import { StaffingChip } from "./staffStore";
 import { weatherLabel, welfareFlag } from "@/lib/weather";
 import {
   JobFilters,
@@ -490,6 +491,7 @@ function JobRow({
               </span>
             )}
             <WelfareBadge date={job.booking?.arrivalDate} />
+            <StaffingChip jobId={job.id} />
           </div>
           <div className="mt-0.5 flex items-center gap-2 truncate text-[13px] text-ink-soft">
             <span className="truncate">
@@ -889,8 +891,9 @@ function JobCard({
             <div className="mt-0.5 truncate text-[12px] text-ink-soft">
               {jobAgent(job)} · {jobCommodity(job)}
             </div>
-            <div className="mt-1">
+            <div className="mt-1 flex flex-wrap items-center gap-1.5">
               <WelfareBadge date={job.booking?.arrivalDate} />
+              <StaffingChip jobId={job.id} />
             </div>
           </div>
           {showStatus && <StatusBadge status={status} />}
