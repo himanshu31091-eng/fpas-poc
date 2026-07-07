@@ -212,3 +212,34 @@ export function useStaff(): StaffState {
   if (!ctx) throw new Error("useStaff must be used within StaffProvider");
   return ctx;
 }
+
+/** Compact "staff assigned" chip for job rows/cards/detail. Null when none. */
+export function StaffingChip({
+  jobId,
+  className = "",
+}: {
+  jobId: string;
+  className?: string;
+}) {
+  const { getStaffing } = useStaff();
+  const sa = getStaffing(jobId);
+  const assets = sa?.assets?.length ?? 0;
+  if (!sa || (sa.needed === 0 && sa.assigned.length === 0 && assets === 0)) {
+    return null;
+  }
+  const short = sa.assigned.length < sa.needed;
+  return (
+    <span
+      title={`Staffing: ${sa.assigned.length}/${sa.needed} staff${
+        assets ? `, ${assets} asset${assets === 1 ? "" : "s"}` : ""
+      }`}
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono text-[10px] font-semibold ${
+        short ? "bg-amber-soft text-amber" : "bg-green-soft text-green"
+      } ${className}`}
+    >
+      <span aria-hidden>👥</span>
+      {sa.assigned.length}/{sa.needed}
+      {assets ? ` · ⚙${assets}` : ""}
+    </span>
+  );
+}

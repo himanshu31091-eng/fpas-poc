@@ -16,7 +16,7 @@ import { CustomerUpdate } from "./CustomerUpdate";
 import { Timeline } from "./Timeline";
 import { CommodityArt } from "./CommodityArt";
 import { WeatherPanel } from "./weather";
-import { useStaff } from "./staffStore";
+import { useStaff, StaffingChip } from "./staffStore";
 import { availableStaff, statusOnDate, STATUS_META } from "@/lib/staff";
 import {
   IconBox,
@@ -177,6 +177,7 @@ export function JobWorkspace({ jobId }: { jobId: string }) {
                 const fs = flightStatus(job);
                 return fs ? <FlightStatusChip state={fs.state} label={fs.label} /> : null;
               })()}
+              <StaffingChip jobId={jobId} />
             </div>
             <p className="mt-0.5 text-sm text-ink-soft">
               {jobAgent(job)}
@@ -279,7 +280,9 @@ export function JobWorkspace({ jobId }: { jobId: string }) {
 }
 
 function JobStaffing({ job }: { job: Job }) {
-  const { roster, leave, team, assets, getStaffing, setStaffing } = useStaff();
+  const { roster, leave, team, assets, staffing, getStaffing, setStaffing } =
+    useStaff();
+  const { jobs } = useStore();
   const { canEdit, toast } = usePrefs();
   const date = job.booking?.arrivalDate ?? "";
   const existing = getStaffing(job.id);
@@ -301,6 +304,25 @@ function JobStaffing({ job }: { job: Job }) {
   const away = team
     .map((s) => ({ s, st: statusOnDate(s, date, roster, leave) }))
     .filter((x) => x.st && !["working", "training"].includes(x.st.status));
+
+  // Double-booking: staff/assets assigned to OTHER shipments arriving the same day.
+  const jobById = new Map(jobs.map((j) => [j.id, j]));
+  const staffUse = new Map<string, string[]>();
+  const assetUse = new Map<string, string[]>();
+  for (const sa of staffing) {
+    if (sa.jobId === job.id) continue;
+    const other = jobById.get(sa.jobId);
+    if (!other || other.deletedAt || other.booking?.arrivalDate !== date)
+      continue;
+    const awb = jobAwb(other);
+    for (const s of sa.assigned)
+      staffUse.set(s, [...(staffUse.get(s) ?? []), awb]);
+    for (const a of sa.assets ?? [])
+      assetUse.set(a, [...(assetUse.get(a) ?? []), awb]);
+  }
+  const clashCount =
+    assigned.filter((s) => staffUse.has(s)).length +
+    assignedAssets.filter((a) => assetUse.has(a)).length;
 
   function toggle(name: string) {
     setAssigned((a) =>
@@ -359,6 +381,11 @@ function JobStaffing({ job }: { job: Job }) {
               {needed - assigned.length} more needed
             </span>
           )}
+          {clashCount > 0 && (
+            <span className="rounded-full bg-red-soft px-2.5 py-1 font-mono text-[11px] font-semibold text-red">
+              ⚠ {clashCount} double-booked
+            </span>
+          )}
         </div>
 
         <div className="mt-4">
@@ -373,17 +400,26 @@ function JobStaffing({ job }: { job: Job }) {
             <div className="flex flex-wrap gap-2">
               {free.map((s) => {
                 const on = assigned.includes(s);
+                const clash = staffUse.get(s);
                 return (
                   <button
                     key={s}
                     onClick={() => canEdit && toggle(s)}
                     disabled={!canEdit}
+                    title={
+                      clash
+                        ? `Also assigned to ${clash.join(", ")} on ${date}`
+                        : undefined
+                    }
                     className={`rounded-full px-3 py-1.5 text-[12px] font-medium transition-all disabled:cursor-not-allowed ${
                       on
                         ? "bg-brand text-white shadow-glow"
+                        : clash
+                        ? "border border-amber/60 bg-amber-soft text-amber hover:brightness-105"
                         : "border border-line bg-white text-ink-soft hover:border-primary/40 hover:text-ink"
                     }`}
                   >
+                    {clash ? "⚠ " : ""}
                     {s}
                   </button>
                 );
@@ -420,18 +456,26 @@ function JobStaffing({ job }: { job: Job }) {
             <div className="flex flex-wrap gap-2">
               {assets.map((a) => {
                 const on = assignedAssets.includes(a.id);
+                const clash = assetUse.get(a.id);
                 return (
                   <button
                     key={a.id}
                     onClick={() => canEdit && toggleAsset(a.id)}
                     disabled={!canEdit}
-                    title={`${a.type} · ×${a.quantity}`}
+                    title={
+                      clash
+                        ? `${a.type} · already on ${clash.join(", ")} on ${date}`
+                        : `${a.type} · ×${a.quantity}`
+                    }
                     className={`rounded-full px-3 py-1.5 text-[12px] font-medium transition-all disabled:cursor-not-allowed ${
                       on
                         ? "bg-brand text-white shadow-glow"
+                        : clash
+                        ? "border border-amber/60 bg-amber-soft text-amber hover:brightness-105"
                         : "border border-line bg-white text-ink-soft hover:border-primary/40 hover:text-ink"
                     }`}
                   >
+                    {clash ? "⚠ " : ""}
                     {a.name}
                   </button>
                 );
