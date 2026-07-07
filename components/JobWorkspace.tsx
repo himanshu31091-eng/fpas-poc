@@ -17,12 +17,7 @@ import { Timeline } from "./Timeline";
 import { CommodityArt } from "./CommodityArt";
 import { WeatherPanel } from "./weather";
 import { useStaff } from "./staffStore";
-import {
-  STAFF_MEMBERS,
-  availableStaff,
-  statusOnDate,
-  STATUS_META,
-} from "@/lib/staff";
+import { availableStaff, statusOnDate, STATUS_META } from "@/lib/staff";
 import {
   IconBox,
   IconChevronLeft,
@@ -284,12 +279,15 @@ export function JobWorkspace({ jobId }: { jobId: string }) {
 }
 
 function JobStaffing({ job }: { job: Job }) {
-  const { roster, leave, getStaffing, setStaffing } = useStaff();
+  const { roster, leave, team, assets, getStaffing, setStaffing } = useStaff();
   const { canEdit, toast } = usePrefs();
   const date = job.booking?.arrivalDate ?? "";
   const existing = getStaffing(job.id);
   const [needed, setNeeded] = useState(existing?.needed ?? 2);
   const [assigned, setAssigned] = useState<string[]>(existing?.assigned ?? []);
+  const [assignedAssets, setAssignedAssets] = useState<string[]>(
+    existing?.assets ?? []
+  );
 
   if (!date) {
     return (
@@ -299,22 +297,24 @@ function JobStaffing({ job }: { job: Job }) {
     );
   }
 
-  const free = availableStaff(date, roster, leave);
-  const away = STAFF_MEMBERS.map((s) => ({
-    s,
-    st: statusOnDate(s, date, roster, leave),
-  })).filter(
-    (x) => x.st && !["working", "training"].includes(x.st.status)
-  );
+  const free = availableStaff(team, date, roster, leave);
+  const away = team
+    .map((s) => ({ s, st: statusOnDate(s, date, roster, leave) }))
+    .filter((x) => x.st && !["working", "training"].includes(x.st.status));
 
   function toggle(name: string) {
     setAssigned((a) =>
       a.includes(name) ? a.filter((x) => x !== name) : [...a, name]
     );
   }
+  function toggleAsset(id: string) {
+    setAssignedAssets((a) =>
+      a.includes(id) ? a.filter((x) => x !== id) : [...a, id]
+    );
+  }
 
   function saveStaffing() {
-    setStaffing({ jobId: job.id, needed, assigned });
+    setStaffing({ jobId: job.id, needed, assigned, assets: assignedAssets });
     toast("Staffing saved", "success");
   }
 
@@ -408,6 +408,34 @@ function JobStaffing({ job }: { job: Job }) {
                   {s} · {STATUS_META[st!.status].label}
                 </span>
               ))}
+            </div>
+          </div>
+        )}
+
+        {assets.length > 0 && (
+          <div className="mt-4">
+            <div className="mb-2 font-mono text-[10px] uppercase tracking-wide text-ink-faint">
+              Equipment / assets ({assignedAssets.length} assigned)
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {assets.map((a) => {
+                const on = assignedAssets.includes(a.id);
+                return (
+                  <button
+                    key={a.id}
+                    onClick={() => canEdit && toggleAsset(a.id)}
+                    disabled={!canEdit}
+                    title={`${a.type} · ×${a.quantity}`}
+                    className={`rounded-full px-3 py-1.5 text-[12px] font-medium transition-all disabled:cursor-not-allowed ${
+                      on
+                        ? "bg-brand text-white shadow-glow"
+                        : "border border-line bg-white text-ink-soft hover:border-primary/40 hover:text-ink"
+                    }`}
+                  >
+                    {a.name}
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}

@@ -57,12 +57,39 @@ export interface LeaveRequest {
   decidedAt?: string;
 }
 
-/** Staff assigned to a shipment (job), for its arrival/handling day. */
+/** Staff (and equipment) assigned to a shipment (job), for its handling day. */
 export interface StaffingAssignment {
   jobId: string;
   needed: number;
   assigned: string[];
+  /** Asset IDs assigned to this shipment. */
+  assets?: string[];
   note?: string;
+}
+
+/** A bookable, non-staff resource (equipment / facility). */
+export type AssetType =
+  | "Truck"
+  | "Crate"
+  | "Stall"
+  | "Inspection bay"
+  | "Cold storage"
+  | "Other";
+
+export const ASSET_TYPES: AssetType[] = [
+  "Truck",
+  "Crate",
+  "Stall",
+  "Inspection bay",
+  "Cold storage",
+  "Other",
+];
+
+export interface Asset {
+  id: string;
+  name: string;
+  type: AssetType;
+  quantity: number;
 }
 
 export const STATUS_META: Record<
@@ -132,11 +159,12 @@ export function statusOnDate(
 
 /** Staff available on a date — not on leave / sick / off / holiday. */
 export function availableStaff(
+  members: string[],
   date: string,
   roster: RosterEntry[],
   leave: LeaveRequest[]
 ): string[] {
-  return STAFF_MEMBERS.filter((s) => {
+  return members.filter((s) => {
     const st = statusOnDate(s, date, roster, leave);
     if (!st) return true; // no entry → free to be rostered
     return st.status === "working" || st.status === "training";
@@ -173,6 +201,24 @@ export const loadLeave = () => load<LeaveRequest[]>(LEAVE_KEY);
 export const saveLeave = (v: LeaveRequest[]) => save(LEAVE_KEY, v);
 export const loadStaffing = () => load<StaffingAssignment[]>(STAFFING_KEY);
 export const saveStaffing = (v: StaffingAssignment[]) => save(STAFFING_KEY, v);
+
+const TEAM_KEY = "fpas.team.v1";
+const ASSETS_KEY = "fpas.assets.v1";
+export const loadTeam = () => load<string[]>(TEAM_KEY);
+export const saveTeam = (v: string[]) => save(TEAM_KEY, v);
+export const loadAssets = () => load<Asset[]>(ASSETS_KEY);
+export const saveAssets = (v: Asset[]) => save(ASSETS_KEY, v);
+
+export function seedAssets(): Asset[] {
+  return [
+    { id: "as-1", name: "Livestock truck 1", type: "Truck", quantity: 1 },
+    { id: "as-2", name: "Livestock truck 2", type: "Truck", quantity: 1 },
+    { id: "as-3", name: "Horse stalls", type: "Stall", quantity: 8 },
+    { id: "as-4", name: "IATA crates (large)", type: "Crate", quantity: 12 },
+    { id: "as-5", name: "Inspection bay A", type: "Inspection bay", quantity: 1 },
+    { id: "as-6", name: "Cold storage unit", type: "Cold storage", quantity: 2 },
+  ];
+}
 
 // --- Seed data --------------------------------------------------------------
 // Deterministic roster around the current week so the board is always relevant
