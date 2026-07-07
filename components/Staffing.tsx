@@ -975,6 +975,13 @@ function ImportTab() {
             className="hidden"
           />
         </label>
+        <a
+          href="/staff-roster-sample.csv"
+          download
+          className="rounded-xl px-3 py-1.5 text-[12px] text-primary transition-colors hover:bg-primary-soft"
+        >
+          Download sample .csv
+        </a>
         <button
           onClick={() => {
             resetRoster();
