@@ -175,7 +175,7 @@ export function availableStaff(
 
 const ROSTER_KEY = "fpas.roster.v1";
 const LEAVE_KEY = "fpas.leave.v1";
-const STAFFING_KEY = "fpas.staffing.v1";
+const STAFFING_KEY = "fpas.staffing.v2";
 
 function load<T>(key: string): T | null {
   if (typeof window === "undefined") return null;
@@ -262,9 +262,14 @@ export function seedRoster(today: Date): RosterEntry[] {
   return out;
 }
 
-/** One sample shipment-staffing assignment (job-1 is the horse import seed). */
+/** Sample shipment-staffing (seed jobs job-1 = horse import, job-2 = companion). */
 export function seedStaffing(): StaffingAssignment[] {
-  return [{ jobId: "job-1", needed: 3, assigned: ["Lotte", "Maya"] }];
+  return [
+    // Short of staff → amber chip (2 of 3).
+    { jobId: "job-1", needed: 3, assigned: ["Lotte", "Maya"], assets: ["as-1", "as-3"] },
+    // Fully staffed → green chip (2 of 2).
+    { jobId: "job-2", needed: 2, assigned: ["Dominique", "Bart"], assets: ["as-4"] },
+  ];
 }
 
 export function seedLeave(today: Date): LeaveRequest[] {
