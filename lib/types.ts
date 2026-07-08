@@ -226,6 +226,8 @@ export interface Job {
   extraction: ExtractionResult | null;
   /** Ops staff member this job is assigned to (demo). */
   assignee?: string;
+  /** Manual operational stage (commercial/handling lifecycle). */
+  stage?: OpsStage;
   /** The confirmed booking (carries its own ComplianceFacts). */
   booking: Booking | null;
   /** The AI-reasoned readiness briefing. The rail itself is derived from facts. */
@@ -238,3 +240,18 @@ export interface Job {
  * job's own data so the dashboard is correct without any AI call.
  */
 export type JobStatus = "new" | "extracted" | "in_progress" | "ready";
+
+/**
+ * Manual operational stage (the commercial/handling lifecycle), set by ops.
+ * Distinct from the derived JobStatus (which reflects regulatory readiness).
+ */
+export type OpsStage =
+  | "Enquiry"
+  | "Quoted"
+  | "Confirmed"
+  | "Docs pending"
+  | "Ready"
+  | "Departed"
+  | "Arrived"
+  | "Completed"
+  | "Cancelled";

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import type { Confidence, JobStatus, Urgency } from "@/lib/types";
+import type { Confidence, JobStatus, OpsStage, Urgency } from "@/lib/types";
+import { STAGE_META } from "@/lib/jobs";
 import { IconFMark } from "./icons";
 
 export function Button({
@@ -178,6 +179,25 @@ export function StatusBadge({ status }: { status: JobStatus }) {
     >
       <span className="h-1.5 w-1.5 rounded-full bg-current opacity-70" />
       {STATUS_TEXT[status]}
+    </span>
+  );
+}
+
+/** Manual ops-stage chip (commercial/handling lifecycle). Renders nothing if unset. */
+export function OpsStageChip({
+  stage,
+  className = "",
+}: {
+  stage?: OpsStage;
+  className?: string;
+}) {
+  if (!stage) return null;
+  return (
+    <span
+      title="Ops stage — the manual handling lifecycle (distinct from regulatory readiness)"
+      className={`inline-flex items-center rounded-full px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide ${STAGE_META[stage]} ${className}`}
+    >
+      {stage}
     </span>
   );
 }
