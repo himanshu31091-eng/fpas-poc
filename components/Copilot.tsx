@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useStore } from "./store";
 import { Button, Card, Eyebrow, Spinner } from "./ui";
+import { Markdown } from "./Markdown";
 import { IconSparkles, IconArrowRight } from "./icons";
 import { jobsContext } from "@/lib/jobs";
 
@@ -98,13 +99,13 @@ export function Copilot() {
                 className={m.role === "user" ? "flex justify-end" : "flex justify-start"}
               >
                 <div
-                  className={`max-w-[85%] whitespace-pre-wrap rounded-xl px-3.5 py-2 text-[13.5px] leading-relaxed ${
+                  className={`max-w-[85%] rounded-xl px-3.5 py-2 text-[13.5px] leading-relaxed ${
                     m.role === "user"
-                      ? "bg-brand text-white"
+                      ? "whitespace-pre-wrap bg-brand text-white"
                       : "bg-bg text-ink ring-1 ring-line"
                   }`}
                 >
-                  {m.text}
+                  {m.role === "user" ? m.text : <Markdown text={m.text} />}
                 </div>
               </div>
             ))}

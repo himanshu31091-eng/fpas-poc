@@ -5,6 +5,7 @@ import { useStaff } from "./staffStore";
 import { useStore } from "./store";
 import { usePrefs } from "./prefs";
 import { Button, Card, Eyebrow, BrandLoader } from "./ui";
+import { Markdown } from "./Markdown";
 import { IconSparkles, IconChevronLeft, IconDownload } from "./icons";
 import { downloadXlsx } from "@/lib/xlsx";
 import { requiredCrew, movementsOn } from "@/lib/jobs";
@@ -655,9 +656,9 @@ function CoverageCard({ weekStart }: { weekStart: Date }) {
         </p>
       )}
       {answer && (
-        <pre className="mt-3 whitespace-pre-wrap rounded-xl bg-bg/60 px-3 py-2.5 font-body text-[13px] leading-relaxed text-ink">
-          {answer}
-        </pre>
+        <div className="mt-3 rounded-xl bg-bg/60 px-3 py-2.5 text-[13px] text-ink">
+          <Markdown text={answer} />
+        </div>
       )}
     </Card>
   );
