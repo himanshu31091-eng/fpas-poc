@@ -42,7 +42,7 @@ const STEPS: Step[] = [
   {
     target: "joblist",
     title: "Your shipments",
-    body: "Every job with its status, open steps, (mock) flight status, and the live Amsterdam arrival-day weather — with a welfare flag when it's too hot or cold for live animals. Click any row to open its workspace — extraction, readiness, load plan, submissions, documents.",
+    body: "Every job with its readiness status, its ops stage (Enquiry → Confirmed → Ready → …), open steps, (mock) flight status, and the live Amsterdam arrival-day weather — with a welfare flag when it's too hot or cold for live animals. Click any row to open its workspace — extraction, readiness, the horse loading-list builder (HC/passport checks, grooms, SPX), submissions, documents.",
   },
   {
     target: "nav-new",
@@ -52,7 +52,7 @@ const STEPS: Step[] = [
   {
     target: "nav-staffing",
     title: "Staff planning",
-    body: "The FPAS Amsterdam roster: a weekly availability board, a leave request-and-approve calendar, and an AI import that reads the planning spreadsheet. Each shipment can request and assign staff from those available that day.",
+    body: "The FPAS Amsterdam roster: a weekly/monthly availability board, a leave request-and-approve calendar, and an AI import that reads the planning spreadsheet. It also derives coverage from the bookings — how many crew each day's shipments need vs. who's rostered on — and flags understaffed days. Each shipment can request and assign staff from those available that day.",
   },
   {
     target: "nav-copilot",
