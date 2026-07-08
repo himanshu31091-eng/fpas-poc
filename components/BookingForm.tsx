@@ -18,16 +18,17 @@ type Editable = Omit<
 >;
 
 // Common text fields (job-type-conditional ones handled separately below).
-const FIELDS: { key: keyof Editable; label: string; mono?: boolean }[] = [
-  { key: "awb", label: "Air waybill (AWB)", mono: true },
-  { key: "shippingAgent", label: "Shipping agent" },
-  { key: "commodity", label: "Commodity" },
-  { key: "animalCount", label: "Animal count" },
-  { key: "flight", label: "Flight", mono: true },
-  { key: "origin", label: "Origin" },
-  { key: "arrivalDate", label: "Arrival date (YYYY-MM-DD)", mono: true },
-  { key: "arrivalTime", label: "Arrival time (HH:MM)", mono: true },
-  { key: "specialCargo", label: "Special cargo" },
+// `label` is an i18n key resolved with t() at render.
+const FIELDS: { key: keyof Editable; mono?: boolean }[] = [
+  { key: "awb", mono: true },
+  { key: "shippingAgent" },
+  { key: "commodity" },
+  { key: "animalCount" },
+  { key: "flight", mono: true },
+  { key: "origin" },
+  { key: "arrivalDate", mono: true },
+  { key: "arrivalTime", mono: true },
+  { key: "specialCargo" },
 ];
 
 export function BookingForm({
@@ -38,7 +39,7 @@ export function BookingForm({
   onSaved?: () => void;
 }) {
   const { getJob, updateBooking } = useStore();
-  const { canEdit, toast } = usePrefs();
+  const { canEdit, toast, t } = usePrefs();
   const job = getJob(jobId);
   const booking = job?.booking ?? null;
 
@@ -70,8 +71,8 @@ export function BookingForm({
     setSaved(false);
   }
 
-  function setJobType(t: JobType) {
-    setDraft((prev) => (prev ? { ...prev, jobType: t } : prev));
+  function setJobType(jt: JobType) {
+    setDraft((prev) => (prev ? { ...prev, jobType: jt } : prev));
     setSaved(false);
   }
 
@@ -92,17 +93,17 @@ export function BookingForm({
         <div className="flex items-center gap-2">
           {/* Job type segmented control */}
           <div className="flex rounded-xl border border-line bg-bg p-0.5">
-            {(["import", "export"] as JobType[]).map((t) => (
+            {(["import", "export"] as JobType[]).map((jt) => (
               <button
-                key={t}
-                onClick={() => setJobType(t)}
-                className={`rounded-lg px-3 py-1 text-[12px] font-medium capitalize transition-all ${
-                  draft.jobType === t
+                key={jt}
+                onClick={() => setJobType(jt)}
+                className={`rounded-lg px-3 py-1 text-[12px] font-medium transition-all ${
+                  draft.jobType === jt
                     ? "bg-brand text-white shadow-glow"
                     : "text-ink-soft hover:text-ink"
                 }`}
               >
-                {t}
+                {t(`bf.type.${jt}`)}
               </button>
             ))}
           </div>
@@ -111,7 +112,7 @@ export function BookingForm({
               isHorses ? "bg-primary-soft text-primary" : "bg-bg text-ink-faint"
             }`}
           >
-            {isHorses ? "Horses · OKTF" : "Non-horse"}
+            {isHorses ? t("bf.horsesOktf") : t("bf.nonHorse")}
           </span>
         </div>
       </div>
@@ -120,7 +121,7 @@ export function BookingForm({
         {FIELDS.map((f) => (
           <label key={f.key} className="block">
             <span className="mb-1 block text-[12px] text-ink-soft">
-              {f.label}
+              {t(`bf.field.${f.key}`)}
             </span>
             {f.key === "shippingAgent" ? (
               <>
@@ -151,9 +152,7 @@ export function BookingForm({
         {/* Job-type conditional field */}
         <label className="block">
           <span className="mb-1 block text-[12px] text-ink-soft">
-            {isExport
-              ? "Warehouse arrival time (export)"
-              : "Govt vet inspection time (import)"}
+            {isExport ? t("bf.field.warehouse") : t("bf.field.govtVet")}
           </span>
           <input
             value={
@@ -175,16 +174,16 @@ export function BookingForm({
       <div className="mt-4 flex items-center justify-end gap-3">
         {!canEdit && (
           <span className="font-mono text-[11px] uppercase tracking-wide text-ink-faint">
-            read-only (viewer)
+            {t("bf.readonly")}
           </span>
         )}
         {saved && canEdit && (
           <span className="font-mono text-[11px] uppercase tracking-wide text-green">
-            ● saved
+            {t("bf.saved")}
           </span>
         )}
         <Button onClick={save} disabled={!canEdit}>
-          Save booking
+          {t("bf.save")}
         </Button>
       </div>
     </Card>

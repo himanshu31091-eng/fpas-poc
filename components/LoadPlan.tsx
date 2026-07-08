@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useStore } from "./store";
+import { usePrefs } from "./prefs";
 import { Button, Card, ErrorRetry, SimTag } from "./ui";
 import {
   IconPlane,
@@ -20,6 +21,7 @@ const CONTOURS = ["L", "R", "747"];
 
 export function LoadPlan({ jobId }: { jobId: string }) {
   const { getJob, updateLoadPlan, updateBooking, sendToAirline } = useStore();
+  const { t } = usePrefs();
   const job = getJob(jobId);
 
   const [airline, setAirline] = useState<string>(
@@ -35,7 +37,7 @@ export function LoadPlan({ jobId }: { jobId: string }) {
   if (!job?.booking) {
     return (
       <Card className="p-10 text-center text-sm text-ink-soft">
-        No booking yet. Create the booking first.
+        {t("lp.noBooking")}
       </Card>
     );
   }
@@ -115,12 +117,12 @@ export function LoadPlan({ jobId }: { jobId: string }) {
           {docGaps > 0 ? (
             <>
               <IconAlert width={15} height={15} />
-              {docGaps} of {filled.length} horses missing HC or passport
+              {t("lp.docGap", { n: docGaps, total: filled.length })}
             </>
           ) : (
             <>
               <IconCheckCircle width={15} height={15} />
-              Documents complete — every horse has HC and passport
+              {t("lp.docsComplete")}
             </>
           )}
         </div>
@@ -129,27 +131,27 @@ export function LoadPlan({ jobId }: { jobId: string }) {
       {/* Loading list table */}
       <Card className="overflow-hidden">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
-          <span className="text-sm font-semibold text-ink">Loading list</span>
+          <span className="text-sm font-semibold text-ink">{t("lp.loadingList")}</span>
           <Button variant="ghost" size="sm" onClick={addRow}>
             <IconPlus width={15} height={15} />
-            Add horse
+            {t("lp.addHorse")}
           </Button>
         </div>
         {rows.length === 0 ? (
           <p className="px-4 py-8 text-center text-sm text-ink-soft">
-            No horses yet. Add each horse with its stall, weight and documents.
+            {t("lp.empty")}
           </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[720px] text-sm">
               <thead>
                 <tr className="border-b border-line text-left font-mono text-[11px] uppercase tracking-wide text-ink-faint">
-                  <th className="px-3 py-2 font-medium">Stall</th>
-                  <th className="px-3 py-2 font-medium">Contour</th>
-                  <th className="px-3 py-2 font-medium">Horse</th>
-                  <th className="px-3 py-2 font-medium">Gender</th>
-                  <th className="px-3 py-2 font-medium">Weight</th>
-                  <th className="px-3 py-2 text-center font-medium">Tack</th>
+                  <th className="px-3 py-2 font-medium">{t("lp.col.stall")}</th>
+                  <th className="px-3 py-2 font-medium">{t("lp.col.contour")}</th>
+                  <th className="px-3 py-2 font-medium">{t("lp.col.horse")}</th>
+                  <th className="px-3 py-2 font-medium">{t("lp.col.gender")}</th>
+                  <th className="px-3 py-2 font-medium">{t("lp.col.weight")}</th>
+                  <th className="px-3 py-2 text-center font-medium">{t("lp.col.tack")}</th>
                   <th className="px-3 py-2 text-center font-medium">HC</th>
                   <th className="px-3 py-2 text-center font-medium">PP</th>
                   <th className="px-3 py-2" />
@@ -204,7 +206,7 @@ export function LoadPlan({ jobId }: { jobId: string }) {
                       <button
                         onClick={() => remove(r.id)}
                         className="text-ink-faint hover:text-red"
-                        title="Remove"
+                        title={t("lp.remove")}
                       >
                         <IconTrash width={15} height={15} />
                       </button>
@@ -221,9 +223,9 @@ export function LoadPlan({ jobId }: { jobId: string }) {
       <Card className="p-4">
         <div className="flex items-center gap-2 text-sm font-semibold text-ink">
           <IconUsers width={16} height={16} className="text-primary" />
-          Grooms accompanying
+          {t("lp.grooms")}
           <span className="font-mono text-[11px] font-normal text-ink-faint">
-            · {grooms.length} pax
+            · {t("lp.pax", { n: grooms.length })}
           </span>
         </div>
         <div className="mt-3 space-y-2">
@@ -240,7 +242,7 @@ export function LoadPlan({ jobId }: { jobId: string }) {
               <button
                 onClick={() => removeGroom(i)}
                 className="text-ink-faint hover:text-red"
-                title="Remove"
+                title={t("lp.remove")}
               >
                 <IconTrash width={14} height={14} />
               </button>
@@ -252,12 +254,12 @@ export function LoadPlan({ jobId }: { jobId: string }) {
           <input
             value={groom.passport}
             onChange={(e) => setGroom({ ...groom, passport: e.target.value })}
-            placeholder="Passport / ID"
+            placeholder={t("lp.passportId")}
             className="w-40 rounded-md border border-line-strong bg-white px-2 py-1 font-mono text-[13px] text-ink focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
           <Button variant="ghost" size="sm" onClick={addGroom}>
             <IconPlus width={15} height={15} />
-            Add groom
+            {t("lp.addGroom")}
           </Button>
         </div>
       </Card>
@@ -266,16 +268,16 @@ export function LoadPlan({ jobId }: { jobId: string }) {
       <Card className="p-4">
         <div className="flex items-center gap-2 text-sm font-semibold text-ink">
           <IconCheckCircle width={16} height={16} className="text-primary" />
-          SPX security declaration
+          {t("lp.spx")}
           <SimTag />
         </div>
         <div className="mt-3 flex flex-wrap items-end gap-3">
           <label className="block">
-            <span className="mb-1 block text-[12px] text-ink-soft">Declared by</span>
+            <span className="mb-1 block text-[12px] text-ink-soft">{t("lp.declaredBy")}</span>
             <Cell value={spx.declaredBy} onChange={(v) => setSpx({ declaredBy: v })} w="w-48" />
           </label>
           <label className="block">
-            <span className="mb-1 block text-[12px] text-ink-soft">Time</span>
+            <span className="mb-1 block text-[12px] text-ink-soft">{t("lp.time")}</span>
             <Cell value={spx.time} onChange={(v) => setSpx({ time: v })} w="w-24" mono />
           </label>
           <button
@@ -287,7 +289,7 @@ export function LoadPlan({ jobId }: { jobId: string }) {
             }`}
           >
             {spx.declared && <IconCheck width={13} height={13} />}
-            {spx.declared ? "Declared secure" : "Mark declared"}
+            {spx.declared ? t("lp.declaredSecure") : t("lp.markDeclared")}
           </button>
         </div>
       </Card>
@@ -296,18 +298,14 @@ export function LoadPlan({ jobId }: { jobId: string }) {
       <Card className="p-4">
         <div className="flex items-center gap-2 text-sm font-semibold text-ink">
           <IconPlane width={16} height={16} className="text-primary" />
-          Send loading list to airline
+          {t("lp.sendTitle")}
           <SimTag />
         </div>
-        <p className="mt-1 text-[13px] text-ink-soft">
-          The assistant drafts the loading list from the plan above and sends it to
-          the carrier&apos;s operations addresses. (Mock send — no email leaves
-          this demo.)
-        </p>
+        <p className="mt-1 text-[13px] text-ink-soft">{t("lp.sendDesc")}</p>
 
         <div className="mt-3 flex flex-wrap items-end gap-3">
           <label className="block">
-            <span className="mb-1 block text-[12px] text-ink-soft">Airline</span>
+            <span className="mb-1 block text-[12px] text-ink-soft">{t("lp.airline")}</span>
             <select
               value={airline}
               onChange={(e) => setAirline(e.target.value)}
@@ -321,14 +319,14 @@ export function LoadPlan({ jobId }: { jobId: string }) {
             </select>
           </label>
           <Button onClick={send} disabled={sending || rows.length === 0}>
-            {sending ? "Drafting & sending…" : "Draft & send to airline →"}
+            {sending ? t("lp.drafting") : t("lp.draftSend")}
           </Button>
         </div>
 
         <div className="mt-3 rounded-xl border border-line bg-bg/60 px-3 py-2">
           <div className="font-mono text-[11px] uppercase tracking-wide text-ink-faint">
-            {recipients.length} recipient{recipients.length === 1 ? "" : "s"}
-            {airline === "Etihad" ? " (Etihad requires all six)" : ""}
+            {t("lp.recipients", { n: recipients.length })}
+            {airline === "Etihad" ? t("lp.etihadNote") : ""}
           </div>
           <div className="mt-1 flex flex-wrap gap-1.5">
             {recipients.map((r) => (
@@ -354,7 +352,7 @@ export function LoadPlan({ jobId }: { jobId: string }) {
         <Card className="border-green/30 p-4">
           <div className="flex items-center gap-2 font-mono text-[11px] font-semibold uppercase tracking-wide text-green">
             <span className="h-1.5 w-1.5 rounded-full bg-green" />
-            Sent to {sent.airline} · {sent.recipients.length} recipients
+            {t("lp.sentTo", { airline: sent.airline, n: sent.recipients.length })}
           </div>
           <div className="mt-1 font-mono text-[11px] text-ink-faint">
             {sent.sentBy} · {new Date(sent.sentAt).toLocaleString()}
