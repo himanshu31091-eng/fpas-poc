@@ -233,7 +233,7 @@ export function Guide() {
           </div>
           <ol className="mt-3 space-y-2 text-[13.5px] leading-relaxed text-ink-soft">
             <li>1. Open an Export job (or set Booking → Export).</li>
-            <li>2. On Load plan, add each stall — animal, gender, weight.</li>
+            <li>2. On Load plan, build the loading list — each stall's horse, gender, weight, contour, and HC/passport ticks; add grooms and the SPX declaration. Watch the doc-readiness banner clear.</li>
             <li>3. Pick the airline (e.g. Etihad → six addresses) → <em>Draft &amp; send to airline</em>.</li>
             <li>4. Use <em>Submissions</em> to draft &amp; record regulatory notices.</li>
             <li>5. Draft a customer <em>Update</em> and print the <em>Timeline</em> job pack.</li>
