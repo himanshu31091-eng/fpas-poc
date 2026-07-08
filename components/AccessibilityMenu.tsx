@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { IconAccessibility } from "./icons";
+import { usePrefs } from "./prefs";
+import { LANGS } from "@/lib/i18n";
 
 const KEY = "fpas.a11y.v1";
 
@@ -18,6 +20,7 @@ function apply(prefs: Prefs) {
 }
 
 export function AccessibilityMenu() {
+  const { lang, setLang, t } = usePrefs();
   const [open, setOpen] = useState(false);
   const [prefs, setPrefs] = useState<Prefs>({ large: false, contrast: false });
 
@@ -64,22 +67,45 @@ export function AccessibilityMenu() {
       {open && (
         <>
           <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 z-40 mt-2 w-60 rounded-card border border-line bg-panel p-3 shadow-lift">
+          <div className="absolute right-0 z-40 mt-2 w-64 rounded-card border border-line bg-panel p-3 shadow-lift">
             <div className="mb-2 font-mono text-[10px] uppercase tracking-wide text-ink-faint">
-              Accessibility
+              {t("a11y.title")}
             </div>
             <Toggle
-              label="Larger text"
-              desc="Scale the whole interface up"
+              label={t("a11y.largerText")}
+              desc={t("a11y.largerTextDesc")}
               on={prefs.large}
               onChange={(v) => set({ large: v })}
             />
             <Toggle
-              label="High contrast"
-              desc="Stronger text and borders"
+              label={t("a11y.highContrast")}
+              desc={t("a11y.highContrastDesc")}
               on={prefs.contrast}
               onChange={(v) => set({ contrast: v })}
             />
+
+            {/* Language */}
+            <div className="mt-2 border-t border-line px-2 pt-3">
+              <label className="block">
+                <span className="block text-[13px] font-medium text-ink">
+                  {t("a11y.language")}
+                </span>
+                <span className="mb-1.5 block text-[11px] text-ink-soft">
+                  {t("a11y.languageDesc")}
+                </span>
+                <select
+                  value={lang}
+                  onChange={(e) => setLang(e.target.value as (typeof LANGS)[number]["id"])}
+                  className="w-full rounded-lg border border-line-strong bg-white px-2 py-1.5 text-[13px] text-ink focus:outline-none focus:ring-2 focus:ring-primary/30"
+                >
+                  {LANGS.map((l) => (
+                    <option key={l.id} value={l.id}>
+                      {l.flag} {l.native}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
           </div>
         </>
       )}

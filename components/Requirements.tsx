@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Card } from "./ui";
+import { usePrefs } from "./prefs";
 import { IconClipboard, IconPrinter } from "./icons";
 import {
   FUNCTIONAL,
@@ -16,6 +17,7 @@ import {
  * document so the running POC reports its own coverage against the brief.
  */
 export function Requirements() {
+  const { t } = usePrefs();
   const fc = statusCounts(FUNCTIONAL.items);
 
   function print() {
@@ -32,7 +34,7 @@ export function Requirements() {
           </span>
           <div>
             <h1 className="font-display text-xl font-bold text-ink">
-              Requirements &amp; Traceability
+              {t("req.title")}
             </h1>
             <p className="text-[13px] text-ink-soft">
               How this POC maps to the FPAS Amsterdam Import requirements.

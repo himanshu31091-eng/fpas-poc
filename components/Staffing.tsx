@@ -36,6 +36,7 @@ const TABS: { id: Tab; label: string }[] = [
 
 export function Staffing() {
   const staff = useStaff();
+  const { t } = usePrefs();
   const [tab, setTab] = useState<Tab>("roster");
 
   if (!staff.hydrated) {
@@ -50,29 +51,28 @@ export function Staffing() {
     <div>
       <header className="mb-5 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <Eyebrow>Staff planning</Eyebrow>
+          <Eyebrow>{t("staff.eyebrow")}</Eyebrow>
           <h1 className="mt-1 font-display text-2xl font-bold tracking-tight text-ink">
-            Roster &amp; availability
+            {t("staff.title")}
           </h1>
           <p className="mt-1 text-sm text-ink-soft">
-            Who&apos;s working, off, on leave or sick — and who&apos;s free to
-            cover a shipment. (Demo data, stored in your browser.)
+            {t("staff.subtitle")}
           </p>
         </div>
       </header>
 
       <div className="mb-5 flex flex-wrap gap-1.5">
-        {TABS.map((t) => (
+        {TABS.map((tb) => (
           <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
+            key={tb.id}
+            onClick={() => setTab(tb.id)}
             className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition-all ${
-              tab === t.id
+              tab === tb.id
                 ? "bg-brand text-white shadow-glow"
                 : "border border-line bg-white text-ink-soft hover:border-primary/40 hover:text-ink"
             }`}
           >
-            {t.label}
+            {t(`staff.tab.${tb.id}`)}
           </button>
         ))}
       </div>

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useStore } from "./store";
+import { usePrefs } from "./prefs";
 import { Button, Card, Eyebrow, Spinner } from "./ui";
 import { Markdown } from "./Markdown";
 import { IconSparkles, IconArrowRight } from "./icons";
@@ -21,6 +22,7 @@ interface Msg {
 
 export function Copilot() {
   const { jobs } = useStore();
+  const { t } = usePrefs();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -58,14 +60,12 @@ export function Copilot() {
   return (
     <div className="mx-auto max-w-3xl">
       <header className="mb-5">
-        <Eyebrow>AI Copilot</Eyebrow>
+        <Eyebrow>{t("copilot.eyebrow")}</Eyebrow>
         <h1 className="mt-1 font-display text-2xl font-bold tracking-tight text-ink">
-          Ask your operations
+          {t("copilot.title")}
         </h1>
         <p className="mt-1 max-w-xl text-sm text-ink-soft">
-          Ask about the current shipments or have the assistant draft text. It
-          only sees the jobs in this workspace — a decision-support tool, not an
-          autonomous agent.
+          {t("copilot.subtitle")}
         </p>
       </header>
 
@@ -141,12 +141,12 @@ export function Copilot() {
             }
           }}
           rows={2}
-          placeholder="Ask about your shipments…  (Enter to send)"
+          placeholder={t("copilot.placeholder")}
           className="flex-1 resize-none rounded-xl border border-line-strong bg-white px-3 py-2 text-[13.5px] text-ink focus:outline-none focus:ring-2 focus:ring-primary/30"
         />
         <Button onClick={() => ask(input)} disabled={busy || !input.trim()}>
           <IconArrowRight width={16} height={16} />
-          Ask
+          {t("copilot.ask")}
         </Button>
       </div>
     </div>

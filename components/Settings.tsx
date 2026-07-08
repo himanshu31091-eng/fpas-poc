@@ -10,7 +10,7 @@ const LOCATIONS = ["Amsterdam (Schiphol BIP)", "Melbourne", "New Zealand (PAQ)",
 
 export function Settings() {
   const { jobs, resetDemo } = useStore();
-  const { role, user, dark, toggleDark, theme, setTheme, logo, setLogo, toast } =
+  const { role, user, dark, toggleDark, theme, setTheme, logo, setLogo, toast, t } =
     usePrefs();
 
   function onLogoFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -66,19 +66,18 @@ export function Settings() {
   return (
     <div className="mx-auto max-w-3xl">
       <header className="mb-5">
-        <Eyebrow>Settings</Eyebrow>
+        <Eyebrow>{t("settings.eyebrow")}</Eyebrow>
         <h1 className="mt-1 font-display text-2xl font-bold tracking-tight text-ink">
-          Workspace settings
+          {t("settings.title")}
         </h1>
         <p className="mt-1 text-sm text-ink-soft">
-          Configure this FPAS workspace. (Demo — changes are stored in your
-          browser.)
+          {t("settings.subtitle")}
         </p>
       </header>
 
       <div className="space-y-4">
         <Card className="p-5">
-          <h2 className="text-sm font-semibold text-ink">Organisation</h2>
+          <h2 className="text-sm font-semibold text-ink">{t("settings.section.org")}</h2>
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
             <label className="block">
               <span className="mb-1 block text-[12px] text-ink-soft">
@@ -106,7 +105,7 @@ export function Settings() {
         </Card>
 
         <Card className="p-5">
-          <h2 className="text-sm font-semibold text-ink">Appearance</h2>
+          <h2 className="text-sm font-semibold text-ink">{t("settings.section.appearance")}</h2>
 
           {/* Theme picker */}
           <div className="mt-3">
@@ -213,7 +212,7 @@ export function Settings() {
         </Card>
 
         <Card className="p-5">
-          <h2 className="text-sm font-semibold text-ink">AI</h2>
+          <h2 className="text-sm font-semibold text-ink">{t("settings.section.ai")}</h2>
           <p className="mt-2 text-[13px] text-ink-soft">
             AI screens call the Claude API live (model set via{" "}
             <span className="font-mono text-[12px]">ANTHROPIC_MODEL</span>). If a
@@ -222,7 +221,7 @@ export function Settings() {
         </Card>
 
         <Card className="p-5">
-          <h2 className="text-sm font-semibold text-ink">Data</h2>
+          <h2 className="text-sm font-semibold text-ink">{t("settings.section.data")}</h2>
           <p className="mt-1 text-[13px] text-ink-soft">
             Jobs are stored in this browser. Export a backup or reset to the demo
             samples.
