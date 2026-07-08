@@ -35,7 +35,7 @@ export function NewBooking() {
     runExtraction,
   } = useStore();
 
-  const { canEdit } = usePrefs();
+  const { canEdit, t } = usePrefs();
   const [mode, setMode] = useState<Mode>("email");
   const [selectedEmail, setSelectedEmail] = useState<string | null>(null);
   const [pasted, setPasted] = useState("");
@@ -45,13 +45,10 @@ export function NewBooking() {
   if (!canEdit) {
     return (
       <Card className="mx-auto max-w-lg p-10 text-center">
-        <p className="text-sm text-ink-soft">
-          Creating bookings requires the Operations or Admin role. You&apos;re
-          currently in the read-only Viewer role.
-        </p>
+        <p className="text-sm text-ink-soft">{t("nb.viewerOnly")}</p>
         <div className="mt-4">
           <Link href="/">
-            <Button variant="ghost">← Back to dashboard</Button>
+            <Button variant="ghost">{t("nb.backToDashboard")}</Button>
           </Link>
         </div>
       </Card>
@@ -116,51 +113,39 @@ export function NewBooking() {
   return (
     <div>
       <header className="mb-5">
-        <Eyebrow>New import job</Eyebrow>
+        <Eyebrow>{t("nb.eyebrow")}</Eyebrow>
         <h1 className="mt-1 font-display text-2xl font-bold tracking-tight text-ink">
-          Create a booking
+          {t("nb.title")}
         </h1>
-        <p className="mt-1 max-w-xl text-sm text-ink-soft">
-          Start from an agent email and let the assistant extract the fields, or
-          key one in by hand.
-        </p>
+        <p className="mt-1 max-w-xl text-sm text-ink-soft">{t("nb.subtitle")}</p>
       </header>
 
       {/* Mode switch */}
       <div className="mb-4 flex flex-wrap gap-1">
-        {(
-          [
-            { id: "email", label: "From sample email" },
-            { id: "pdf", label: "Upload PDF" },
-            { id: "paste", label: "Paste email text" },
-            { id: "enquiry", label: "Customer enquiry" },
-            { id: "csv", label: "Import CSV" },
-            { id: "manual", label: "Manual entry" },
-          ] as { id: Mode; label: string }[]
-        ).map((m) => (
-          <button
-            key={m.id}
-            onClick={() => setMode(m.id)}
-            className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition-all ${
-              mode === m.id
-                ? "bg-brand text-white shadow-glow"
-                : "border border-line bg-white text-ink-soft hover:border-primary/40 hover:text-ink"
-            }`}
-          >
-            {m.label}
-          </button>
-        ))}
+        {(["email", "pdf", "paste", "enquiry", "csv", "manual"] as Mode[]).map(
+          (m) => (
+            <button
+              key={m}
+              onClick={() => setMode(m)}
+              className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition-all ${
+                mode === m
+                  ? "bg-brand text-white shadow-glow"
+                  : "border border-line bg-white text-ink-soft hover:border-primary/40 hover:text-ink"
+              }`}
+            >
+              {t(`nb.mode.${m}`)}
+            </button>
+          )
+        )}
       </div>
 
       {mode === "email" && (
         <div>
           <EmailPicker selectedId={selectedEmail} onSelect={setSelectedEmail} />
           <div className="mt-4 flex items-center justify-end gap-3">
-            <span className="text-[12px] text-ink-faint">
-              Creates a job and runs AI extraction on the selected message.
-            </span>
+            <span className="text-[12px] text-ink-faint">{t("nb.email.hint")}</span>
             <Button onClick={startFromEmail} disabled={!selectedEmail}>
-              Create &amp; extract →
+              {t("nb.createExtract")}
             </Button>
           </div>
         </div>
@@ -170,12 +155,10 @@ export function NewBooking() {
         <div>
           <Card className="p-8 text-center">
             <p className="mx-auto mb-4 max-w-md text-sm text-ink-soft">
-              Upload an agent PDF (health certificate, booking sheet). The
-              assistant reads the document itself and fills the booking — the
-              &quot;PDF → form&quot; flow from the target architecture.
+              {t("nb.pdf.desc")}
             </p>
             <label className="mx-auto inline-flex cursor-pointer items-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-fpasnavy shadow-glow transition-all hover:-translate-y-0.5 hover:brightness-105">
-              Choose a PDF…
+              {t("nb.pdf.choose")}
               <input
                 type="file"
                 accept="application/pdf,.pdf"
@@ -184,7 +167,7 @@ export function NewBooking() {
               />
             </label>
             <p className="mt-3 font-mono text-[11px] text-ink-faint">
-              The PDF is read by AI on upload; large scans may take a few seconds.
+              {t("nb.pdf.note")}
             </p>
           </Card>
         </div>
@@ -194,22 +177,20 @@ export function NewBooking() {
         <div>
           <Card className="p-4">
             <label className="mb-1 block text-[12px] text-ink-soft">
-              Paste the agent&apos;s email or message text
+              {t("nb.paste.label")}
             </label>
             <textarea
               value={pasted}
               onChange={(e) => setPasted(e.target.value)}
               rows={12}
-              placeholder="Paste the raw email here…"
+              placeholder={t("nb.paste.placeholder")}
               className="w-full rounded-md border border-line-strong bg-white px-3 py-2 font-mono text-[12.5px] leading-relaxed text-ink focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
           </Card>
           <div className="mt-4 flex items-center justify-end gap-3">
-            <span className="text-[12px] text-ink-faint">
-              Creates a job and runs AI extraction on the pasted text.
-            </span>
+            <span className="text-[12px] text-ink-faint">{t("nb.paste.hint")}</span>
             <Button onClick={startFromText} disabled={!pasted.trim()}>
-              Create &amp; extract →
+              {t("nb.createExtract")}
             </Button>
           </div>
         </div>
@@ -219,40 +200,36 @@ export function NewBooking() {
         <div>
           <Card className="p-5">
             <div className="mb-4">
-              <div className="text-sm font-semibold text-ink">Online Enquiry</div>
-              <p className="mt-1 text-[13px] text-ink-soft">
-                The customer-facing enquiry form from the FPAS website. The
-                assistant reads the free-text enquiry and proposes the booking
-                for ops to review.
-              </p>
+              <div className="text-sm font-semibold text-ink">{t("nb.enq.title")}</div>
+              <p className="mt-1 text-[13px] text-ink-soft">{t("nb.enq.desc")}</p>
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <EnqField
-                label="Name *"
+                label={t("nb.enq.name")}
                 value={enquiry.name}
                 onChange={(v) => setEnquiry({ ...enquiry, name: v })}
               />
               <EnqField
-                label="Phone *"
+                label={t("nb.enq.phone")}
                 value={enquiry.phone}
                 onChange={(v) => setEnquiry({ ...enquiry, phone: v })}
                 mono
               />
               <EnqField
-                label="Email *"
+                label={t("nb.enq.email")}
                 value={enquiry.email}
                 onChange={(v) => setEnquiry({ ...enquiry, email: v })}
               />
             </div>
             <label className="mt-3 block">
               <span className="mb-1 block text-[12px] text-ink-soft">
-                Enquiry *
+                {t("nb.enq.enquiry")}
               </span>
               <textarea
                 value={enquiry.enquiry}
                 onChange={(e) => setEnquiry({ ...enquiry, enquiry: e.target.value })}
                 rows={7}
-                placeholder="Describe the shipment — e.g. '4 horses from Dubai on EK9021, arriving 11 July, health certificate to follow. 2 mares in foal.'"
+                placeholder={t("nb.enq.placeholder")}
                 className="w-full rounded-md border border-line-strong bg-white px-3 py-2 text-[13px] leading-relaxed text-ink focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
             </label>
@@ -264,18 +241,15 @@ export function NewBooking() {
                 className="mt-0.5 h-4 w-4 rounded border-line-strong text-primary focus:ring-primary/30"
               />
               <span>
-                I have read the Terms &amp; Conditions{" "}
-                <span className="text-red">*</span>
+                {t("nb.enq.terms")} <span className="text-red">*</span>
               </span>
             </label>
             <p className="mt-2 font-mono text-[11px] text-ink-faint">
-              * Required fields
+              {t("nb.enq.required")}
             </p>
           </Card>
           <div className="mt-4 flex items-center justify-end gap-3">
-            <span className="text-[12px] text-ink-faint">
-              Creates a job and runs AI extraction on the enquiry.
-            </span>
+            <span className="text-[12px] text-ink-faint">{t("nb.enq.hint")}</span>
             <Button
               onClick={startEnquiry}
               disabled={
@@ -286,7 +260,7 @@ export function NewBooking() {
                 !enquiry.terms
               }
             >
-              Submit enquiry →
+              {t("nb.enq.submit")}
             </Button>
           </div>
         </div>
@@ -296,21 +270,17 @@ export function NewBooking() {
         <div>
           <Card className="p-5">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-              <p className="text-[13px] text-ink-soft">
-                Migrate the Amsterdam spreadsheet: upload or paste CSV and each
-                row becomes a job. Columns are matched by header (awb, agent,
-                commodity, type, animalCount, flight, origin, arrivalDate…).
-              </p>
+              <p className="text-[13px] text-ink-soft">{t("nb.csv.desc")}</p>
               <div className="flex items-center gap-2">
                 <label className="cursor-pointer rounded-xl border border-line-strong bg-white px-3 py-1.5 text-[12px] text-ink-soft hover:border-primary/40">
-                  Upload .csv
+                  {t("nb.csv.upload")}
                   <input type="file" accept=".csv,text/csv" onChange={onCsvFile} className="hidden" />
                 </label>
                 <button
                   onClick={() => setCsv(CSV_SAMPLE)}
                   className="rounded-xl px-3 py-1.5 text-[12px] text-primary hover:bg-primary-soft"
                 >
-                  Load sample
+                  {t("nb.csv.loadSample")}
                 </button>
               </div>
             </div>
@@ -318,16 +288,14 @@ export function NewBooking() {
               value={csv}
               onChange={(e) => setCsv(e.target.value)}
               rows={10}
-              placeholder="Paste CSV here, or upload a file…"
+              placeholder={t("nb.csv.placeholder")}
               className="w-full rounded-md border border-line-strong bg-white px-3 py-2 font-mono text-[12px] leading-relaxed text-ink focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
           </Card>
           <div className="mt-4 flex items-center justify-end gap-3">
-            <span className="text-[12px] text-ink-faint">
-              Creates one job per data row.
-            </span>
+            <span className="text-[12px] text-ink-faint">{t("nb.csv.hint")}</span>
             <Button onClick={importCsv} disabled={!csv.trim()}>
-              Import jobs →
+              {t("nb.csv.import")}
             </Button>
           </div>
         </div>
@@ -336,11 +304,10 @@ export function NewBooking() {
       {mode === "manual" && (
         <Card className="p-6 text-center">
           <p className="mx-auto max-w-md text-sm text-ink-soft">
-            Create a blank import job and fill the booking fields yourself. You
-            can still run the readiness gate and draft documents afterwards.
+            {t("nb.manual.desc")}
           </p>
           <div className="mt-4">
-            <Button onClick={startManual}>Create blank booking →</Button>
+            <Button onClick={startManual}>{t("nb.manual.create")}</Button>
           </div>
         </Card>
       )}

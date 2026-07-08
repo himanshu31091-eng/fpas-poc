@@ -70,7 +70,7 @@ interface PrefsValue {
   lang: Lang;
   setLang: (l: Lang) => void;
   /** Translate a core-UI key into the current language (English fallback). */
-  t: (key: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
   toast: (msg: string, tone?: Tone) => void;
 }
 
@@ -187,7 +187,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const t = useCallback((key: string) => translate(lang, key), [lang]);
+  const t = useCallback(
+    (key: string, params?: Record<string, string | number>) =>
+      translate(lang, key, params),
+    [lang]
+  );
 
   const toast = useCallback((msg: string, tone: Tone = "default") => {
     const id = Date.now() + Math.random();
