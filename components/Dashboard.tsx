@@ -15,6 +15,7 @@ import {
   type CommodityGroup,
 } from "./JobFilters";
 import { Button, Card, CountUp, FlightStatusChip, OpsStageChip, SimTag, StatusBadge } from "./ui";
+import { Markdown } from "./Markdown";
 import { CommodityArt } from "./CommodityArt";
 import { Calendar } from "./Calendar";
 import { Insights } from "./Insights";
@@ -1094,9 +1095,9 @@ function BriefingCard({ jobs }: { jobs: Job[] }) {
         </p>
       )}
       {text && (
-        <pre className="mt-3 whitespace-pre-wrap rounded-xl bg-bg/60 px-3 py-2.5 font-body text-[13px] leading-relaxed text-ink">
-          {text}
-        </pre>
+        <div className="mt-3 rounded-xl bg-bg/60 px-3 py-2.5 text-[13px] text-ink">
+          <Markdown text={text} />
+        </div>
       )}
     </Card>
   );
