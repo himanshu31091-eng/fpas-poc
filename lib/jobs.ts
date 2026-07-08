@@ -291,10 +291,15 @@ export function seedJobs(): Job[] {
     specialCargo: "1 stallion — separate stall",
     facts: facts({ bookingCreated: true }),
     loadPlan: [
-      { id: "lp-1", stall: "1", animalId: "Aramis", gender: "Gelding", weightKg: "548" },
-      { id: "lp-2", stall: "2", animalId: "Bella", gender: "Mare", weightKg: "512" },
-      { id: "lp-3", stall: "3", animalId: "Comet", gender: "Stallion", weightKg: "596" },
+      { id: "lp-1", stall: "1", animalId: "Aramis", gender: "Gelding", weightKg: "548", contour: "L", tackbag: true, hc: true, pp: true },
+      { id: "lp-2", stall: "1", animalId: "Bella", gender: "Mare", weightKg: "512", contour: "L", tackbag: true, hc: true, pp: false },
+      { id: "lp-3", stall: "2", animalId: "Comet", gender: "Stallion", weightKg: "596", contour: "R", tackbag: false, hc: true, pp: true },
     ],
+    grooms: [
+      { name: "Kelly Prinsen", passport: "NL X4471820" },
+      { name: "João Ferreira", passport: "PT 553219" },
+    ],
+    spx: { declaredBy: "", time: "", declared: false },
   };
 
   return [

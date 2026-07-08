@@ -64,7 +64,7 @@ export interface StepEvidence {
 /** Import (into the BIP) or Export (out to an airline). Drives conditional fields. */
 export type JobType = "import" | "export";
 
-/** One line of an export load plan (per stall). */
+/** One line of an export load plan (per horse). */
 export interface LoadPlanRow {
   id: string;
   stall: string;
@@ -72,6 +72,27 @@ export interface LoadPlanRow {
   gender?: string;
   weightKg?: string;
   notes?: string;
+  /** Stall contour position (L / R / 747). */
+  contour?: string;
+  /** Tackbag loaded for this stall. */
+  tackbag?: boolean;
+  /** Health certificate present for this horse. */
+  hc?: boolean;
+  /** Passport present for this horse. */
+  pp?: boolean;
+}
+
+/** A groom accompanying an export shipment on the flight. */
+export interface Groom {
+  name: string;
+  passport: string;
+}
+
+/** SPX (known-consignor) security declaration on an export loading list. */
+export interface SpxDeclaration {
+  declaredBy: string;
+  time: string;
+  declared: boolean;
 }
 
 /** Record of a load plan sent to an airline (mock send). */
@@ -115,8 +136,12 @@ export interface Booking {
   facts: ComplianceFacts;
   /** Evidence per satisfied step, keyed by ComplianceFacts key. */
   evidence?: Partial<Record<keyof ComplianceFacts, StepEvidence>>;
-  /** Export-only: the load plan (stall / gender / weight). */
+  /** Export-only: the load plan (stall / gender / weight / docs). */
   loadPlan?: LoadPlanRow[];
+  /** Export-only: grooms accompanying the shipment on the flight. */
+  grooms?: Groom[];
+  /** Export-only: the SPX security declaration on the loading list. */
+  spx?: SpxDeclaration;
   /** Export-only: record of the load plan sent to the airline. */
   airlineSubmission?: AirlineSubmission;
   /** Regulatory submissions/notifications keyed by a stable step id. */
