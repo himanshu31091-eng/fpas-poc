@@ -4,6 +4,7 @@ import type {
   FlightManagerLead,
   Job,
   JobStatus,
+  OpsStage,
 } from "./types";
 import { evaluateReadiness } from "./importSequence";
 import { AGENT_EMAILS } from "./mockData";
@@ -79,6 +80,56 @@ export const STATUS_LABEL: Record<JobStatus, string> = {
   in_progress: "In progress",
   ready: "Ready for arrival",
 };
+
+/** The manual ops-stage lifecycle, in order. */
+export const OPS_STAGES: OpsStage[] = [
+  "Enquiry",
+  "Quoted",
+  "Confirmed",
+  "Docs pending",
+  "Ready",
+  "Departed",
+  "Arrived",
+  "Completed",
+  "Cancelled",
+];
+
+/** Tailwind chip classes per ops stage. */
+export const STAGE_META: Record<OpsStage, string> = {
+  Enquiry: "bg-bg text-ink-faint ring-1 ring-line-strong",
+  Quoted: "bg-cyan/10 text-cyan",
+  Confirmed: "bg-primary-soft text-primary",
+  "Docs pending": "bg-amber-soft text-amber",
+  Ready: "bg-green-soft text-green",
+  Departed: "bg-cyan/10 text-cyan",
+  Arrived: "bg-cyan/10 text-cyan",
+  Completed: "bg-bg text-ink-soft ring-1 ring-line",
+  Cancelled: "bg-red-soft text-red",
+};
+
+/**
+ * Staff needed on a date, derived from that day's shipments — baseline shed
+ * crew plus extra hands per movement (more for horse exports). Used by the
+ * roster coverage strip to show demand vs. scheduled.
+ */
+export function requiredCrew(jobs: Job[], date: string): number {
+  let req = 2; // baseline shed crew
+  for (const j of jobs) {
+    if (j.deletedAt || j.booking?.arrivalDate !== date) continue;
+    const b = j.booking;
+    const horses = b.isHorses || /horse/i.test(b.commodity);
+    const count = Number(b.animalCount) || b.loadPlan?.length || 1;
+    if (b.jobType === "export" && horses) req += Math.ceil(count / 3) + 1;
+    else if (horses) req += 2;
+    else req += 1;
+  }
+  return req;
+}
+
+/** Non-deleted jobs arriving/departing on a date. */
+export function movementsOn(jobs: Job[], date: string): Job[] {
+  return jobs.filter((j) => !j.deletedAt && j.booking?.arrivalDate === date);
+}
 
 /** Best-effort AWB label for lists before a booking exists. */
 export function jobAwb(job: Job): string {
@@ -309,6 +360,7 @@ export function seedJobs(): Job[] {
       updatedAt: "2026-07-02T08:20:00.000Z",
       source: { emailId: "email-1", email: email1 },
       extraction: null,
+      stage: "Confirmed",
       booking: booking1,
       readiness: null,
       artifacts: null,
@@ -319,6 +371,7 @@ export function seedJobs(): Job[] {
       updatedAt: "2026-07-02T09:50:00.000Z",
       source: { emailId: "email-2", email: email2 },
       extraction: null,
+      stage: "Docs pending",
       booking: booking2,
       readiness: null,
       artifacts: null,
@@ -329,6 +382,7 @@ export function seedJobs(): Job[] {
       updatedAt: "2026-07-02T10:10:00.000Z",
       source: { emailId: "email-3", email: email3 },
       extraction: null,
+      stage: "Enquiry",
       booking: null,
       readiness: null,
       artifacts: null,
@@ -339,6 +393,7 @@ export function seedJobs(): Job[] {
       updatedAt: "2026-07-02T11:00:00.000Z",
       source: { manual: true },
       extraction: null,
+      stage: "Confirmed",
       booking: booking4,
       readiness: null,
       artifacts: null,

@@ -157,12 +157,12 @@ export function Guide() {
           <Step
             icon={IconBox}
             title="Booking"
-            body="The shipment details, fully editable. Choose Import or Export: Import shows Govt Vet inspection time; Export shows warehouse arrival time. Horse shipments pick up the OKTF path automatically."
+            body="The shipment details, fully editable. Choose Import or Export: Import shows Govt Vet inspection time; Export shows warehouse arrival time. Horse shipments pick up the OKTF path automatically. Set the ops stage (Enquiry → Quoted → Confirmed → … → Completed) from the job header — a manual handling lifecycle shown alongside the auto-derived readiness status."
           />
           <Step
             icon={IconPlane}
             title="Readiness (import) / Load plan (export)"
-            body="Import: a live compliance rail — mark each step done with a reference for the audit trail (critical steps require one). Export: build the per-stall load plan (stall/gender/weight) and send the AI-drafted load list to the airline."
+            body="Import: a live compliance rail — mark each step done with a reference for the audit trail (critical steps require one). Export: a horse loading-list builder — per-stall contour, gender/weight, per-horse HC & passport ticks with a doc-readiness banner, accompanying grooms and the SPX security declaration — then send the AI-drafted load list to the airline."
           />
           <Step
             icon={IconCheckCircle}
@@ -187,7 +187,7 @@ export function Guide() {
           <Step
             icon={IconUsers}
             title="Staffing"
-            body="The FPAS Amsterdam staff roster: a weekly availability board (working / off / leave / sick / holiday), a leave request-and-approve flow, and an AI import that reads the planning spreadsheet. Each shipment can request and assign staff from those available that day, and the assistant answers coverage questions."
+            body="The FPAS Amsterdam staff roster: a weekly/monthly availability board (working / off / leave / sick / holiday), a leave request-and-approve flow, and an AI import that reads the planning spreadsheet. The roster now shows booking-derived coverage — crew required by each day's shipments vs. staff rostered on, flagging understaffed days. Each shipment can request and assign staff from those available that day, and the assistant answers coverage questions."
           />
           <Step
             icon={IconSparkles}

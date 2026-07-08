@@ -14,7 +14,7 @@ import {
   type JobFacets,
   type CommodityGroup,
 } from "./JobFilters";
-import { Button, Card, CountUp, FlightStatusChip, SimTag, StatusBadge } from "./ui";
+import { Button, Card, CountUp, FlightStatusChip, OpsStageChip, SimTag, StatusBadge } from "./ui";
 import { CommodityArt } from "./CommodityArt";
 import { Calendar } from "./Calendar";
 import { Insights } from "./Insights";
@@ -491,6 +491,7 @@ function JobRow({
               </span>
             )}
             <WelfareBadge date={job.booking?.arrivalDate} />
+            <OpsStageChip stage={job.stage} />
             <StaffingChip jobId={job.id} />
           </div>
           <div className="mt-0.5 flex items-center gap-2 truncate text-[13px] text-ink-soft">
@@ -895,6 +896,7 @@ function JobCard({
             </div>
             <div className="mt-1 flex flex-wrap items-center gap-1.5">
               <WelfareBadge date={job.booking?.arrivalDate} />
+              <OpsStageChip stage={job.stage} />
               <StaffingChip jobId={job.id} />
             </div>
           </div>

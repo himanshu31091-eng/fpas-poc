@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useStore } from "./store";
 import { usePrefs, STAFF } from "./prefs";
-import { Button, Card, FlightStatusChip, StatusBadge } from "./ui";
+import { Button, Card, FlightStatusChip, OpsStageChip, StatusBadge } from "./ui";
 import { ExtractionReview } from "./ExtractionReview";
 import { BookingForm } from "./BookingForm";
 import { ComplianceReadiness } from "./ComplianceReadiness";
@@ -35,8 +35,9 @@ import {
   jobAwb,
   jobStatus,
   openCount,
+  OPS_STAGES,
 } from "@/lib/jobs";
-import type { Job } from "@/lib/types";
+import type { Job, OpsStage } from "@/lib/types";
 
 type Tab =
   | "source"
@@ -88,7 +89,7 @@ function defaultTab(job: Job): Tab {
 
 export function JobWorkspace({ jobId }: { jobId: string }) {
   const router = useRouter();
-  const { getJob, deleteJob, restoreJob, regenerateArtifacts, assignJob } =
+  const { getJob, deleteJob, restoreJob, regenerateArtifacts, assignJob, updateJob } =
     useStore();
   const { canEdit, toast } = usePrefs();
   const job = getJob(jobId);
@@ -173,6 +174,7 @@ export function JobWorkspace({ jobId }: { jobId: string }) {
                 {jobAwb(job)}
               </h1>
               <StatusBadge status={status} />
+              <OpsStageChip stage={job.stage} />
               {(() => {
                 const fs = flightStatus(job);
                 return fs ? <FlightStatusChip state={fs.state} label={fs.label} /> : null;
@@ -187,6 +189,24 @@ export function JobWorkspace({ jobId }: { jobId: string }) {
           </div>
         </div>
         <div className="no-print flex items-center gap-2">
+          <select
+            value={job.stage ?? ""}
+            onChange={(e) => {
+              const stage = (e.target.value || undefined) as OpsStage | undefined;
+              updateJob(jobId, { stage });
+              toast(stage ? `Stage → ${stage}` : "Stage cleared");
+            }}
+            disabled={!canEdit}
+            className="rounded-xl border border-line bg-white px-2.5 py-1.5 text-[12px] text-ink-soft focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-50"
+            title="Ops stage — the manual handling lifecycle (distinct from regulatory readiness)"
+          >
+            <option value="">No stage</option>
+            {OPS_STAGES.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
           <select
             value={job.assignee ?? ""}
             onChange={(e) => {

@@ -2,10 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { useStaff } from "./staffStore";
+import { useStore } from "./store";
 import { usePrefs } from "./prefs";
 import { Button, Card, Eyebrow, BrandLoader } from "./ui";
 import { IconSparkles, IconChevronLeft, IconDownload } from "./icons";
 import { downloadXlsx } from "@/lib/xlsx";
+import { requiredCrew, movementsOn } from "@/lib/jobs";
 import {
   STATUS_META,
   LEAVE_TYPE_LABEL,
@@ -88,6 +90,7 @@ export function Staffing() {
 
 function RosterTab() {
   const { roster, leave, team } = useStaff();
+  const { jobs } = useStore();
   const [mode, setMode] = useState<"week" | "month">("week");
   const [anchor, setAnchor] = useState<Date>(() => new Date());
   const todayStr = dateStr(new Date());
@@ -109,7 +112,25 @@ function RosterTab() {
           return !st || st.status === "working" || st.status === "training";
         }).length;
       }),
-    [days, roster, leave]
+    [days, roster, leave, team]
+  );
+
+  // Booking-derived coverage: crew required by that day's shipments vs. the
+  // number actually rostered on (working/training). Blank cells don't count
+  // as "scheduled" here — this is the commitment view, not the availability one.
+  const coverage = useMemo(
+    () =>
+      days.map((d) => {
+        const ds = dateStr(d);
+        const required = requiredCrew(jobs, ds);
+        const scheduled = team.filter((s) => {
+          const st = statusOnDate(s, ds, roster, leave);
+          return st && (st.status === "working" || st.status === "training");
+        }).length;
+        const movements = movementsOn(jobs, ds).length;
+        return { required, scheduled, movements, short: scheduled < required };
+      }),
+    [days, roster, leave, team, jobs]
   );
 
   function prev() {
@@ -145,10 +166,12 @@ function RosterTab() {
     ];
     const rows = team.map((s) => [s, ...days.map((d) => cellText(s, d))]);
     const availRow = ["Available", ...avail.map((n) => n)];
+    const requiredRow = ["Required (bookings)", ...coverage.map((c) => c.required)];
+    const scheduledRow = ["Scheduled", ...coverage.map((c) => c.scheduled)];
     downloadXlsx(`FPAS-roster-${dateStr(days[0])}`, [
       {
         name: mode === "week" ? "Roster (week)" : "Roster (month)",
-        rows: [header, ...rows, availRow],
+        rows: [header, ...rows, availRow, requiredRow, scheduledRow],
       },
     ]);
   }
@@ -164,9 +187,48 @@ function RosterTab() {
   const compact = mode === "month";
   const minW = compact ? "min-w-[1500px]" : "min-w-[760px]";
 
+  const shortDays = useMemo(
+    () =>
+      days
+        .map((d, i) => ({ d, c: coverage[i] }))
+        .filter(({ c }) => c.short)
+        .map(({ d, c }) => ({
+          label: `${DOW_LABELS[(d.getDay() + 6) % 7]} ${d.getDate()}/${d.getMonth() + 1}`,
+          gap: c.required - c.scheduled,
+        })),
+    [days, coverage]
+  );
+
   return (
     <div className="space-y-4">
       <CoverageCard weekStart={mondayOf(anchor)} />
+
+      {shortDays.length > 0 ? (
+        <Card className="border-red/30 bg-red-soft/40 p-3">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px]">
+            <span className="font-semibold text-red">Understaffed vs. bookings:</span>
+            {shortDays.map((s) => (
+              <span
+                key={s.label}
+                className="inline-flex items-center gap-1 rounded-full bg-white px-2 py-0.5 font-mono text-[11px] font-semibold text-red"
+              >
+                {s.label} · short {s.gap}
+              </span>
+            ))}
+            <span className="text-ink-soft">
+              — crew needed for that day&apos;s shipments exceeds staff rostered on.
+            </span>
+          </div>
+        </Card>
+      ) : (
+        <Card className="border-green/30 bg-green-soft/30 p-3">
+          <span className="text-[13px] text-ink-soft">
+            <span className="font-semibold text-green">Coverage OK</span> — every
+            shipment day in view has enough crew rostered on.
+          </span>
+        </Card>
+      )}
+
       <AddShift />
 
       <Card className="p-4">
@@ -279,6 +341,35 @@ function RosterTab() {
                     className="px-0.5 py-1.5 text-center font-mono text-[12px] font-semibold text-ink"
                   >
                     {n}
+                  </td>
+                ))}
+              </tr>
+              <tr className="border-t border-line">
+                <td
+                  className="sticky left-0 z-10 bg-panel px-2 py-1.5 font-mono text-[10px] uppercase tracking-wide text-ink-faint"
+                  title="Crew required by that day's shipments vs. staff rostered on"
+                >
+                  Req · sched
+                </td>
+                {coverage.map((c, i) => (
+                  <td key={i} className="px-0.5 py-1.5 text-center">
+                    <span
+                      className={`inline-flex min-w-[3.2rem] items-center justify-center gap-0.5 rounded-md px-1 py-0.5 font-mono text-[11px] font-semibold ${
+                        c.short
+                          ? "bg-red-soft text-red"
+                          : c.movements > 0
+                          ? "bg-green-soft text-green"
+                          : "text-ink-faint"
+                      }`}
+                      title={
+                        c.movements > 0
+                          ? `${c.movements} movement${c.movements === 1 ? "" : "s"} · needs ${c.required}, ${c.scheduled} rostered`
+                          : "No shipments this day"
+                      }
+                    >
+                      {c.required}/{c.scheduled}
+                      {c.short ? " !" : ""}
+                    </span>
                   </td>
                 ))}
               </tr>
