@@ -9,6 +9,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { DEFAULT_LANG, LANGS, translate, type Lang } from "@/lib/i18n";
 
 export type Role = "admin" | "ops" | "viewer";
 
@@ -65,6 +66,11 @@ interface PrefsValue {
   /** Custom logo (data URL) shown in the top bar; null = built-in F mark. */
   logo: string | null;
   setLogo: (v: string | null) => void;
+  /** Portal interface language. */
+  lang: Lang;
+  setLang: (l: Lang) => void;
+  /** Translate a core-UI key into the current language (English fallback). */
+  t: (key: string) => string;
   toast: (msg: string, tone?: Tone) => void;
 }
 
@@ -77,6 +83,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [dark, setDark] = useState(false);
   const [theme, setThemeState] = useState<ThemeId>("fpas");
   const [logo, setLogoState] = useState<string | null>(null);
+  const [lang, setLangState] = useState<Lang>(DEFAULT_LANG);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
 
   useEffect(() => {
@@ -95,6 +102,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       const lg = window.localStorage.getItem("fpas.logo");
       if (lg) setLogoState(lg);
+      const lang = window.localStorage.getItem("fpas.lang") as Lang | null;
+      if (lang && LANGS.some((x) => x.id === lang)) {
+        setLangState(lang);
+        document.documentElement.lang = lang;
+      }
     } catch {
       /* ignore */
     }
@@ -165,6 +177,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const setLang = useCallback((l: Lang) => {
+    setLangState(l);
+    if (typeof document !== "undefined") document.documentElement.lang = l;
+    try {
+      window.localStorage.setItem("fpas.lang", l);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const t = useCallback((key: string) => translate(lang, key), [lang]);
+
   const toast = useCallback((msg: string, tone: Tone = "default") => {
     const id = Date.now() + Math.random();
     setToasts((t) => [...t, { id, msg, tone }]);
@@ -188,6 +212,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setTheme,
       logo,
       setLogo,
+      lang,
+      setLang,
+      t,
       toast,
     }),
     [
@@ -203,6 +230,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setTheme,
       logo,
       setLogo,
+      lang,
+      setLang,
+      t,
       toast,
     ]
   );

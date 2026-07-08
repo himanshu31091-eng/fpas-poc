@@ -307,9 +307,10 @@ export function Guide() {
             remembered on this device.
           </li>
           <li>
-            <strong>Accessibility.</strong> The ♿ button in the top bar offers
-            larger text and high-contrast mode, plus a dark theme — remembered on
-            this device.
+            <strong>Accessibility &amp; language.</strong> The ♿ button in the top
+            bar offers larger text, high-contrast mode, and a{" "}
+            <strong>portal language</strong> switch (English, Dutch, German,
+            French, Spanish) — all remembered on this device.
           </li>
           <li>
             <strong>Take a tour.</strong> The button in the top bar walks new

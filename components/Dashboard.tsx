@@ -94,7 +94,7 @@ export function Dashboard() {
     acceptLead,
     dismissLead,
   } = useStore();
-  const { canEdit, user, toast } = usePrefs();
+  const { canEdit, user, toast, t } = usePrefs();
   const router = useRouter();
   const [view, setView] = useState<View>("jobs");
   const [layout, setLayout] = useState<Layout>("list");
@@ -194,21 +194,20 @@ export function Dashboard() {
         <div className="relative flex flex-wrap items-end justify-between gap-4">
           <div>
             <div className="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-accent">
-              Import jobs · Amsterdam Schiphol
+              {t("dash.kicker")}
             </div>
             <h1 className="mt-2 font-display text-3xl font-bold tracking-tight">
-              Live-animal import control
+              {t("dash.title")}
             </h1>
             <p className="mt-1.5 max-w-xl text-sm text-white/80">
-              Every shipment tracked against the regulatory sequence. Open a job
-              to run AI extraction, check readiness, and draft documents.
+              {t("dash.subtitle")}
             </p>
           </div>
           {canEdit && (
             <Link href="/jobs/new">
               <span className="inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-fpasnavy shadow-lg transition-all hover:-translate-y-0.5 active:scale-[0.98]">
                 <IconPlus width={16} height={16} />
-                New booking
+                {t("nav.new")}
               </span>
             </Link>
           )}
@@ -230,7 +229,7 @@ export function Dashboard() {
               }`}
             >
               <Icon width={15} height={15} />
-              {v.label}
+              {t(`view.${v.id}`)}
             </button>
           );
         })}
@@ -355,7 +354,7 @@ export function Dashboard() {
               <button
                 key={l.id}
                 onClick={() => setLayout(l.id)}
-                title={`${l.label} view`}
+                title={t(`layout.${l.id}`)}
                 aria-pressed={active}
                 className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-medium transition-all ${
                   active
@@ -364,7 +363,7 @@ export function Dashboard() {
                 }`}
               >
                 <Icon width={14} height={14} />
-                <span className="hidden sm:inline">{l.label}</span>
+                <span className="hidden sm:inline">{t(`layout.${l.id}`)}</span>
               </button>
             );
           })}
@@ -1168,6 +1167,7 @@ function EmptyState({
   canEdit: boolean;
   onReset: () => void;
 }) {
+  const { t } = usePrefs();
   return (
     <div className="rounded-card border border-dashed border-line-strong bg-panel/60 p-12 text-center">
       <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-brand-soft text-primary">
@@ -1183,7 +1183,7 @@ function EmptyState({
           <Link href="/jobs/new">
             <Button>
               <IconPlus width={16} height={16} />
-              New booking
+              {t("nav.new")}
             </Button>
           </Link>
           {!hasJobs && (

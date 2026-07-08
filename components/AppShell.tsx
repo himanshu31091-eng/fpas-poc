@@ -26,17 +26,17 @@ import {
 } from "./icons";
 
 const NAV = [
-  { href: "/", label: "Dashboard", icon: IconGrid },
-  { href: "/jobs/new", label: "New booking", icon: IconPlus },
-  { href: "/staffing", label: "Staffing", icon: IconUsers },
-  { href: "/copilot", label: "Copilot", icon: IconSparkles },
-  { href: "/guide", label: "How it works", icon: IconDoc },
-  { href: "/requirements", label: "Requirements", icon: IconClipboard },
+  { href: "/", key: "nav.dashboard", icon: IconGrid },
+  { href: "/jobs/new", key: "nav.new", icon: IconPlus },
+  { href: "/staffing", key: "nav.staffing", icon: IconUsers },
+  { href: "/copilot", key: "nav.copilot", icon: IconSparkles },
+  { href: "/guide", key: "nav.guide", icon: IconDoc },
+  { href: "/requirements", key: "nav.requirements", icon: IconClipboard },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { hydrated: jobsHydrated } = useStore();
-  const { hydrated: prefsHydrated, signedIn, canEdit, logo } = usePrefs();
+  const { hydrated: prefsHydrated, signedIn, canEdit, logo, t } = usePrefs();
   const pathname = usePathname();
   const nav = NAV.filter((n) => n.href !== "/jobs/new" || canEdit);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -64,8 +64,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen">
       {/* Disclosure banner — non-negotiable for this demo */}
       <div className="no-print bg-brand px-6 py-2 text-center font-mono text-[11px] font-medium uppercase tracking-wide text-white/90">
-        Proof of concept · mock data only · no live regulatory or airline
-        integrations
+        {t("banner.poc")}
       </div>
 
       {/* Top nav */}
@@ -127,7 +126,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   }`}
                 >
                   <Icon width={16} height={16} />
-                  {item.label}
+                  {t(item.key)}
                 </Link>
               );
             })}
@@ -139,10 +138,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               className="hidden items-center gap-1.5 rounded-full border border-line bg-white px-3 py-1.5 text-[12px] font-medium text-ink-soft transition-colors hover:border-primary/40 hover:text-ink xl:inline-flex"
             >
               <IconSparkles width={14} height={14} />
-              Take a tour
+              {t("action.takeTour")}
             </button>
             <span className="hidden xl:block">
-              <LiveTag />
+              <LiveTag label={t("tag.liveAI")} />
             </span>
             <NotificationsBell />
             <AccessibilityMenu />
@@ -184,7 +183,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     }`}
                   >
                     <Icon width={17} height={17} />
-                    {item.label}
+                    {t(item.key)}
                   </Link>
                 );
               })}
@@ -196,7 +195,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 className="mt-1 flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium text-ink-soft transition-colors hover:bg-white hover:text-ink"
               >
                 <IconSparkles width={17} height={17} />
-                Take a tour
+                {t("action.takeTour")}
               </button>
             </nav>
           </div>
@@ -227,14 +226,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   );
 }
 
-function LiveTag() {
+function LiveTag({ label }: { label: string }) {
   return (
     <span
       className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white/70 px-2.5 py-1 font-mono text-[10px] font-medium uppercase tracking-wide text-ink-soft"
       title="AI screens call the Claude API live. A missing key or failed call shows a retry panel."
     >
       <span className="h-1.5 w-1.5 rounded-full bg-green" />
-      live AI
+      {label}
     </span>
   );
 }
