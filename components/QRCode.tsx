@@ -34,26 +34,35 @@ export function QRCode({
   const quiet = 4; // modules of quiet zone
   const dim = n + quiet * 2;
 
-  // Build one path string of all dark modules (crisp, compact).
+  // Integer pixels per module → every module identical & crisp (fractional
+  // scaling with crispEdges produces uneven modules that scanners reject).
+  const cell = Math.max(3, Math.round(size / dim));
+  const px = cell * dim;
+
+  // Build one path string of all dark modules (in pixel units).
   let d = "";
   for (let y = 0; y < n; y++) {
     for (let x = 0; x < n; x++) {
-      if (matrix[y][x]) d += `M${x + quiet} ${y + quiet}h1v1h-1z`;
+      if (matrix[y][x]) {
+        const px0 = (x + quiet) * cell;
+        const py0 = (y + quiet) * cell;
+        d += `M${px0} ${py0}h${cell}v${cell}h-${cell}z`;
+      }
     }
   }
 
   return (
     <span className={`inline-flex flex-col items-center ${className}`}>
       <svg
-        width={size}
-        height={size}
-        viewBox={`0 0 ${dim} ${dim}`}
+        width={px}
+        height={px}
+        viewBox={`0 0 ${px} ${px}`}
         role="img"
         aria-label={`QR code for ${value}`}
         shapeRendering="crispEdges"
         style={{ background: "#ffffff" }}
       >
-        <rect x="0" y="0" width={dim} height={dim} fill="#ffffff" />
+        <rect x="0" y="0" width={px} height={px} fill="#ffffff" />
         <path d={d} fill="#000000" />
       </svg>
       {caption && (
