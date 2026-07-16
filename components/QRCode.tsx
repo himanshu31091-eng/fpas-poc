@@ -51,9 +51,10 @@ export function QRCode({
         role="img"
         aria-label={`QR code for ${value}`}
         shapeRendering="crispEdges"
-        style={{ background: "#fff", borderRadius: 6 }}
+        style={{ background: "#ffffff" }}
       >
-        <path d={d} fill="#0C1B29" />
+        <rect x="0" y="0" width={dim} height={dim} fill="#ffffff" />
+        <path d={d} fill="#000000" />
       </svg>
       {caption && (
         <span className="mt-1 font-mono text-[10px] tracking-wide text-ink-soft">{caption}</span>

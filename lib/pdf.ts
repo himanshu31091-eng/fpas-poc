@@ -80,10 +80,10 @@ function qrPdfOps(value: string, x: number, y: number, box: number): string {
     return "";
   }
   const n = matrix.length;
-  const quiet = 2;
+  const quiet = 4;
   const dim = n + quiet * 2;
   const mod = box / dim;
-  let c = `1 1 1 rg ${x} ${y} ${box} ${box} re f\n0.05 0.11 0.16 rg\n`;
+  let c = `1 1 1 rg ${x} ${y} ${box} ${box} re f\n0 0 0 rg\n`;
   for (let r = 0; r < n; r++) {
     for (let col = 0; col < n; col++) {
       if (!matrix[r][col]) continue;
@@ -118,7 +118,7 @@ function pageContent(
     c += `BT /F1 9 Tf 0.85 0.85 0.9 rg ${MARGIN} ${PAGE_H - 80} Td (${escapePdf(subtitle)}) Tj ET\n`;
 
   // Scannable AWB QR code (top-right, on a white panel over the header)
-  if (qr) c += qrPdfOps(qr, PAGE_W - 108, PAGE_H - 84, 66);
+  if (qr) c += qrPdfOps(qr, PAGE_W - 106, PAGE_H - 90, 84);
 
   // Diagonal DRAFT watermark
   if (watermark) {

@@ -139,7 +139,7 @@ export function Housing() {
                       </button>
                     )}
                     <div className="mt-2.5 flex justify-center border-t border-line/70 pt-2.5">
-                      <QRCode value={u.id} size={72} />
+                      <QRCode value={u.id} size={104} caption={u.id} />
                     </div>
                   </div>
                 );

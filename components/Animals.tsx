@@ -122,7 +122,7 @@ function AnimalCard({ a, t }: { a: Animal; t: (k: string) => string }) {
 
       {a.chip && a.chip !== "—" && (
         <div className="mt-3 flex justify-center border-t border-line pt-3">
-          <QRCode value={a.chip} size={92} caption="microchip" />
+          <QRCode value={a.chip} size={132} caption="microchip" />
         </div>
       )}
     </Card>
