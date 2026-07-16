@@ -95,13 +95,13 @@ export function Guide() {
           The top bar has these areas:
         </p>
         <ul className="mt-2 grid grid-cols-1 gap-1.5 text-[13.5px] text-ink-soft sm:grid-cols-2">
-          <li><strong>Dashboard</strong> — jobs (List / Board / Grid), plus Calendar, Insights and an exportable Report.</li>
+          <li><strong>Dashboard</strong> — opens on <em>Today</em> (a command view), plus jobs (List / Board / Grid), Calendar, Insights and a Report.</li>
           <li><strong>New booking</strong> — six ways to create a job.</li>
           <li><strong>Housing</strong> — BIP units + cleaning lifecycle.</li>
           <li><strong>Animals</strong> — registry with vaccination alerts.</li>
           <li><strong>Staffing</strong> — roster, coverage, timesheets & payroll.</li>
-          <li><strong>Copilot</strong> — ask questions about your shipments.</li>
-          <li><strong>How it works</strong> — this page.</li>
+          <li><strong>Copilot &amp; Compliance rules</strong> — ask across shipments; AI-reason required docs.</li>
+          <li><strong>Agent portal</strong> — the external submit/upload/track view (demo).</li>
           <li><strong>Requirements</strong> — how the POC traces to the brief.</li>
         </ul>
         <p className="mt-2 text-[13px] text-ink-faint">
@@ -145,7 +145,7 @@ export function Guide() {
           <Step
             icon={IconGrid}
             title="Dashboard"
-            body="Every job with search, filters, live stats, mock flight-status chips, and the live Amsterdam arrival-day weather (with a welfare flag when it's too hot or cold). View jobs as a List, a Kanban Board (create a job inline from the Board), or a Grid. Switch views: Jobs, Calendar (arrivals & departures), Insights (charts), Report (export to Excel or PDF), and Bin (deleted jobs — restore or delete forever). Click any job for a quick-look drawer (key facts + open the full job). The Flight Manager “Pending” queue sits at the top, and one button gives you an AI daily briefing of what's at risk — weather included."
+            body="Opens on Today — a command view that pulls together what needs you now: outstanding compliance, HC/passport document gaps, vaccination expiries, roster coverage shortfalls, weather-welfare flags and arrivals in the next 48h, each linking to the relevant job or module. Other views: Jobs (List / Board / Grid), Calendar, Insights, Report (Excel/PDF) and Bin. Click any job for a quick-look drawer. The Flight Manager “Pending” queue and a one-click AI daily briefing round it out."
           />
           <Step
             icon={IconPlus}
@@ -180,7 +180,7 @@ export function Guide() {
           <Step
             icon={IconDoc}
             title="Artifacts"
-            body="The offloading list (Loslijst) and delivery note, drafted from the booking. Copy, download, or Save as a branded FPAS PDF. Everything is watermarked DRAFT."
+            body="The offloading list (Loslijst) and delivery note, drafted from the booking. Copy, or download each as a genuine branded FPAS PDF (navy header, DRAFT watermark) — generated in the browser with no external library."
           />
           <Step
             icon={IconClock}
@@ -206,6 +206,16 @@ export function Guide() {
             icon={IconSparkles}
             title="Copilot"
             body="Ask questions across all jobs — “what's arriving in 48 hours?”, “what's blocking the EQUITRANS job?”, or “draft the NVWA notice.” It only sees your jobs; it's decision-support, not an autonomous agent."
+          />
+          <Step
+            icon={IconClipboard}
+            title="Compliance rules (AI)"
+            body="Pick a shipment and the assistant reasons the documents and checks its species, route and direction require — each with the authority (NVWA / EU TRACES / CITES / IATA LAR / Customs / Airline), a severity (mandatory / conditional / recommended) and a rationale. Decision-support, not legal advice."
+          />
+          <Step
+            icon={IconArrowRight}
+            title="Agent portal"
+            body="A demo of the external surface agents and airlines use: submit a booking request, upload documents to a checklist, confirm the AWB, and track status. In production this is a separate authenticated portal."
           />
           <Step
             icon={IconClipboard}
