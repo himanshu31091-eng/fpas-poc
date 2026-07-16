@@ -393,16 +393,26 @@ export function Dashboard() {
             ))}
           </div>
         ) : (
-          <div className="stagger space-y-2.5">
-            {visible.map((job) => (
-              <JobRow
-                key={job.id}
-                job={job}
-                canEdit={canEdit}
-                onDelete={() => handleDelete(job.id)}
-              />
-            ))}
-          </div>
+          <Card className="overflow-hidden">
+            <div className="hidden items-center gap-4 border-b border-line bg-bg/40 px-4 py-2.5 font-mono text-[10px] font-medium uppercase tracking-wider text-ink-faint sm:flex">
+              <span className="w-9 shrink-0" />
+              <span className="flex-1">{t("dash.col.shipment")}</span>
+              <span className="w-32 shrink-0">{t("dash.col.flight")}</span>
+              <span className="w-24 shrink-0 text-center">{t("dash.col.steps")}</span>
+              <span className="w-36 shrink-0">{t("dash.col.status")}</span>
+              <span className="w-[18px] shrink-0" />
+            </div>
+            <div className="stagger divide-y divide-line">
+              {visible.map((job) => (
+                <JobRow
+                  key={job.id}
+                  job={job}
+                  canEdit={canEdit}
+                  onDelete={() => handleDelete(job.id)}
+                />
+              ))}
+            </div>
+          </Card>
         )}
       </div>
 
@@ -446,13 +456,13 @@ function Stat({
 }) {
   const t = TONES[tone];
   return (
-    <div className="lift rounded-card border border-line bg-panel p-4 shadow-card hover:shadow-lift">
+    <div className="lift rounded-card border border-line bg-panel p-4 shadow-panel hover:shadow-card">
       <div className="flex items-center justify-between">
         <span className={`flex h-9 w-9 items-center justify-center rounded-xl ${t.chip}`}>
           <Icon width={18} height={18} />
         </span>
       </div>
-      <div className={`mt-3 font-display text-3xl font-bold ${t.text}`}>
+      <div className={`mt-3 font-mono text-[28px] font-bold tracking-tight ${t.text}`}>
         <CountUp value={value} />
       </div>
       <div className="mt-0.5 text-[12px] text-ink-soft">{label}</div>
@@ -476,9 +486,9 @@ function JobRow({
     <div className="group relative">
       <Link
         href={`/jobs/${job.id}`}
-        className="lift flex items-center gap-4 rounded-card border border-line bg-panel px-4 py-3.5 shadow-card hover:border-primary/40 hover:shadow-lift"
+        className="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-bg/60"
       >
-        <CommodityArt commodity={jobCommodity(job)} size={40} />
+        <CommodityArt commodity={jobCommodity(job)} size={36} />
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
@@ -559,7 +569,7 @@ function JobRow({
         <button
           onClick={onDelete}
           title="Delete job"
-          className="absolute -right-2 -top-2 hidden h-7 w-7 items-center justify-center rounded-full border border-line bg-white text-ink-faint shadow-card transition-colors hover:text-red group-hover:flex"
+          className="absolute right-11 top-1/2 hidden h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg border border-line bg-white text-ink-faint shadow-panel transition-colors hover:border-red/40 hover:text-red group-hover:flex"
         >
           <IconTrash width={14} height={14} />
         </button>
@@ -876,7 +886,7 @@ function JobCard({
     <div className="group relative">
       <Link
         href={`/jobs/${job.id}`}
-        className="lift block rounded-card border border-line bg-panel p-3.5 shadow-card hover:border-primary/40 hover:shadow-lift"
+        className="lift block rounded-card border border-line bg-panel p-3.5 shadow-panel hover:border-primary/40 hover:shadow-card"
       >
         <div className="flex items-start gap-3">
           <CommodityArt commodity={jobCommodity(job)} size={36} />
