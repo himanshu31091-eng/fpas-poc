@@ -187,7 +187,7 @@ export function Dashboard() {
       {/* Gradient hero */}
       <div
         data-tour="hero"
-        className="no-print relative mb-6 overflow-hidden rounded-xl2 bg-brand px-7 py-7 text-white shadow-glow"
+        className="no-print relative mb-6 overflow-hidden rounded-card bg-brand px-7 py-6 text-white shadow-panel"
       >
         <div className="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
         <div className="pointer-events-none absolute -bottom-24 right-24 h-56 w-56 rounded-full bg-white/10 blur-2xl" />
