@@ -86,7 +86,7 @@ export function Artifacts({ jobId }: { jobId: string }) {
 
         <div className="space-y-4">
           {artifacts.map((a) => (
-            <ArtifactCard key={a.id} artifact={a} subtitle={docMeta} />
+            <ArtifactCard key={a.id} artifact={a} subtitle={docMeta} awb={b.awb} />
           ))}
         </div>
       </div>
@@ -126,7 +126,15 @@ export function Artifacts({ jobId }: { jobId: string }) {
   );
 }
 
-function ArtifactCard({ artifact, subtitle }: { artifact: DraftArtifact; subtitle: string }) {
+function ArtifactCard({
+  artifact,
+  subtitle,
+  awb,
+}: {
+  artifact: DraftArtifact;
+  subtitle: string;
+  awb?: string;
+}) {
   const [copied, setCopied] = useState(false);
 
   function copy() {
@@ -142,6 +150,7 @@ function ArtifactCard({ artifact, subtitle }: { artifact: DraftArtifact; subtitl
       subtitle,
       body: artifact.body,
       watermark: "DRAFT",
+      barcode: awb || undefined,
     });
   }
 
