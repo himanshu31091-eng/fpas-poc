@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { usePrefs } from "./prefs";
 import { Card, Eyebrow, SimTag } from "./ui";
 import { IconArrowRight, IconCheck, IconSparkles, IconBox } from "./icons";
+import { Barcode } from "./Barcode";
 import {
   seedUnits,
   loadUnits,
@@ -137,6 +138,9 @@ export function Housing() {
                         {t(flow.actionKey)}
                       </button>
                     )}
+                    <div className="mt-2.5 border-t border-line/70 pt-2">
+                      <Barcode value={u.id} height={22} module={1.1} showValue={false} className="w-full" />
+                    </div>
                   </div>
                 );
               })}
