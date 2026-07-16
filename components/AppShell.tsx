@@ -51,7 +51,10 @@ const NAV_GROUPS: { section: string; items: NavItem[] }[] = [
   },
   {
     section: "nav.section.assistant",
-    items: [{ href: "/copilot", key: "nav.copilot", icon: IconSparkles, tour: "nav-copilot" }],
+    items: [
+      { href: "/copilot", key: "nav.copilot", icon: IconSparkles, tour: "nav-copilot" },
+      { href: "/rules", key: "nav.rules", icon: IconClipboard },
+    ],
   },
   {
     section: "nav.section.reference",
