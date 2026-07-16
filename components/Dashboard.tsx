@@ -17,6 +17,7 @@ import {
 import { Button, Card, CountUp, FlightStatusChip, OpsStageChip, SimTag, StatusBadge } from "./ui";
 import { Markdown } from "./Markdown";
 import { JobDrawer } from "./JobDrawer";
+import { OpsToday } from "./OpsToday";
 import { CommodityArt } from "./CommodityArt";
 import { Calendar } from "./Calendar";
 import { Insights } from "./Insights";
@@ -39,9 +40,10 @@ import {
 import { SHIPPING_AGENTS } from "@/lib/mockData";
 import type { FlightManagerLead, JobType } from "@/lib/types";
 
-type View = "jobs" | "calendar" | "insights" | "report" | "bin";
+type View = "today" | "jobs" | "calendar" | "insights" | "report" | "bin";
 
 const VIEWS: { id: View; label: string; icon: (p: { width?: number; height?: number }) => JSX.Element }[] = [
+  { id: "today", label: "Today", icon: IconAlert },
   { id: "jobs", label: "Jobs", icon: IconGrid },
   { id: "calendar", label: "Calendar", icon: IconPlane },
   { id: "insights", label: "Insights", icon: IconCheckCircle },
@@ -97,7 +99,7 @@ export function Dashboard() {
   } = useStore();
   const { canEdit, user, toast, t } = usePrefs();
   const router = useRouter();
-  const [view, setView] = useState<View>("jobs");
+  const [view, setView] = useState<View>("today");
   const [layout, setLayout] = useState<Layout>("list");
   const [drawerId, setDrawerId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -237,6 +239,7 @@ export function Dashboard() {
         })}
       </div>
 
+      {view === "today" && <OpsToday />}
       {view === "calendar" && <Calendar />}
       {view === "insights" && <Insights />}
       {view === "report" && <Report />}
