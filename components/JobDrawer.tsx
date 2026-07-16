@@ -8,6 +8,7 @@ import { StatusBadge, OpsStageChip, FlightStatusChip } from "./ui";
 import { CommodityArt } from "./CommodityArt";
 import { WelfareBadge, WeatherChip } from "./weather";
 import { StaffingChip } from "./staffStore";
+import { Barcode } from "./Barcode";
 import {
   jobStatus,
   openCount,
@@ -144,6 +145,12 @@ export function JobDrawer({
                 <Row label={t("drawer.grooms")} value={b.grooms.map((g) => g.name).join(", ")} />
               )}
               {b.specialCargo && <Row label={t("bf.field.specialCargo")} value={b.specialCargo} />}
+
+              {b.awb && (
+                <div className="mt-4 flex flex-col items-center rounded-card border border-line bg-white py-3">
+                  <Barcode value={b.awb} />
+                </div>
+              )}
             </div>
           ) : (
             <p className="py-6 text-center text-[13px] text-ink-soft">
