@@ -13,6 +13,7 @@ import {
   IconPlus,
   IconSparkles,
   IconUsers,
+  IconPaw,
 } from "./icons";
 
 function download() {
@@ -96,7 +97,9 @@ export function Guide() {
         <ul className="mt-2 grid grid-cols-1 gap-1.5 text-[13.5px] text-ink-soft sm:grid-cols-2">
           <li><strong>Dashboard</strong> — jobs (List / Board / Grid), plus Calendar, Insights and an exportable Report.</li>
           <li><strong>New booking</strong> — six ways to create a job.</li>
-          <li><strong>Staffing</strong> — roster, leave requests, and shipment staffing.</li>
+          <li><strong>Housing</strong> — BIP units + cleaning lifecycle.</li>
+          <li><strong>Animals</strong> — registry with vaccination alerts.</li>
+          <li><strong>Staffing</strong> — roster, coverage, timesheets & payroll.</li>
           <li><strong>Copilot</strong> — ask questions about your shipments.</li>
           <li><strong>How it works</strong> — this page.</li>
           <li><strong>Requirements</strong> — how the POC traces to the brief.</li>
@@ -142,7 +145,7 @@ export function Guide() {
           <Step
             icon={IconGrid}
             title="Dashboard"
-            body="Every job with search, filters, live stats, mock flight-status chips, and the live Amsterdam arrival-day weather (with a welfare flag when it's too hot or cold). View jobs as a List, a Kanban Board (create a job inline from the Board), or a Grid. Switch views: Jobs, Calendar (arrivals & departures), Insights (charts), Report (export to Excel or PDF), and Bin (deleted jobs — restore or delete forever). The Flight Manager “Pending” queue sits at the top, and one button gives you an AI daily briefing of what's at risk — weather included."
+            body="Every job with search, filters, live stats, mock flight-status chips, and the live Amsterdam arrival-day weather (with a welfare flag when it's too hot or cold). View jobs as a List, a Kanban Board (create a job inline from the Board), or a Grid. Switch views: Jobs, Calendar (arrivals & departures), Insights (charts), Report (export to Excel or PDF), and Bin (deleted jobs — restore or delete forever). Click any job for a quick-look drawer (key facts + open the full job). The Flight Manager “Pending” queue sits at the top, and one button gives you an AI daily briefing of what's at risk — weather included."
           />
           <Step
             icon={IconPlus}
@@ -187,7 +190,17 @@ export function Guide() {
           <Step
             icon={IconUsers}
             title="Staffing"
-            body="The FPAS Amsterdam staff roster: a weekly/monthly availability board (working / off / leave / sick / holiday), a leave request-and-approve flow, and an AI import that reads the planning spreadsheet. The roster now shows booking-derived coverage — crew required by each day's shipments vs. staff rostered on, flagging understaffed days. Each shipment can request and assign staff from those available that day, and the assistant answers coverage questions."
+            body="The FPAS Amsterdam staff roster: a weekly/monthly availability board (working / off / leave / sick / holiday), a leave request-and-approve flow, booking-derived coverage (crew required per day vs. rostered, flagging shortfalls), and a Timesheets tab — planned shifts vs. clock in/out actuals, variance, and an approve-and-export-to-payroll workbook. Each shipment can request and assign staff, and the assistant answers coverage questions."
+          />
+          <Step
+            icon={IconBox}
+            title="Housing & occupancy"
+            body="The BIP holding units by zone (stables, kennels, aviary, aqua, isolation) with the between-shipment cleaning lifecycle — Occupied → Dirty → Cleaning → Ready → Available — advanced in one click, plus live utilisation."
+          />
+          <Step
+            icon={IconPaw}
+            title="Animal registry"
+            body="Per-animal welfare & compliance records: microchip, passport, owner, linked shipment and vaccinations — with expiry alerts (due-soon / expired) and a CITES flag for regulated species."
           />
           <Step
             icon={IconSparkles}
