@@ -16,6 +16,7 @@ import {
 } from "./JobFilters";
 import { Button, Card, CountUp, FlightStatusChip, OpsStageChip, SimTag, StatusBadge } from "./ui";
 import { Markdown } from "./Markdown";
+import { JobDrawer } from "./JobDrawer";
 import { CommodityArt } from "./CommodityArt";
 import { Calendar } from "./Calendar";
 import { Insights } from "./Insights";
@@ -98,6 +99,7 @@ export function Dashboard() {
   const router = useRouter();
   const [view, setView] = useState<View>("jobs");
   const [layout, setLayout] = useState<Layout>("list");
+  const [drawerId, setDrawerId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<JobStatus | "all">("all");
   const [mineOnly, setMineOnly] = useState(false);
@@ -379,7 +381,7 @@ export function Dashboard() {
             onReset={resetDemo}
           />
         ) : layout === "board" ? (
-          <JobBoard jobs={visible} canEdit={canEdit} onDelete={handleDelete} />
+          <JobBoard jobs={visible} canEdit={canEdit} onDelete={handleDelete} onOpen={setDrawerId} />
         ) : layout === "grid" ? (
           <div className="stagger grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {visible.map((job) => (
@@ -388,6 +390,7 @@ export function Dashboard() {
                 job={job}
                 canEdit={canEdit}
                 onDelete={handleDelete}
+                onOpen={setDrawerId}
                 showStatus
               />
             ))}
@@ -409,6 +412,7 @@ export function Dashboard() {
                   job={job}
                   canEdit={canEdit}
                   onDelete={() => handleDelete(job.id)}
+                  onOpen={setDrawerId}
                 />
               ))}
             </div>
@@ -432,6 +436,8 @@ export function Dashboard() {
           </button>
         </div>
       )}
+
+      <JobDrawer jobId={drawerId} onClose={() => setDrawerId(null)} />
     </div>
   );
 }
@@ -474,10 +480,12 @@ function JobRow({
   job,
   canEdit,
   onDelete,
+  onOpen,
 }: {
   job: Job;
   canEdit: boolean;
   onDelete: () => void;
+  onOpen?: (id: string) => void;
 }) {
   const status = jobStatus(job);
   const open = openCount(job);
@@ -486,6 +494,11 @@ function JobRow({
     <div className="group relative">
       <Link
         href={`/jobs/${job.id}`}
+        onClick={(e) => {
+          if (!onOpen || e.metaKey || e.ctrlKey || e.shiftKey) return;
+          e.preventDefault();
+          onOpen(job.id);
+        }}
         className="flex items-center gap-4 px-4 py-3 transition-colors hover:bg-bg/60"
       >
         <CommodityArt commodity={jobCommodity(job)} size={36} />
@@ -582,10 +595,12 @@ function JobBoard({
   jobs,
   canEdit,
   onDelete,
+  onOpen,
 }: {
   jobs: Job[];
   canEdit: boolean;
   onDelete: (id: string) => void;
+  onOpen?: (id: string) => void;
 }) {
   const router = useRouter();
   const { createQuickJob } = useStore();
@@ -646,6 +661,7 @@ function JobBoard({
                   job={job}
                   canEdit={canEdit}
                   onDelete={onDelete}
+                  onOpen={onOpen}
                 />
               ))
             )}
@@ -871,11 +887,13 @@ function JobCard({
   job,
   canEdit,
   onDelete,
+  onOpen,
   showStatus = false,
 }: {
   job: Job;
   canEdit: boolean;
   onDelete: (id: string) => void;
+  onOpen?: (id: string) => void;
   showStatus?: boolean;
 }) {
   const status = jobStatus(job);
@@ -886,6 +904,11 @@ function JobCard({
     <div className="group relative">
       <Link
         href={`/jobs/${job.id}`}
+        onClick={(e) => {
+          if (!onOpen || e.metaKey || e.ctrlKey || e.shiftKey) return;
+          e.preventDefault();
+          onOpen(job.id);
+        }}
         className="lift block rounded-card border border-line bg-panel p-3.5 shadow-panel hover:border-primary/40 hover:shadow-card"
       >
         <div className="flex items-start gap-3">
