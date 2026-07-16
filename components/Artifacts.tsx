@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useStore } from "./store";
 import { BrandLoader, Button, Card, ErrorRetry } from "./ui";
-import { IconDoc, IconFMark } from "./icons";
+import { IconDoc, IconFMark, IconDownload } from "./icons";
+import { downloadPdf } from "@/lib/pdf";
 import type { DraftArtifact } from "@/lib/types";
 
 export function Artifacts({ jobId }: { jobId: string }) {
@@ -54,6 +55,11 @@ export function Artifacts({ jobId }: { jobId: string }) {
     );
   }
 
+  const b = job.booking;
+  const docMeta = [b.awb || b.flight, b.shippingAgent, b.arrivalDate]
+    .filter(Boolean)
+    .join("  ·  ");
+
   return (
     <div>
       <div className="no-print">
@@ -65,7 +71,7 @@ export function Artifacts({ jobId }: { jobId: string }) {
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => window.print()}>
               <IconDoc width={15} height={15} />
-              Save as PDF
+              Print all
             </Button>
             <Button
               variant="ghost"
@@ -80,7 +86,7 @@ export function Artifacts({ jobId }: { jobId: string }) {
 
         <div className="space-y-4">
           {artifacts.map((a) => (
-            <ArtifactCard key={a.id} artifact={a} />
+            <ArtifactCard key={a.id} artifact={a} subtitle={docMeta} />
           ))}
         </div>
       </div>
@@ -120,7 +126,7 @@ export function Artifacts({ jobId }: { jobId: string }) {
   );
 }
 
-function ArtifactCard({ artifact }: { artifact: DraftArtifact }) {
+function ArtifactCard({ artifact, subtitle }: { artifact: DraftArtifact; subtitle: string }) {
   const [copied, setCopied] = useState(false);
 
   function copy() {
@@ -130,14 +136,13 @@ function ArtifactCard({ artifact }: { artifact: DraftArtifact }) {
     });
   }
 
-  function download() {
-    const blob = new Blob([artifact.body], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = artifact.filename;
-    link.click();
-    URL.revokeObjectURL(url);
+  function pdf() {
+    downloadPdf(artifact.filename.replace(/\.[^.]+$/, ""), {
+      title: artifact.title,
+      subtitle,
+      body: artifact.body,
+      watermark: "DRAFT",
+    });
   }
 
   return (
@@ -155,8 +160,9 @@ function ArtifactCard({ artifact }: { artifact: DraftArtifact }) {
           <Button variant="subtle" onClick={copy}>
             {copied ? "Copied" : "Copy"}
           </Button>
-          <Button variant="ghost" onClick={download}>
-            Download
+          <Button variant="ghost" onClick={pdf}>
+            <IconDownload width={14} height={14} />
+            PDF
           </Button>
         </div>
       </div>
