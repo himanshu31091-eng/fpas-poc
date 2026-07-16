@@ -8,7 +8,7 @@
 // is sanitised to ASCII to keep the standard encoding happy.
 // ---------------------------------------------------------------------------
 
-import { code39, code39Width } from "./barcode";
+import { qrMatrix } from "./qr";
 
 const PAGE_W = 595; // A4 in points
 const PAGE_H = 842;
@@ -71,22 +71,27 @@ function wrap(text: string): string[] {
   return out;
 }
 
-/** White panel + black Code 39 bars + value, drawn in vector (scannable). */
-function barcodePdfOps(value: string, x: number, y: number, w: number, h: number): string {
-  const mods = code39(value);
-  const total = code39Width(value) || 1;
-  const quiet = 8;
-  const mw = (w - quiet * 2) / total;
-  let c = `1 1 1 rg ${x} ${y} ${w} ${h} re f\n0.05 0.11 0.16 rg\n`;
-  const barsY = y + 15;
-  const barsH = h - 26;
-  let bx = x + quiet;
-  for (const m of mods) {
-    const bw = m.w * mw;
-    if (m.bar) c += `${bx.toFixed(2)} ${barsY.toFixed(2)} ${bw.toFixed(2)} ${barsH.toFixed(2)} re f\n`;
-    bx += bw;
+/** White panel + black QR modules, drawn in vector (scannable off the sheet). */
+function qrPdfOps(value: string, x: number, y: number, box: number): string {
+  let matrix: boolean[][];
+  try {
+    matrix = qrMatrix(value);
+  } catch {
+    return "";
   }
-  c += `BT /F3 6.5 Tf 0.2 0.25 0.3 rg ${(x + quiet).toFixed(2)} ${(y + 4).toFixed(2)} Td (${escapePdf(value)}) Tj ET\n`;
+  const n = matrix.length;
+  const quiet = 2;
+  const dim = n + quiet * 2;
+  const mod = box / dim;
+  let c = `1 1 1 rg ${x} ${y} ${box} ${box} re f\n0.05 0.11 0.16 rg\n`;
+  for (let r = 0; r < n; r++) {
+    for (let col = 0; col < n; col++) {
+      if (!matrix[r][col]) continue;
+      const px = x + (col + quiet) * mod;
+      const py = y + box - (r + quiet + 1) * mod; // flip: matrix row 0 = top
+      c += `${px.toFixed(2)} ${py.toFixed(2)} ${mod.toFixed(2)} ${mod.toFixed(2)} re f\n`;
+    }
+  }
   return c;
 }
 
@@ -96,7 +101,7 @@ function pageContent(
   footer: string,
   lines: string[],
   watermark?: string,
-  barcode?: string
+  qr?: string
 ): string {
   const navy = "0.137 0.122 0.361";
   const yellow = "1 0.769 0.047";
@@ -112,8 +117,8 @@ function pageContent(
   if (subtitle)
     c += `BT /F1 9 Tf 0.85 0.85 0.9 rg ${MARGIN} ${PAGE_H - 80} Td (${escapePdf(subtitle)}) Tj ET\n`;
 
-  // Scannable AWB barcode (top-right, on a white panel over the header)
-  if (barcode) c += barcodePdfOps(barcode, PAGE_W - 205, PAGE_H - 78, 165, 58);
+  // Scannable AWB QR code (top-right, on a white panel over the header)
+  if (qr) c += qrPdfOps(qr, PAGE_W - 108, PAGE_H - 84, 66);
 
   // Diagonal DRAFT watermark
   if (watermark) {
@@ -140,7 +145,7 @@ export function renderPdf(doc: {
   subtitle?: string;
   body: string;
   watermark?: string;
-  barcode?: string;
+  qr?: string;
 }): string {
   const allLines = wrap(doc.body);
   const pages: string[][] = [];
@@ -174,7 +179,7 @@ export function renderPdf(doc: {
       footer,
       lines,
       doc.watermark,
-      i === 0 ? doc.barcode : undefined
+      i === 0 ? doc.qr : undefined
     );
     objects[pageObj] =
       `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PAGE_W} ${PAGE_H}] ` +
@@ -208,7 +213,7 @@ export function renderPdf(doc: {
 
 export function downloadPdf(
   filename: string,
-  doc: { title: string; subtitle?: string; body: string; watermark?: string; barcode?: string }
+  doc: { title: string; subtitle?: string; body: string; watermark?: string; qr?: string }
 ) {
   const pdf = renderPdf(doc);
 
