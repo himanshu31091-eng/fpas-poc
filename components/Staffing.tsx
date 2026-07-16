@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useStaff } from "./staffStore";
 import { useStore } from "./store";
 import { usePrefs } from "./prefs";
-import { Button, Card, Eyebrow, BrandLoader } from "./ui";
+import { Button, Card, Eyebrow, BrandLoader, SimTag } from "./ui";
 import { Markdown } from "./Markdown";
 import { IconSparkles, IconChevronLeft, IconDownload } from "./icons";
 import { downloadXlsx } from "@/lib/xlsx";
@@ -25,13 +25,14 @@ import {
   type AssetType,
 } from "@/lib/staff";
 
-type Tab = "roster" | "leave" | "resources" | "import";
+type Tab = "roster" | "timesheets" | "leave" | "resources" | "import";
 
-const TABS: { id: Tab; label: string }[] = [
-  { id: "roster", label: "Roster" },
-  { id: "leave", label: "Leave" },
-  { id: "resources", label: "Resources" },
-  { id: "import", label: "Import" },
+const TABS: { id: Tab }[] = [
+  { id: "roster" },
+  { id: "timesheets" },
+  { id: "leave" },
+  { id: "resources" },
+  { id: "import" },
 ];
 
 export function Staffing() {
@@ -79,6 +80,7 @@ export function Staffing() {
 
       <div key={tab} className="animate-fade-up">
         {tab === "roster" && <RosterTab />}
+        {tab === "timesheets" && <TimesheetsTab />}
         {tab === "leave" && <LeaveTab />}
         {tab === "resources" && <ResourcesTab />}
         {tab === "import" && <ImportTab />}
@@ -665,6 +667,173 @@ function CoverageCard({ weekStart }: { weekStart: Date }) {
 }
 
 // --- Leave requests + calendar ---------------------------------------------
+
+// --- Timesheets: planned (roster) vs actual clock in/out → payroll export ---
+const toMin = (t: string) => {
+  const [h, m] = t.split(":").map(Number);
+  return (h || 0) * 60 + (m || 0);
+};
+const hoursBetween = (start: string, end: string) =>
+  Math.max(0, (toMin(end) - toMin(start)) / 60);
+
+function TimesheetsTab() {
+  const { roster } = useStaff();
+  const { t, toast } = usePrefs();
+  const [actuals, setActuals] = useState<Record<string, { start: string; end: string }>>({});
+  const [seeded, setSeeded] = useState(false);
+
+  const week = useMemo(() => weekDates(mondayOf(new Date())).map((d) => dateStr(d)), []);
+
+  const rows = useMemo(
+    () =>
+      roster
+        .filter(
+          (r) =>
+            (r.status === "working" || r.status === "training") &&
+            r.start &&
+            r.end &&
+            week.includes(r.date)
+        )
+        .sort((a, b) => a.date.localeCompare(b.date) || a.staff.localeCompare(b.staff)),
+    [roster, week]
+  );
+
+  // Seed a couple of realistic variances so the demo shows the point.
+  useEffect(() => {
+    if (seeded || rows.length === 0) return;
+    const seed: Record<string, { start: string; end: string }> = {};
+    if (rows[0]) seed[rows[0].id] = { start: rows[0].start!, end: addMin(rows[0].end!, 45) };
+    if (rows[2]) seed[rows[2].id] = { start: addMin(rows[2].start!, 20), end: rows[2].end! };
+    setActuals(seed);
+    setSeeded(true);
+  }, [rows, seeded]);
+
+  const actOf = (id: string, start: string, end: string) => actuals[id] ?? { start, end };
+  const setAct = (id: string, key: "start" | "end", v: string) =>
+    setActuals((p) => ({ ...p, [id]: { ...(p[id] ?? { start: "", end: "" }), [key]: v } }));
+
+  const planned = rows.reduce((s, r) => s + hoursBetween(r.start!, r.end!), 0);
+  const actual = rows.reduce((s, r) => {
+    const a = actOf(r.id, r.start!, r.end!);
+    return s + hoursBetween(a.start, a.end);
+  }, 0);
+  const variance = actual - planned;
+
+  function exportPayroll() {
+    const header = [t("ts.employee"), t("ts.date"), t("ts.planned"), t("ts.clockIn"), t("ts.clockOut"), t("ts.hours"), t("ts.variance")];
+    const body = rows.map((r) => {
+      const a = actOf(r.id, r.start!, r.end!);
+      const h = hoursBetween(a.start, a.end);
+      const v = h - hoursBetween(r.start!, r.end!);
+      return [r.staff, r.date, `${r.start}-${r.end}`, a.start, a.end, h.toFixed(2), v.toFixed(2)];
+    });
+    const totals = ["", "", planned.toFixed(2), "", "", actual.toFixed(2), variance.toFixed(2)];
+    downloadXlsx(`FPAS-timesheets-${week[0]}`, [
+      { name: "Timesheets", rows: [header, ...body, totals] },
+    ]);
+    toast("Week approved · payroll workbook exported", "success");
+  }
+
+  const inp =
+    "w-[68px] rounded-md border border-line-strong bg-white px-2 py-1 text-center font-mono text-[12px] text-ink focus:outline-none focus:ring-2 focus:ring-primary/30";
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-3">
+        <TsStat label={t("ts.planned")} value={`${planned.toFixed(1)}h`} sub={t("ts.rostered")} tint="text-ink" />
+        <TsStat label={t("ts.actual")} value={`${actual.toFixed(1)}h`} sub={t("ts.fromClock")} tint="text-primary" />
+        <TsStat
+          label={t("ts.variance")}
+          value={`${variance >= 0 ? "+" : ""}${variance.toFixed(1)}h`}
+          sub={t("ts.actualMinusPlanned")}
+          tint={variance > 0 ? "text-red" : "text-green"}
+        />
+        <button
+          onClick={exportPayroll}
+          disabled={rows.length === 0}
+          className="ml-auto inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2 text-[13px] font-semibold text-fpasnavy shadow-glow transition-all hover:-translate-y-0.5 disabled:opacity-50"
+        >
+          <IconDownload width={15} height={15} />
+          {t("ts.approveExport")}
+        </button>
+      </div>
+
+      <Card className="overflow-hidden">
+        {rows.length === 0 ? (
+          <p className="px-4 py-10 text-center text-sm text-ink-soft">{t("ts.empty")}</p>
+        ) : (
+          <div className="-mx-1 overflow-x-auto px-1">
+            <table className="w-full min-w-[720px] border-collapse text-[12.5px]">
+              <thead>
+                <tr className="border-b border-line font-mono text-[10px] uppercase tracking-wider text-ink-faint">
+                  <th className="px-3 py-2.5 text-left font-medium">{t("ts.employee")}</th>
+                  <th className="px-3 py-2.5 text-left font-medium">{t("ts.date")}</th>
+                  <th className="px-3 py-2.5 text-left font-medium">{t("ts.planned")}</th>
+                  <th className="px-3 py-2.5 text-center font-medium">{t("ts.clockIn")}</th>
+                  <th className="px-3 py-2.5 text-center font-medium">{t("ts.clockOut")}</th>
+                  <th className="px-3 py-2.5 text-right font-medium">{t("ts.hours")}</th>
+                  <th className="px-3 py-2.5 text-right font-medium">{t("ts.variance")}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-line">
+                {rows.map((r) => {
+                  const a = actOf(r.id, r.start!, r.end!);
+                  const h = hoursBetween(a.start, a.end);
+                  const v = h - hoursBetween(r.start!, r.end!);
+                  return (
+                    <tr key={r.id}>
+                      <td className="px-3 py-2 font-medium text-ink">{r.staff}</td>
+                      <td className="px-3 py-2 font-mono text-ink-soft">{r.date.slice(5)}</td>
+                      <td className="px-3 py-2 font-mono text-ink-faint">
+                        {r.start}–{r.end}
+                      </td>
+                      <td className="px-2 py-2 text-center">
+                        <input className={inp} value={a.start} onChange={(e) => setAct(r.id, "start", e.target.value)} />
+                      </td>
+                      <td className="px-2 py-2 text-center">
+                        <input className={inp} value={a.end} onChange={(e) => setAct(r.id, "end", e.target.value)} />
+                      </td>
+                      <td className="px-3 py-2 text-right font-mono font-semibold text-ink">{h.toFixed(1)}h</td>
+                      <td className="px-3 py-2 text-right">
+                        <span
+                          className={`font-mono font-semibold ${
+                            v > 0 ? "text-red" : v < 0 ? "text-amber" : "text-ink-faint"
+                          }`}
+                        >
+                          {v > 0 ? `+${v.toFixed(1)}` : v < 0 ? v.toFixed(1) : "—"}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
+      <p className="font-mono text-[10.5px] text-ink-faint">
+        <SimTag className="mr-1.5" /> Approve locks the week and exports approved hours per employee — the payroll hand-off (dnata interim).
+      </p>
+    </div>
+  );
+}
+
+function addMin(t: string, mins: number) {
+  const total = toMin(t) + mins;
+  const h = Math.floor(total / 60) % 24;
+  const m = total % 60;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+function TsStat({ label, value, sub, tint }: { label: string; value: string; sub: string; tint: string }) {
+  return (
+    <div className="min-w-[140px] rounded-card border border-line bg-panel p-3.5 shadow-panel">
+      <div className="font-mono text-[10px] uppercase tracking-wide text-ink-faint">{label}</div>
+      <div className={`mt-1 font-mono text-[22px] font-bold tracking-tight ${tint}`}>{value}</div>
+      <div className="mt-0.5 text-[11px] text-ink-faint">{sub}</div>
+    </div>
+  );
+}
 
 const STATUS_BADGE: Record<string, string> = {
   requested: "bg-amber-soft text-amber",
