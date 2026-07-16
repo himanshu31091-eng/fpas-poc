@@ -150,7 +150,7 @@ function ArtifactCard({
       subtitle,
       body: artifact.body,
       watermark: "DRAFT",
-      barcode: awb || undefined,
+      qr: awb || undefined,
     });
   }
 

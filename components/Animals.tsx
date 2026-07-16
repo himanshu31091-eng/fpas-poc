@@ -4,7 +4,7 @@ import { useState } from "react";
 import { usePrefs } from "./prefs";
 import { Card, Eyebrow, SimTag } from "./ui";
 import { IconSearch, IconAlert } from "./icons";
-import { Barcode } from "./Barcode";
+import { QRCode } from "./QRCode";
 import { SEED_ANIMALS, daysUntil, type Animal } from "@/lib/animals";
 
 export function Animals() {
@@ -121,8 +121,8 @@ function AnimalCard({ a, t }: { a: Animal; t: (k: string) => string }) {
       )}
 
       {a.chip && a.chip !== "—" && (
-        <div className="mt-3 border-t border-line pt-3">
-          <Barcode value={a.chip} height={30} module={1.0} />
+        <div className="mt-3 flex justify-center border-t border-line pt-3">
+          <QRCode value={a.chip} size={92} caption="microchip" />
         </div>
       )}
     </Card>
