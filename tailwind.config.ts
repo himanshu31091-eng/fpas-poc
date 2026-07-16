@@ -9,13 +9,13 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        bg: "#F5F7F5",
+        bg: "#F3F6F8",
         panel: "#FFFFFF",
         ink: "#0C1B29",
         "ink-soft": "#3A4A59",
         "ink-faint": "#697784",
-        line: "#E4E9E7",
-        "line-strong": "#C7D0CC",
+        line: "#E5EAEF",
+        "line-strong": "#CBD5DF",
         // Brand accent — driven by CSS variables so the whole app can be
         // re-themed from Settings (see globals.css [data-theme]). Alpha-value
         // placeholder keeps opacity modifiers (e.g. text-primary/40) working.

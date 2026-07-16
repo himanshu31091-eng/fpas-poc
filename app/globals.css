@@ -82,12 +82,11 @@ body {
   text-rendering: optimizeLegibility;
   letter-spacing: -0.005em;
   line-height: 1.5;
-  /* Soft equine-logistics mesh: themed accent with a warm gold wash. */
-  background-color: #f5f7f5;
+  /* Calm ops-console canvas: a barely-there themed wash, no heavy mesh. */
+  background-color: #f3f6f8;
   background-image:
-    radial-gradient(1100px 560px at 100% -8%, rgb(var(--c-primary) / 0.1), transparent 60%),
-    radial-gradient(1000px 520px at -8% 4%, rgb(var(--c-grad3) / 0.1), transparent 55%),
-    radial-gradient(900px 500px at 50% 120%, rgb(var(--c-accent) / 0.07), transparent 60%);
+    radial-gradient(1200px 560px at 100% -10%, rgb(var(--c-primary) / 0.05), transparent 62%),
+    radial-gradient(1000px 520px at -8% 2%, rgb(var(--c-grad3) / 0.04), transparent 58%);
   background-attachment: fixed;
 }
 

@@ -56,8 +56,8 @@ export function Card({
 }) {
   return (
     <div
-      className={`rounded-card border border-line bg-panel shadow-card ${
-        hover ? "lift hover:border-primary/40 hover:shadow-lift" : ""
+      className={`rounded-card border border-line bg-panel shadow-panel ${
+        hover ? "lift hover:border-primary/40 hover:shadow-card" : ""
       } ${className}`}
     >
       {children}
