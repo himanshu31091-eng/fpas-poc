@@ -2,9 +2,10 @@
 ### One-page executive summary
 
 **In one line:** a working proof of concept that modernises FPAS's Amsterdam
-live-animal import operation into a single AI-assisted web app — turning
-manual, spreadsheet-and-email work into a guided, auditable, single-screen
-workflow, delivered in days.
+live-animal operation into a single AI-assisted ops console — turning manual,
+spreadsheet-and-email work into a guided, auditable workflow with staff
+planning, housing and animal records around it, in the FPAS brand and five
+languages, delivered in days.
 
 ---
 
@@ -25,19 +26,25 @@ Amsterdam import slice end to end:
   inspection slot, Scope pre-registration, customs, offloading — and reported
   in plain language: what's outstanding, why, and how urgent, with a full
   audit trail.
-- **AI-drafted documents.** Offloading list, delivery note, airline load list,
-  regulatory notices and customer updates — all marked DRAFT for human
-  approval.
-- **Operations view.** Jobs as List / Board / Grid, filters, calendar,
-  insights, an exportable report (Excel & PDF), and live Amsterdam
-  arrival-day **weather with animal-welfare flags**.
-- **Staff planning & resources** (built from FPAS's own spreadsheet). A weekly
-  and monthly roster, a leave request-and-approve calendar, an editable
-  register of **people and equipment**, and per-shipment staffing that assigns
-  staff *and* assets from those available — with double-booking alerts and an
-  AI import of the existing spreadsheet.
-- **FPAS-branded and configurable.** The navy/yellow identity and logo
-  throughout; admins can change the theme and upload the logo from Settings.
+- **AI-drafted documents & the horse loading-list builder.** Offloading list,
+  delivery note, airline load list, regulatory notices and customer updates —
+  all DRAFT for approval — plus a per-stall loading list with health-certificate,
+  passport, groom and SPX-security checks and a live doc-gap alert.
+- **Operations view.** Jobs as List / Board / Grid with a **job detail drawer**,
+  filters, an ops-stage lifecycle, calendar, insights, an exportable report
+  (Excel & PDF), and live Amsterdam arrival-day **weather with welfare flags**.
+- **Staff planning, coverage & payroll** (built from FPAS's own spreadsheet). A
+  weekly/monthly roster, **booking-derived coverage** that flags understaffed
+  days, **timesheets** (planned vs. actual hours) with a payroll export, a leave
+  request-and-approve calendar, an editable register of **people and equipment**,
+  per-shipment staffing with double-booking alerts, and an AI import of the sheet.
+- **Housing & occupancy** — the BIP holding units by zone with a cleaning
+  lifecycle and utilisation — and an **animal registry** with microchip,
+  passport, vaccination-expiry alerts and CITES flags.
+- **FPAS-branded, multilingual and configurable.** An ops-console layout with a
+  left sidebar in the navy/yellow identity; the interface runs in **English,
+  Dutch, German, French and Spanish**; admins can change the theme and upload the
+  logo from Settings.
 
 **What's genuinely real vs simulated.** Real: the AI extraction, reasoning and
 drafting; the encoded regulatory sequence; the operator workflow; the audit
@@ -47,8 +54,11 @@ access control.
 
 **Built directly on client input.** The FPAS brand pack, the fpas.com enquiry
 form, the staff-planning spreadsheet, and the CEO's asks (leave calendar,
-resource requests) are all reflected in the app, and an in-app traceability
-page maps every requirement to Built / Simulated / Future.
+resource requests, staff hours/payroll) are all reflected in the app. When the
+client shared their own ops-console mock, we adopted its strongest ideas — the
+sidebar layout, job detail drawer, loading-list builder, housing and animal
+registry — on top of our live-AI engine. An in-app traceability page maps every
+requirement to Built / Simulated / Future.
 
 **What's next (production phase).** Real database and authentication, live
 integrations, direct regulatory submission, migration from HCL Notes, and

@@ -1,7 +1,7 @@
 # First Point Animal Services — AI Job Manager POC
 ### Slide-by-slide speaker notes
 
-Notes for the 13-slide deck. Each slide: what to show, talking points, and a
+Notes for the 14-slide deck. Each slide: what to show, talking points, and a
 one-line "say this". Keep the tone executive; demo live where you can.
 
 ---
@@ -39,18 +39,20 @@ one-line "say this". Keep the tone executive; demo live where you can.
 - Only **NVWA** pre-approval satisfies that step — not an origin-country vet.
 - **Say this:** "This is where the app understands FPAS's business, not just parses text — it knows the regulatory order and won't let a step be faked."
 
-**Slide 6 — AI documents & submissions**
-*Show:* Documents tab (offloading list + delivery note), load list, notices.
+**Slide 6 — AI documents & the horse loading-list builder**
+*Show:* Documents tab (offloading list + delivery note), notices; then an export job's Load plan.
 - AI-drafts the offloading list (Loslijst), delivery note, airline load list, regulatory notices, customer updates.
+- The loading-list builder: per-stall contour/gender/weight, per-horse **HC & passport ticks** with a live doc-gap banner, accompanying **grooms** and the **SPX security declaration**.
 - Everything is marked DRAFT for human approval; exportable as branded PDF.
-- **Say this:** "The paperwork drafts itself from the booking — staff review and send, they don't start from a blank page."
+- **Say this:** "The paperwork drafts itself from the booking — and for horse exports the loading list catches a missing passport before the truck leaves."
 
-**Slide 7 — Dashboard & operations view**
-*Show:* List / Board / Grid toggle, filters, calendar, insights, weather chip.
-- Three views of the same jobs; multi-facet filters (type, commodity, arrival window, agent).
+**Slide 7 — Dashboard & the ops-console UX**
+*Show:* the left sidebar layout; List / Board / Grid toggle; click a job to open the detail drawer; filters, calendar, insights, weather chip.
+- **Left sidebar navigation** in the FPAS brand — the app-console layout the client asked for.
+- Three views of the same jobs; a **job detail drawer** for a quick look without leaving the register; multi-facet filters (type, commodity, arrival window, agent).
 - Live Amsterdam arrival-day **weather with welfare flags** (heat/cold), fed into the AI briefing.
 - One-click AI daily briefing of what's at risk.
-- **Say this:** "A real ops console — filter to 'overdue horse imports', see the weather for arrival day, and get an AI risk briefing in one click."
+- **Say this:** "A real ops console — sidebar navigation, a quick-look drawer on any job, filters, arrival-day weather, and an AI risk briefing in one click."
 
 **Slide 8 — Reporting & export**
 *Show:* Report view → Export to Excel and PDF.
@@ -58,31 +60,40 @@ one-line "say this". Keep the tone executive; demo live where you can.
 - Genuine Excel workbook + PDF, generated in the browser.
 - **Say this:** "An exec-ready report the team can export to Excel or PDF whenever they need it."
 
-**Slide 9 — Staff planning & resources**
-*Show:* Staffing area — roster (week/month), leave, Resources, a job's Staffing tab.
+**Slide 9 — Staff planning, coverage, timesheets & payroll**
+*Show:* Staffing area — roster (week/month) with the coverage strip, Timesheets tab, leave, Resources, a job's Staffing tab.
 - Built from FPAS's own roster spreadsheet + the CEO's asks.
-- Roster (week & month, Excel export), leave request/approve, editable register of **people and equipment**.
-- Per-shipment staffing assigns staff *and* assets from those available, with **double-booking alerts**; AI imports the existing spreadsheet.
-- **Say this:** "We took the Amsterdam planning spreadsheet and made it live — assign the right people and equipment to each shipment, and the app warns you about clashes."
+- Roster (week & month, Excel export); **booking-derived coverage** flags days where the crew needed by that day's shipments exceeds who's rostered on.
+- **Timesheets** compare planned shifts vs. clock-in/out actuals with variance, and **approve → export to payroll** as a real workbook.
+- Leave request/approve, an editable register of **people and equipment**, and per-shipment staffing that assigns staff *and* assets from those available, with **double-booking alerts**; AI imports the existing spreadsheet.
+- **Say this:** "We took the Amsterdam planning spreadsheet and made it live — coverage against the actual bookings, timesheets through to a payroll export, and clash warnings when you staff a shipment."
 
-**Slide 10 — Branding & configurability**
-*Show:* the FPAS navy/yellow app; Settings → theme + logo upload.
+**Slide 10 — Housing & animal records**
+*Show:* the Housing page (advance a unit through the cleaning cycle) and the Animal registry.
+- **Housing & occupancy** — BIP units by zone (stables/kennels/aviary/aqua/isolation) with the between-shipment cleaning lifecycle (Occupied → Dirty → Cleaning → Ready → Available) and live utilisation.
+- **Animal registry** — per-animal microchip, passport, owner and linked shipment, with **vaccination-expiry alerts** and **CITES** flags.
+- Both were the strongest modules in the client's own ops-console mock — adopted on top of our live-AI engine.
+- **Say this:** "Beyond the movement itself, the app tracks where animals are housed and their individual welfare records — the parts of the operation the client's own mock highlighted."
+
+**Slide 11 — Branding, multilingual & configurability**
+*Show:* the FPAS navy/yellow app; the Accessibility menu → language switch (try Dutch); Settings → theme + logo upload.
 - Full First Point Animal Services identity (navy #231F5C, yellow #FFC40C, F-mark logo).
+- The interface runs in **English, Dutch, German, French and Spanish** — switch it live in the demo.
 - Admins can change the theme and upload the logo themselves — not hard-coded.
-- **Say this:** "It already looks like FPAS, and you can re-brand or re-theme it yourselves from Settings."
+- **Say this:** "It already looks like FPAS, runs in Dutch or four other languages, and you can re-brand or re-theme it yourselves from Settings."
 
-**Slide 11 — Requirements traceability**
+**Slide 12 — Requirements traceability**
 *Show:* the in-app Requirements page (Built / Simulated / Future).
 - Every requirement from the brief mapped in-app, with a coverage summary and a "beyond the brief" section.
 - **Say this:** "The app reports its own coverage against your requirements — so scope is explicit."
 
-**Slide 12 — Real vs simulated**
+**Slide 13 — Real vs simulated**
 *Show:* the honesty split.
 - Real: AI extraction/reasoning/drafting, the encoded regulatory sequence, the operator workflow, the audit trail, live weather.
 - Simulated: all data, every external integration, access control.
 - **Say this:** "We're deliberately clear about what's genuinely working versus what's mocked for the demo."
 
-**Slide 13 — What's next**
+**Slide 14 — What's next**
 *Show:* the production roadmap.
 - Production database & auth, live integrations (Flight Manager, NetSuite, regulators, partners), direct regulatory submission, HCL Notes migration, multi-site rollout (Melbourne / NZ / Chicago).
 - Open questions: EU data residency, target cloud/SSO, integration priority order, access to redacted real samples.
@@ -90,4 +101,4 @@ one-line "say this". Keep the tone executive; demo live where you can.
 
 ---
 
-*Demo tips:* run it live on the deployed URL; if the AI is slow, screens fail gracefully with a retry. Have one horse import (for readiness/OKTF), one companion-animal shipment (fully ready), and the Staffing area pre-loaded.
+*Demo tips:* run it live on the deployed URL; if the AI is slow, screens fail gracefully with a retry. Have one horse import (for readiness/OKTF), one horse export (for the loading-list builder), and one companion-animal shipment ready. Good things to show live: the **job detail drawer**, the **language switch** (to Dutch), the **coverage strip** and **Timesheets → payroll export** in Staffing, and the **Housing** cleaning cycle. The data resets to the demo seed on reload.
