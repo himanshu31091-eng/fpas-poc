@@ -25,6 +25,7 @@ import {
   IconMenu,
   IconClose,
   IconChevronLeft,
+  IconBox,
 } from "./icons";
 
 type NavItem = {
@@ -42,6 +43,7 @@ const NAV_GROUPS: { section: string; items: NavItem[] }[] = [
     items: [
       { href: "/", key: "nav.dashboard", icon: IconGrid },
       { href: "/jobs/new", key: "nav.new", icon: IconPlus, tour: "nav-new", editOnly: true },
+      { href: "/housing", key: "nav.housing", icon: IconBox },
       { href: "/staffing", key: "nav.staffing", icon: IconUsers, tour: "nav-staffing" },
     ],
   },
