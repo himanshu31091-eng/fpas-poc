@@ -260,14 +260,34 @@ export const IconAccessibility = (p: P) => (
   </Svg>
 );
 
-export const IconHorseshoe = (p: P) => (
+// Horses — chess-knight silhouette (universally read as "horse").
+export const IconHorse = (p: P) => (
   <Svg {...p}>
-    <path d="M6.5 21v-8a5.5 5.5 0 0 1 11 0v8" />
-    <path d="M4.6 21h3M16.4 21h3" />
-    <circle cx="7.9" cy="10.4" r="0.55" fill="currentColor" stroke="none" />
-    <circle cx="7.2" cy="14" r="0.55" fill="currentColor" stroke="none" />
-    <circle cx="16.1" cy="10.4" r="0.55" fill="currentColor" stroke="none" />
-    <circle cx="16.8" cy="14" r="0.55" fill="currentColor" stroke="none" />
+    <path
+      fill="currentColor"
+      stroke="none"
+      d="M6 21h12v-1.4c0-.9-.6-1.6-1.4-1.9 1.1-1.9 1.8-4.1 1.8-6.4V8.6c0-2-1.2-3.8-3-4.6l-2.6-1.1c-.5-.2-1 .1-1.1.6l-.2 1c-.1.4-.5.7-.9.6-2.6-.4-4.9 1.6-4.9 4.2 0 .6.3 1.2.8 1.5l1.7 1.1-3 2c-.7.5-1.2 1.3-1.2 2.2V19c0 .3.2.5.5.5H6V21z"
+    />
+  </Svg>
+);
+
+// Fish — aquatic commodities (koi, ornamental fish).
+export const IconFish = (p: P) => (
+  <Svg {...p}>
+    <path d="M4 12c3-4 7-5 10-5s5 2 6 5c-1 3-3 5-6 5s-7-1-10-5z" />
+    <path d="M20 12c1.2-1 2.4-1.6 3.2-1.8-.3 1.1-.3 2.4 0 3.5-.8-.2-2-.7-3.2-1.7z" />
+    <circle cx="8" cy="11" r="0.7" fill="currentColor" stroke="none" />
+  </Svg>
+);
+
+// Bug — insects, butterfly pupae.
+export const IconBug = (p: P) => (
+  <Svg {...p}>
+    <ellipse cx="12" cy="13" rx="3.5" ry="5" />
+    <path d="M12 8v10" />
+    <circle cx="12" cy="6.4" r="1.6" />
+    <path d="M10.6 5.3 9.2 3.7M13.4 5.3 14.8 3.7" />
+    <path d="M8.5 10 5.6 8.6M8.5 13 5.2 13M8.5 16 5.6 17.4M15.5 10 18.4 8.6M15.5 13 18.8 13M15.5 16 18.4 17.4" />
   </Svg>
 );
 

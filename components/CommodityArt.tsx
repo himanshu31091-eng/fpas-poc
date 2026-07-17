@@ -1,21 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import { IconHorseshoe, IconPaw, IconBox } from "./icons";
+import { IconHorse, IconFish, IconBug, IconPaw } from "./icons";
 
-type Kind = "horse" | "companion" | "other";
+type Kind = "horse" | "companion" | "fish" | "insect" | "other";
 
 function kindOf(commodity?: string): Kind {
   const s = (commodity ?? "").toLowerCase();
   if (/horse|equine|mare|stallion|foal|colt|filly|gelding/.test(s)) return "horse";
   if (/dog|cat|companion|pet|puppy|kitten|canine|feline/.test(s)) return "companion";
+  if (/fish|koi|aqua|ornamental|marine/.test(s)) return "fish";
+  if (/insect|butterfly|pupae|pupa|bee|beetle|bug|larvae/.test(s)) return "insect";
   return "other";
 }
 
 const ICON: Record<Kind, (p: { width?: number; height?: number }) => JSX.Element> = {
-  horse: IconHorseshoe,
+  horse: IconHorse,
   companion: IconPaw,
-  other: IconBox,
+  fish: IconFish,
+  insect: IconBug,
+  other: IconPaw, // generic live-animal fallback (zoo, reptiles, birds, …)
 };
 
 /**
