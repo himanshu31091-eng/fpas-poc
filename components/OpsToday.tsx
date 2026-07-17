@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useStore } from "./store";
 import { useStaff } from "./staffStore";
 import { useWeather } from "./weather";
@@ -24,7 +24,7 @@ import {
   movementsOn,
 } from "@/lib/jobs";
 import { statusOnDate, dateStr, addDays } from "@/lib/staff";
-import { SEED_ANIMALS, daysUntil } from "@/lib/animals";
+import { SEED_ANIMALS, loadAnimals, daysUntil } from "@/lib/animals";
 import { welfareFlag } from "@/lib/weather";
 
 type Tone = "red" | "amber" | "primary" | "green";
@@ -45,6 +45,11 @@ export function OpsToday() {
 
   const now = useMemo(() => new Date(), []);
   const active = useMemo(() => jobs.filter((j) => !j.deletedAt), [jobs]);
+  const [animals, setAnimals] = useState(SEED_ANIMALS);
+  useEffect(() => {
+    const saved = loadAnimals();
+    if (saved && saved.length) setAnimals(saved);
+  }, []);
 
   // --- Arrivals in the next 48h -------------------------------------------
   const arrivals: Item[] = useMemo(() => {
@@ -97,7 +102,7 @@ export function OpsToday() {
   // --- Vaccination expiries (animal registry) -----------------------------
   const vax: Item[] = useMemo(() => {
     const out: Item[] = [];
-    for (const a of SEED_ANIMALS) {
+    for (const a of animals) {
       for (const v of a.vax) {
         const d = daysUntil(v.exp);
         if (d < 0)
@@ -107,7 +112,7 @@ export function OpsToday() {
       }
     }
     return out.sort((a, b) => (a.tone === "red" ? -1 : 1));
-  }, []);
+  }, [animals]);
 
   // --- Coverage shortfalls (next 7 days with movements) -------------------
   const coverage: Item[] = useMemo(() => {
