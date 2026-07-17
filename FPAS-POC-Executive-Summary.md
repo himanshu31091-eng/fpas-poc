@@ -28,11 +28,19 @@ Amsterdam import slice end to end:
   audit trail.
 - **AI-drafted documents & the horse loading-list builder.** Offloading list,
   delivery note, airline load list, regulatory notices and customer updates —
-  all DRAFT for approval — plus a per-stall loading list with health-certificate,
-  passport, groom and SPX-security checks and a live doc-gap alert.
-- **Operations view.** Jobs as List / Board / Grid with a **job detail drawer**,
-  filters, an ops-stage lifecycle, calendar, insights, an exportable report
-  (Excel & PDF), and live Amsterdam arrival-day **weather with welfare flags**.
+  all DRAFT for approval, downloadable as **branded PDFs** with a scan-to-open
+  QR — plus a per-stall loading list with health-certificate, passport, groom
+  and SPX-security checks and a live doc-gap alert.
+- **AI compliance rules engine.** For any shipment, the assistant reasons the
+  documents and checks its species, route and direction require — each with the
+  responsible authority (NVWA, TRACES, CITES, IATA), a severity and a rationale.
+- **Operations view.** Opens on an **"Operations Today"** command feed that
+  surfaces everything needing attention across modules; jobs as List / Board /
+  Grid with a **job detail drawer**, filters, an ops-stage lifecycle, calendar,
+  insights, an exportable report (Excel & PDF), live arrival-day **weather with
+  welfare flags**, and **QR deep links** that open a record from a phone scan.
+- **Agent portal (demo).** The external surface agents would use — submit a
+  request, upload documents to a checklist, confirm the AWB, track status.
 - **Staff planning, coverage & payroll** (built from FPAS's own spreadsheet). A
   weekly/monthly roster, **booking-derived coverage** that flags understaffed
   days, **timesheets** (planned vs. actual hours) with a payroll export, a leave

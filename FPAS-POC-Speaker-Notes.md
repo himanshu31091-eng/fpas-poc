@@ -21,9 +21,9 @@ one-line "say this". Keep the tone executive; demo live where you can.
 
 **Slide 3 — What we built**
 *Show:* one app, the end-to-end arc (intake → readiness → documents).
-- A single AI-assisted web app covering the Amsterdam import slice end to end.
+- A single AI-assisted web app covering the Amsterdam operation end to end — intake, compliance, documents, staff planning, housing, animals — plus a demo of the external **agent portal** (agents submit a request, upload docs to a checklist, confirm the AWB, track status).
 - Preserves the mature process; modernises the tooling around it.
-- **Say this:** "One screen, one flow — intake to compliance to paperwork — with AI doing the reading and drafting, and a human always in control."
+- **Say this:** "One screen, one flow — intake to compliance to paperwork — with AI doing the reading and drafting, a human always in control, and an agent-facing portal on the front."
 
 **Slide 4 — Intake → AI extraction → validated booking**
 *Show:* New booking; pick a sample email or the enquiry form; run extraction; confirm.
@@ -37,22 +37,23 @@ one-line "say this". Keep the tone executive; demo live where you can.
 - The real Amsterdam sequence is encoded: OKTF → HC → NVWA pre-approval → inspection slot → Scope → customs → offloading.
 - Plain-language "what's outstanding, why, how urgent" + audit trail (who/when/reference).
 - Only **NVWA** pre-approval satisfies that step — not an origin-country vet.
-- **Say this:** "This is where the app understands FPAS's business, not just parses text — it knows the regulatory order and won't let a step be faked."
+- Complementing this, the **AI compliance rules engine** (Assistant → Compliance rules) reasons, for any shipment, the documents & checks its species/route/direction require — each tagged with the authority (NVWA / TRACES / CITES / IATA) and a severity.
+- **Say this:** "This is where the app understands FPAS's business, not just parses text — it knows the regulatory order, and the AI can reason the exact documents a given species and route need."
 
 **Slide 6 — AI documents & the horse loading-list builder**
 *Show:* Documents tab (offloading list + delivery note), notices; then an export job's Load plan.
 - AI-drafts the offloading list (Loslijst), delivery note, airline load list, regulatory notices, customer updates.
 - The loading-list builder: per-stall contour/gender/weight, per-horse **HC & passport ticks** with a live doc-gap banner, accompanying **grooms** and the **SPX security declaration**.
-- Everything is marked DRAFT for human approval; exportable as branded PDF.
-- **Say this:** "The paperwork drafts itself from the booking — and for horse exports the loading list catches a missing passport before the truck leaves."
+- Everything is marked DRAFT for human approval; each downloads as a genuine **branded PDF** (navy header, DRAFT watermark) carrying a **QR that opens the shipment when scanned**.
+- **Say this:** "The paperwork drafts itself from the booking — real branded PDFs, and the loading list catches a missing passport before the truck leaves."
 
 **Slide 7 — Dashboard & the ops-console UX**
-*Show:* the left sidebar layout; List / Board / Grid toggle; click a job to open the detail drawer; filters, calendar, insights, weather chip.
+*Show:* opens on **Operations Today**; the left sidebar; List / Board / Grid toggle; click a job to open the detail drawer (with its QR); filters, weather chip.
+- **Operations Today** — the default landing pulls together everything needing attention across modules (compliance, doc gaps, vaccination expiries, coverage shortfalls, weather, 48h arrivals), each linking straight to the record.
 - **Left sidebar navigation** in the FPAS brand — the app-console layout the client asked for.
-- Three views of the same jobs; a **job detail drawer** for a quick look without leaving the register; multi-facet filters (type, commodity, arrival window, agent).
-- Live Amsterdam arrival-day **weather with welfare flags** (heat/cold), fed into the AI briefing.
-- One-click AI daily briefing of what's at risk.
-- **Say this:** "A real ops console — sidebar navigation, a quick-look drawer on any job, filters, arrival-day weather, and an AI risk briefing in one click."
+- Three views of the same jobs; a **job detail drawer** for a quick look, with a **QR that opens the shipment on a phone**; multi-facet filters.
+- Live arrival-day **weather with welfare flags**, and a one-click AI daily briefing.
+- **Say this:** "It opens on a single 'what needs me today' view, then a real ops console underneath — sidebar, quick-look drawer, filters, weather, and QR codes you can scan to pull a shipment up on your phone."
 
 **Slide 8 — Reporting & export**
 *Show:* Report view → Export to Excel and PDF.
@@ -101,4 +102,4 @@ one-line "say this". Keep the tone executive; demo live where you can.
 
 ---
 
-*Demo tips:* run it live on the deployed URL; if the AI is slow, screens fail gracefully with a retry. Have one horse import (for readiness/OKTF), one horse export (for the loading-list builder), and one companion-animal shipment ready. Good things to show live: the **job detail drawer**, the **language switch** (to Dutch), the **coverage strip** and **Timesheets → payroll export** in Staffing, and the **Housing** cleaning cycle. The data resets to the demo seed on reload.
+*Demo tips:* run it live on the deployed URL; if the AI is slow, screens fail gracefully with a retry. Have one horse import (for readiness/OKTF), one horse export (for the loading-list builder), and one companion-animal shipment ready. Good things to show live: the **Operations Today** landing view, the **job detail drawer** (and **scan its QR** with a phone to open the shipment), the **AI compliance rules** page, the **language switch** (to Dutch), **Timesheets → payroll export**, the **Housing** cleaning cycle, and the **agent portal**. The data resets to the demo seed on reload. Note on QR: scanning opens the deployed URL, which seeds the same demo records — so seeded jobs/units/animals resolve on any device; a record you create live only exists in that browser.

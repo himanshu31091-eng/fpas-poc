@@ -25,7 +25,8 @@ registry**, reporting and multilingual support. Built by MoreYeahs.
 - **Compliance-readiness gate** — encodes the real Amsterdam regulatory sequence (OKTF → HC → **NVWA pre-approval** → inspection slot → Scope pre-registration → GDB to customs → offloading list) and reports, in plain language, what's outstanding, why, and how urgent. *This is the core differentiator.*
 - **NVWA vs origin-vet distinction** — only a Dutch-authority (NVWA) endorsement satisfies that step; an origin-country vet endorsement does not.
 - **Evidence & audit trail** — each step records who marked it done, when, and a reference (required on critical steps).
-- **Operational documents** — AI-drafted **offloading list (Loslijst)** and **delivery note**, marked DRAFT for human approval; export as branded PDF. *(Live AI.)*
+- **Operational documents** — AI-drafted **offloading list (Loslijst)** and **delivery note**, marked DRAFT for human approval; download as a genuine **branded PDF** (navy header, DRAFT watermark, and a **QR** that opens the shipment when scanned) — generated in the browser, no external library. *(Live AI.)*
+- **AI compliance rules engine** — pick a shipment and the assistant reasons the documents & checks its **species / route / direction** require, each tagged with the responsible authority (**NVWA / EU TRACES / CITES / IATA LAR / Customs / Airline**), a severity (mandatory / conditional / recommended) and a one-line rationale. *(Live AI.)*
 - **Horse loading-list builder (export)** — per-stall list with **contour (L/R/747)**, gender, weight, a **tackbag** toggle, and per-horse **health-certificate & passport ticks** with a live doc-readiness banner ("N of M horses missing HC or passport"); accompanying **grooms** (name + passport) and the **SPX security declaration**. Feeds the AI-drafted **airline load list**. *(Load-list send is Simulated.)*
 - **Regulatory submissions tracker** — AI-drafted notices recorded as submitted with a reference. *(Simulated.)*
 - **AI customer movement updates.** *(Live AI.)*
@@ -47,6 +48,7 @@ registry**, reporting and multilingual support. Built by MoreYeahs.
 
 - **Left sidebar console layout** — grouped navigation (Operations · Assistant · Reference · Manage), FPAS logo, a station switcher and a yellow active indicator; a slim top bar carries the global controls and the primary **New booking** CTA. Collapses to a drawer on mobile.
 - **Job detail drawer** — a plain click on any job opens a right-side **quick-look slide-over** (key facts, status/stage, welfare/weather/staffing chips) with an "Open full job" action; modified clicks still deep-link straight to the workspace.
+- **QR deep links** — jobs, housing units and animals each carry a **QR code that opens that exact record when scanned** (job → shipment workspace, unit → highlighted in Housing, animal → filtered registry); document PDFs carry the shipment QR too. Generated in the browser, verified scannable.
 - **Multilingual interface** — English / Dutch / German / French / Spanish, switchable from the Accessibility menu and remembered per device (sets the page language for screen readers too).
 - **Accessibility** — larger-text and high-contrast modes, dark mode, and always-visible keyboard focus.
 - **AI reliability tuning** — per-call timeouts, bounded retries with in-place JSON repair, higher output limits, and prompt caching (prevents the earlier 504 timeouts and lowers latency/cost).
@@ -55,6 +57,7 @@ registry**, reporting and multilingual support. Built by MoreYeahs.
 
 ## 4. Dashboard, views & filtering
 
+- **"Operations Today" command view** — the default landing: one at-a-glance feed aggregating outstanding compliance, HC/passport document gaps, vaccination expiries, roster coverage shortfalls, weather-welfare flags and arrivals in the next 48h, with a "N items need attention" banner; every alert links to the job or module concerned.
 - **Three job views:** **List** (a clean register table with a column header and hairline-divided rows), **Kanban Board** (grouped by status), and **Grid** — one toggle, applies everywhere.
 - **Create a job from the Kanban board** — quick-create modal, plus a link to the full intake.
 - **Multi-facet Filters** — Job type, Commodity, Arrival window (≤48h / this week / overdue), and Agent, combined with search + status chips.
@@ -115,13 +118,19 @@ registry**, reporting and multilingual support. Built by MoreYeahs.
 
 ---
 
-## 11. In-app requirements traceability
+## 11. Agent portal (external surface)
+
+- A demonstration of the **external portal** agents and airlines would use (the #1 day-one item on the client's own roadmap): **submit a booking request**, **upload documents to a per-commodity checklist**, **confirm the AWB**, and **track a derived status** (Submitted → Docs pending → Ready). *(Simulated; in production this is a separate authenticated surface.)*
+
+---
+
+## 12. In-app requirements traceability
 
 - A **Requirements & Traceability** page renders the FR / IR / NFR tables from the requirements document *inside the app*, with live **Built / Simulated / Future** status badges, a functional-coverage summary, and a **"Beyond the brief"** section listing the extras added on top.
 
 ---
 
-## 12. How it maps to client inputs
+## 13. How it maps to client inputs
 
 | Client input | What we delivered |
 |---|---|
@@ -137,7 +146,7 @@ registry**, reporting and multilingual support. Built by MoreYeahs.
 
 ---
 
-## 13. Explicitly out of scope (production phase)
+## 14. Explicitly out of scope (production phase)
 
 Production database & persistence, real authentication/security, live integrations (Flight Manager, NetSuite, regulators, partners), direct regulatory submission, migration from HCL Notes, and multi-site rollout. All shipment/staff/housing/animal data in the POC is fictional.
 
@@ -150,14 +159,16 @@ Production database & persistence, real authentication/security, live integratio
 3. **What we built** — one AI-assisted ops console covering the Amsterdam operation end to end
 4. **Intake → AI extraction → validated booking** (the front door; 6 intake modes)
 5. **Compliance readiness** — the encoded Amsterdam regulatory sequence (the differentiator)
-6. **AI documents & the horse loading-list builder** — offloading list, delivery note, load list, HC/passport & SPX checks (all DRAFT)
-7. **Dashboard & the ops-console UX** — sidebar layout, List / Board / Grid, filters, job detail drawer, calendar, insights, weather + welfare
-8. **Reporting** — operations report, Excel & PDF export
-9. **Staff planning, coverage, timesheets & payroll** — roster (week/month), booking-derived coverage, timesheets → payroll export, leave calendar, per-shipment staffing, AI import
-10. **Housing & occupancy + Animal registry** — BIP units + cleaning lifecycle; per-animal vaccination/CITES records
-11. **Branding, multilingual & configurability** — FPAS navy/yellow, logo/theme in Settings, five languages
-12. **Requirements traceability & Real vs simulated** — how the POC maps to the brief; what's live (AI, reasoning, workflow, audit) vs mock (data, integrations, access control)
-13. **What's next** — the production engagement (integrations, auth, database, migration, multi-site)
+6. **AI documents & the horse loading-list builder** — offloading list, delivery note, load list, HC/passport & SPX checks (all DRAFT); real branded **PDF** export with a scan-to-open **QR**
+7. **AI compliance rules engine** — species/route → required documents & checks, with authority + severity + rationale
+8. **Dashboard & the ops-console UX** — the **"Operations Today"** command view, sidebar layout, List / Board / Grid, filters, job detail drawer, weather + welfare; **QR deep links** open a record from a phone scan
+9. **Reporting** — operations report, Excel & PDF export
+10. **Staff planning, coverage, timesheets & payroll** — roster (week/month), booking-derived coverage, timesheets → payroll export, leave calendar, per-shipment staffing, AI import
+11. **Housing & occupancy + Animal registry** — BIP units + cleaning lifecycle; per-animal vaccination/CITES records
+12. **Agent portal (external surface)** — submit request, upload docs to a checklist, confirm AWB, track status
+13. **Branding, multilingual & configurability** — FPAS navy/yellow, logo/theme in Settings, five languages
+14. **Requirements traceability & Real vs simulated** — how the POC maps to the brief; what's live (AI, reasoning, workflow, audit) vs mock (data, integrations, access control)
+15. **What's next** — the production engagement (integrations, auth, database, migration, multi-site)
 
 ---
 

@@ -145,7 +145,7 @@ export function Guide() {
           <Step
             icon={IconGrid}
             title="Dashboard"
-            body="Opens on Today — a command view that pulls together what needs you now: outstanding compliance, HC/passport document gaps, vaccination expiries, roster coverage shortfalls, weather-welfare flags and arrivals in the next 48h, each linking to the relevant job or module. Other views: Jobs (List / Board / Grid), Calendar, Insights, Report (Excel/PDF) and Bin. Click any job for a quick-look drawer with a scannable QR of the AWB. The Flight Manager “Pending” queue and a one-click AI daily briefing round it out."
+            body="Opens on Today — a command view that pulls together what needs you now: outstanding compliance, HC/passport document gaps, vaccination expiries, roster coverage shortfalls, weather-welfare flags and arrivals in the next 48h, each linking to the relevant job or module. Other views: Jobs (List / Board / Grid), Calendar, Insights, Report (Excel/PDF) and Bin. Click any job for a quick-look drawer with a QR code that opens the shipment when scanned. The Flight Manager “Pending” queue and a one-click AI daily briefing round it out."
           />
           <Step
             icon={IconPlus}
@@ -180,7 +180,7 @@ export function Guide() {
           <Step
             icon={IconDoc}
             title="Artifacts"
-            body="The offloading list (Loslijst) and delivery note, drafted from the booking. Copy, or download each as a genuine branded FPAS PDF (navy header, DRAFT watermark, a scannable AWB QR) — generated in the browser with no external library."
+            body="The offloading list (Loslijst) and delivery note, drafted from the booking. Copy, or download each as a genuine branded FPAS PDF (navy header, DRAFT watermark, and a QR that opens the shipment when scanned) — generated in the browser with no external library."
           />
           <Step
             icon={IconClock}
@@ -195,12 +195,12 @@ export function Guide() {
           <Step
             icon={IconBox}
             title="Housing & occupancy"
-            body="The BIP holding units by zone (stables, kennels, aviary, aqua, isolation) with the between-shipment cleaning lifecycle — Occupied → Dirty → Cleaning → Ready → Available — advanced in one click, plus live utilisation. Each unit carries a scannable QR for check-in/out."
+            body="The BIP holding units by zone (stables, kennels, aviary, aqua, isolation) with the between-shipment cleaning lifecycle — Occupied → Dirty → Cleaning → Ready → Available — advanced in one click, plus live utilisation. Each unit carries a QR that opens (and highlights) that unit when scanned."
           />
           <Step
             icon={IconPaw}
             title="Animal registry"
-            body="Per-animal welfare & compliance records: microchip, passport, owner, linked shipment and vaccinations — with expiry alerts (due-soon / expired), a CITES flag for regulated species, and a scannable microchip QR."
+            body="Per-animal welfare & compliance records: microchip, passport, owner, linked shipment and vaccinations — with expiry alerts (due-soon / expired), a CITES flag for regulated species, and a microchip QR that opens the animal's record when scanned."
           />
           <Step
             icon={IconSparkles}
