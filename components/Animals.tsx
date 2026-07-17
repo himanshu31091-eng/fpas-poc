@@ -2,22 +2,48 @@
 
 import { useEffect, useState } from "react";
 import { usePrefs } from "./prefs";
-import { Card, Eyebrow, SimTag } from "./ui";
-import { IconSearch, IconAlert } from "./icons";
+import { Button, Card, Eyebrow, SimTag } from "./ui";
+import { IconSearch, IconAlert, IconPlus, IconTrash, IconGear, IconClose } from "./icons";
 import { QRCode, useOrigin } from "./QRCode";
-import { SEED_ANIMALS, daysUntil, type Animal } from "@/lib/animals";
+import {
+  SEED_ANIMALS,
+  loadAnimals,
+  saveAnimals,
+  upsertAnimal,
+  removeAnimal,
+  daysUntil,
+  type Animal,
+  type Vax,
+} from "@/lib/animals";
 
 export function Animals() {
-  const { t } = usePrefs();
+  const { t, canEdit, toast } = usePrefs();
   const [q, setQ] = useState("");
+  const [animals, setAnimals] = useState<Animal[]>(() => SEED_ANIMALS);
+  const [editing, setEditing] = useState<Animal | "new" | null>(null);
 
-  // Deep link: /animals?chip=… → filter straight to that animal.
   useEffect(() => {
+    const saved = loadAnimals();
+    if (saved && saved.length) setAnimals(saved);
     const chip = new URLSearchParams(window.location.search).get("chip");
     if (chip) setQ(chip);
   }, []);
 
-  const list = SEED_ANIMALS.filter((a) =>
+  function commit(next: Animal[]) {
+    setAnimals(next);
+    saveAnimals(next);
+  }
+  function saveAnimal(a: Animal) {
+    commit(upsertAnimal(animals, a));
+    setEditing(null);
+    toast(t("common.save") + " · " + a.name, "success");
+  }
+  function deleteAnimal(id: string, name: string) {
+    commit(removeAnimal(animals, id));
+    toast(t("common.remove") + " · " + name);
+  }
+
+  const list = animals.filter((a) =>
     [a.name, a.species, a.breed, a.chip, a.owner]
       .join(" ")
       .toLowerCase()
@@ -34,7 +60,15 @@ export function Animals() {
           </h1>
           <p className="mt-1 max-w-xl text-sm text-ink-soft">{t("an.subtitle")}</p>
         </div>
-        <SimTag />
+        <div className="flex items-center gap-2">
+          {canEdit && (
+            <Button size="sm" onClick={() => setEditing("new")}>
+              <IconPlus width={15} height={15} />
+              {t("an.addAnimal")}
+            </Button>
+          )}
+          <SimTag />
+        </div>
       </header>
 
       <div className="flex max-w-md items-center gap-2 rounded-xl border border-line-strong bg-white px-3 py-2">
@@ -49,16 +83,44 @@ export function Animals() {
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
         {list.map((a) => (
-          <AnimalCard key={a.id} a={a} t={t} />
+          <AnimalCard
+            key={a.id}
+            a={a}
+            t={t}
+            canEdit={canEdit}
+            onEdit={() => setEditing(a)}
+            onDelete={() => deleteAnimal(a.id, a.name)}
+          />
         ))}
       </div>
 
       <p className="font-mono text-[10.5px] text-ink-faint">{t("an.footer")}</p>
+
+      {editing && (
+        <AnimalForm
+          initial={editing === "new" ? null : editing}
+          t={t}
+          onCancel={() => setEditing(null)}
+          onSave={saveAnimal}
+        />
+      )}
     </div>
   );
 }
 
-function AnimalCard({ a, t }: { a: Animal; t: (k: string) => string }) {
+function AnimalCard({
+  a,
+  t,
+  canEdit,
+  onEdit,
+  onDelete,
+}: {
+  a: Animal;
+  t: (k: string) => string;
+  canEdit: boolean;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
   const origin = useOrigin();
   const expired = a.vax.find((v) => daysUntil(v.exp) < 0);
   const soon = a.vax.find((v) => daysUntil(v.exp) >= 0 && daysUntil(v.exp) <= 45);
@@ -72,11 +134,23 @@ function AnimalCard({ a, t }: { a: Animal; t: (k: string) => string }) {
             {a.species} · {a.breed}
           </div>
         </div>
-        {a.cites && (
-          <span className="rounded-md border border-primary/30 bg-primary-soft px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wide text-primary">
-            CITES
-          </span>
-        )}
+        <div className="flex items-center gap-1.5">
+          {canEdit && (
+            <>
+              <button onClick={onEdit} title={t("common.edit")} className="text-ink-faint transition-colors hover:text-primary">
+                <IconGear width={13} height={13} />
+              </button>
+              <button onClick={onDelete} title={t("common.remove")} className="text-ink-faint transition-colors hover:text-red">
+                <IconTrash width={13} height={13} />
+              </button>
+            </>
+          )}
+          {a.cites && (
+            <span className="rounded-md border border-primary/30 bg-primary-soft px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wide text-primary">
+              CITES
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="mt-3 space-y-1">
@@ -142,5 +216,111 @@ function Kv({ k, v, warn }: { k: string; v: string; warn?: boolean }) {
       <span className="font-mono text-[10px] uppercase tracking-wide text-ink-faint">{k}</span>
       <span className={`font-mono text-right ${warn ? "text-red" : "text-ink"}`}>{v}</span>
     </div>
+  );
+}
+
+let idSeq = 0;
+
+function AnimalForm({
+  initial,
+  t,
+  onCancel,
+  onSave,
+}: {
+  initial: Animal | null;
+  t: (k: string) => string;
+  onCancel: () => void;
+  onSave: (a: Animal) => void;
+}) {
+  const [f, setF] = useState<Animal>(
+    initial ?? {
+      id: `A-${Date.now()}-${idSeq++}`,
+      name: "",
+      species: "Horses",
+      breed: "",
+      chip: "",
+      passport: "",
+      owner: "",
+      job: "",
+      weightKg: 0,
+      vax: [],
+      cites: false,
+      notes: "",
+    }
+  );
+  const set = (k: keyof Animal, v: string | number | boolean) =>
+    setF((p) => ({ ...p, [k]: v } as Animal));
+  const setVax = (i: number, k: keyof Vax, v: string) =>
+    setF((p) => ({ ...p, vax: p.vax.map((x, idx) => (idx === i ? { ...x, [k]: v } : x)) }));
+  const addVax = () => setF((p) => ({ ...p, vax: [...p.vax, { name: "", exp: "" }] }));
+  const rmVax = (i: number) => setF((p) => ({ ...p, vax: p.vax.filter((_, idx) => idx !== i) }));
+
+  const inp =
+    "w-full rounded-md border border-line-strong bg-white px-2.5 py-1.5 text-[13px] text-ink focus:outline-none focus:ring-2 focus:ring-primary/30";
+  const canSave = f.name.trim().length > 0;
+
+  return (
+    <div className="no-print fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:items-center">
+      <div className="absolute inset-0 bg-ink/40" onClick={onCancel} />
+      <div className="relative my-4 w-full max-w-lg rounded-xl2 border border-line bg-panel shadow-lift">
+        <div className="flex items-center justify-between border-b border-line px-5 py-3.5">
+          <span className="text-sm font-semibold text-ink">
+            {initial ? t("an.editAnimal") : t("an.addAnimal")}
+          </span>
+          <button onClick={onCancel} className="flex h-7 w-7 items-center justify-center rounded-lg bg-bg text-ink-soft hover:text-ink">
+            <IconClose width={15} height={15} />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 p-5 sm:grid-cols-2">
+          <Field label={t("an.f.name")}><input className={inp} value={f.name} onChange={(e) => set("name", e.target.value)} /></Field>
+          <Field label={t("an.f.species")}><input className={inp} value={f.species} onChange={(e) => set("species", e.target.value)} /></Field>
+          <Field label={t("an.f.breed")}><input className={inp} value={f.breed} onChange={(e) => set("breed", e.target.value)} /></Field>
+          <Field label={t("an.microchip")}><input className={`${inp} font-mono`} value={f.chip} onChange={(e) => set("chip", e.target.value)} /></Field>
+          <Field label={t("an.passport")}><input className={`${inp} font-mono`} value={f.passport} onChange={(e) => set("passport", e.target.value)} /></Field>
+          <Field label={t("an.owner")}><input className={inp} value={f.owner} onChange={(e) => set("owner", e.target.value)} /></Field>
+          <Field label={t("an.f.job")}><input className={`${inp} font-mono`} value={f.job} onChange={(e) => set("job", e.target.value)} /></Field>
+          <Field label={t("an.weight") + " (kg)"}><input type="number" className={`${inp} font-mono`} value={f.weightKg} onChange={(e) => set("weightKg", Number(e.target.value))} /></Field>
+          <label className="col-span-full mt-1 flex items-center gap-2 text-[13px] text-ink">
+            <input type="checkbox" checked={f.cites} onChange={(e) => set("cites", e.target.checked)} className="h-4 w-4 rounded border-line-strong text-primary focus:ring-primary/30" />
+            {t("an.f.cites")}
+          </label>
+          <Field label={t("an.f.notes")} full><input className={inp} value={f.notes} onChange={(e) => set("notes", e.target.value)} /></Field>
+
+          {/* Vaccinations */}
+          <div className="col-span-full">
+            <div className="mb-1.5 flex items-center justify-between">
+              <span className="text-[12px] text-ink-soft">{t("an.vax")}</span>
+              <button onClick={addVax} className="inline-flex items-center gap-1 font-mono text-[11px] text-primary hover:underline">
+                <IconPlus width={12} height={12} /> {t("an.addVax")}
+              </button>
+            </div>
+            <div className="space-y-2">
+              {f.vax.map((v, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <input className={inp} placeholder={t("an.vaccine")} value={v.name} onChange={(e) => setVax(i, "name", e.target.value)} />
+                  <input className={`${inp} font-mono`} placeholder={t("an.expiry")} value={v.exp} onChange={(e) => setVax(i, "exp", e.target.value)} />
+                  <button onClick={() => rmVax(i)} className="shrink-0 text-ink-faint hover:text-red"><IconTrash width={14} height={14} /></button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end gap-2 border-t border-line px-5 py-3">
+          <Button variant="ghost" size="sm" onClick={onCancel}>{t("common.cancel")}</Button>
+          <Button size="sm" onClick={() => canSave && onSave(f)} disabled={!canSave}>{t("common.save")}</Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Field({ label, full, children }: { label: string; full?: boolean; children: React.ReactNode }) {
+  return (
+    <label className={`block ${full ? "col-span-full" : ""}`}>
+      <span className="mb-1 block text-[12px] text-ink-soft">{label}</span>
+      {children}
+    </label>
   );
 }

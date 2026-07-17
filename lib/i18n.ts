@@ -278,6 +278,21 @@ export const DICT: Record<string, Entry> = {
     fr: "expirée",
     es: "caducada",
   },
+  "an.addAnimal": {
+    en: "Add animal", nl: "Dier toevoegen", de: "Tier hinzufügen", fr: "Ajouter un animal", es: "Añadir animal",
+  },
+  "an.editAnimal": {
+    en: "Edit animal", nl: "Dier bewerken", de: "Tier bearbeiten", fr: "Modifier l’animal", es: "Editar animal",
+  },
+  "an.f.name": { en: "Name", nl: "Naam", de: "Name", fr: "Nom", es: "Nombre" },
+  "an.f.species": { en: "Species", nl: "Soort", de: "Art", fr: "Espèce", es: "Especie" },
+  "an.f.breed": { en: "Breed", nl: "Ras", de: "Rasse", fr: "Race", es: "Raza" },
+  "an.f.job": { en: "Linked shipment", nl: "Gekoppelde zending", de: "Verknüpfte Sendung", fr: "Expédition liée", es: "Envío vinculado" },
+  "an.f.notes": { en: "Notes", nl: "Opmerkingen", de: "Anmerkungen", fr: "Remarques", es: "Notas" },
+  "an.f.cites": { en: "CITES-regulated species", nl: "CITES-gereguleerde soort", de: "CITES-regulierte Art", fr: "Espèce réglementée CITES", es: "Especie regulada por CITES" },
+  "an.vaccine": { en: "Vaccine", nl: "Vaccin", de: "Impfstoff", fr: "Vaccin", es: "Vacuna" },
+  "an.expiry": { en: "Expiry (YYYY-MM-DD)", nl: "Vervaldatum (JJJJ-MM-DD)", de: "Ablauf (JJJJ-MM-TT)", fr: "Expiration (AAAA-MM-JJ)", es: "Vencimiento (AAAA-MM-DD)" },
+  "an.addVax": { en: "Add vaccination", nl: "Vaccinatie toevoegen", de: "Impfung hinzufügen", fr: "Ajouter une vaccination", es: "Añadir vacuna" },
   "an.footer": {
     en: "Full registry adds travel history, document attachments, breed lists and owner records.",
     nl: "Het volledige register voegt reisgeschiedenis, documentbijlagen, raslijsten en eigenaargegevens toe.",

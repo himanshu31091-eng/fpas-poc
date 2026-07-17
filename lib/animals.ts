@@ -38,6 +38,39 @@ export function daysUntil(d: string): number {
   );
 }
 
+export const ANIMALS_KEY = "fpas.animals.v1";
+
+export function loadAnimals(): Animal[] | null {
+  try {
+    const raw = window.localStorage.getItem(ANIMALS_KEY);
+    return raw ? (JSON.parse(raw) as Animal[]) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveAnimals(animals: Animal[]) {
+  try {
+    window.localStorage.setItem(ANIMALS_KEY, JSON.stringify(animals));
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Insert a new animal or replace an existing one (matched by id). */
+export function upsertAnimal(animals: Animal[], a: Animal): Animal[] {
+  const i = animals.findIndex((x) => x.id === a.id);
+  if (i === -1) return [...animals, a];
+  const next = animals.slice();
+  next[i] = a;
+  return next;
+}
+
+/** Remove an animal by id. */
+export function removeAnimal(animals: Animal[], id: string): Animal[] {
+  return animals.filter((x) => x.id !== id);
+}
+
 export const SEED_ANIMALS: Animal[] = [
   { id: "H-001", name: "Baloubet", species: "Horses", breed: "KWPN", chip: "528210004471820", passport: "NLD-2018-004471", owner: "IRT AUS", job: "EK9022 · IRT AUS", weightKg: 585, vax: [{ name: "Equine influenza", exp: "2026-11-14" }], cites: false, notes: "" },
   { id: "H-002", name: "Cornetto", species: "Horses", breed: "Holsteiner", chip: "276098100223145", passport: "DEU-2017-223145", owner: "IRT AUS", job: "EK9022 · IRT AUS", weightKg: 601, vax: [{ name: "Equine influenza", exp: "2027-02-02" }], cites: false, notes: "Quiet loader" },
