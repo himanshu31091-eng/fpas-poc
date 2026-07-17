@@ -53,15 +53,16 @@ export function AccessibilityMenu() {
     <div className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
-        aria-label="Accessibility options"
-        title="Accessibility"
-        className={`flex h-8 w-8 items-center justify-center rounded-lg border transition-colors ${
+        aria-label={t("a11y.title")}
+        title={t("a11y.title")}
+        className={`flex h-8 items-center gap-1.5 rounded-lg border px-2 transition-colors ${
           prefs.large || prefs.contrast
             ? "border-primary/50 bg-primary-soft text-primary"
             : "border-line bg-white text-ink-soft hover:text-ink"
         }`}
       >
         <IconAccessibility width={16} height={16} />
+        <span className="hidden text-[12px] font-medium sm:inline">{t("a11y.title")}</span>
       </button>
 
       {open && (
