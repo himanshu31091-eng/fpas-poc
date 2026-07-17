@@ -1,7 +1,17 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { qrMatrix } from "@/lib/qr";
+
+/** The deployed origin (e.g. https://…vercel.app), resolved after mount so QR
+ *  codes can encode absolute deep links that a phone can open. */
+export function useOrigin(): string {
+  const [origin, setOrigin] = useState("");
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
+  return origin;
+}
 
 /**
  * Dynamic QR code as inline SVG. Encodes whatever `value` is passed (an AWB, a

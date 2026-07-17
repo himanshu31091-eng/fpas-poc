@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { usePrefs } from "./prefs";
 import { Card, Eyebrow, SimTag } from "./ui";
 import { IconArrowRight, IconCheck, IconSparkles, IconBox } from "./icons";
-import { QRCode } from "./QRCode";
+import { QRCode, useOrigin } from "./QRCode";
 import {
   seedUnits,
   loadUnits,
@@ -27,11 +27,21 @@ const STAT_STATUSES: UnitStatus[] = ["Available", "Occupied", "Dirty", "Cleaning
 
 export function Housing() {
   const { t } = usePrefs();
+  const origin = useOrigin();
   const [units, setUnits] = useState<HousingUnit[]>(() => seedUnits());
+  const [focus, setFocus] = useState<string | null>(null);
 
   useEffect(() => {
     const saved = loadUnits();
     if (saved && saved.length) setUnits(saved);
+    // Deep link: /housing?unit=ST-A1 → highlight + scroll to that unit.
+    const unit = new URLSearchParams(window.location.search).get("unit");
+    if (unit) {
+      setFocus(unit);
+      setTimeout(() => {
+        document.getElementById(`unit-${unit}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 200);
+    }
   }, []);
 
   function advance(id: string) {
@@ -105,7 +115,10 @@ export function Housing() {
                 return (
                   <div
                     key={u.id}
-                    className={`rounded-card border p-3 transition-colors ${style.card}`}
+                    id={`unit-${u.id}`}
+                    className={`rounded-card border p-3 transition-colors ${style.card} ${
+                      focus === u.id ? "ring-2 ring-primary ring-offset-2" : ""
+                    }`}
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-mono text-[13px] font-bold text-ink">{u.id}</span>
@@ -138,9 +151,11 @@ export function Housing() {
                         {t(flow.actionKey)}
                       </button>
                     )}
-                    <div className="mt-2.5 flex justify-center border-t border-line/70 pt-2.5">
-                      <QRCode value={u.id} size={104} caption={u.id} />
-                    </div>
+                    {origin && (
+                      <div className="mt-2.5 flex justify-center border-t border-line/70 pt-2.5">
+                        <QRCode value={`${origin}/housing?unit=${encodeURIComponent(u.id)}`} size={104} caption={u.id} />
+                      </div>
+                    )}
                   </div>
                 );
               })}

@@ -8,7 +8,7 @@ import { StatusBadge, OpsStageChip, FlightStatusChip } from "./ui";
 import { CommodityArt } from "./CommodityArt";
 import { WelfareBadge, WeatherChip } from "./weather";
 import { StaffingChip } from "./staffStore";
-import { QRCode } from "./QRCode";
+import { QRCode, useOrigin } from "./QRCode";
 import {
   jobStatus,
   openCount,
@@ -37,6 +37,7 @@ export function JobDrawer({
 }) {
   const { getJob } = useStore();
   const { t } = usePrefs();
+  const origin = useOrigin();
   const job = jobId ? getJob(jobId) : null;
 
   // Esc to close.
@@ -146,9 +147,9 @@ export function JobDrawer({
               )}
               {b.specialCargo && <Row label={t("bf.field.specialCargo")} value={b.specialCargo} />}
 
-              {b.awb && (
+              {b.awb && origin && (
                 <div className="mt-4 flex flex-col items-center rounded-card border border-line bg-white py-4">
-                  <QRCode value={b.awb} size={176} caption={`AWB ${b.awb}`} />
+                  <QRCode value={`${origin}/jobs/${job.id}`} size={176} caption={`Scan → AWB ${b.awb}`} />
                 </div>
               )}
             </div>

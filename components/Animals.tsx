@@ -1,15 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePrefs } from "./prefs";
 import { Card, Eyebrow, SimTag } from "./ui";
 import { IconSearch, IconAlert } from "./icons";
-import { QRCode } from "./QRCode";
+import { QRCode, useOrigin } from "./QRCode";
 import { SEED_ANIMALS, daysUntil, type Animal } from "@/lib/animals";
 
 export function Animals() {
   const { t } = usePrefs();
   const [q, setQ] = useState("");
+
+  // Deep link: /animals?chip=… → filter straight to that animal.
+  useEffect(() => {
+    const chip = new URLSearchParams(window.location.search).get("chip");
+    if (chip) setQ(chip);
+  }, []);
 
   const list = SEED_ANIMALS.filter((a) =>
     [a.name, a.species, a.breed, a.chip, a.owner]
@@ -53,6 +59,7 @@ export function Animals() {
 }
 
 function AnimalCard({ a, t }: { a: Animal; t: (k: string) => string }) {
+  const origin = useOrigin();
   const expired = a.vax.find((v) => daysUntil(v.exp) < 0);
   const soon = a.vax.find((v) => daysUntil(v.exp) >= 0 && daysUntil(v.exp) <= 45);
 
@@ -120,9 +127,9 @@ function AnimalCard({ a, t }: { a: Animal; t: (k: string) => string }) {
         <div className="mt-2.5 text-[12px] italic text-ink-soft">{a.notes}</div>
       )}
 
-      {a.chip && a.chip !== "—" && (
+      {a.chip && a.chip !== "—" && origin && (
         <div className="mt-3 flex justify-center border-t border-line pt-3">
-          <QRCode value={a.chip} size={132} caption="microchip" />
+          <QRCode value={`${origin}/animals?chip=${encodeURIComponent(a.chip)}`} size={132} caption="microchip" />
         </div>
       )}
     </Card>
