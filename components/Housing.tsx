@@ -2,14 +2,16 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { usePrefs } from "./prefs";
-import { Card, Eyebrow, SimTag } from "./ui";
-import { IconArrowRight, IconCheck, IconSparkles, IconBox } from "./icons";
+import { Button, Card, Eyebrow, SimTag } from "./ui";
+import { IconArrowRight, IconCheck, IconSparkles, IconBox, IconPlus, IconTrash, IconGear, IconClose } from "./icons";
 import { QRCode, useOrigin } from "./QRCode";
 import {
   seedUnits,
   loadUnits,
   saveUnits,
   advanceUnit,
+  upsertUnit,
+  removeUnit,
   UNIT_FLOW,
   type HousingUnit,
   type UnitStatus,
@@ -26,10 +28,11 @@ const STATUS_STYLE: Record<UnitStatus, { chip: string; card: string; dot: string
 const STAT_STATUSES: UnitStatus[] = ["Available", "Occupied", "Dirty", "Cleaning", "Ready"];
 
 export function Housing() {
-  const { t } = usePrefs();
+  const { t, canEdit, toast } = usePrefs();
   const origin = useOrigin();
   const [units, setUnits] = useState<HousingUnit[]>(() => seedUnits());
   const [focus, setFocus] = useState<string | null>(null);
+  const [editing, setEditing] = useState<HousingUnit | "new" | null>(null);
 
   useEffect(() => {
     const saved = loadUnits();
@@ -44,12 +47,21 @@ export function Housing() {
     }
   }, []);
 
+  function commit(next: HousingUnit[]) {
+    setUnits(next);
+    saveUnits(next);
+  }
   function advance(id: string) {
-    setUnits((prev) => {
-      const next = advanceUnit(prev, id);
-      saveUnits(next);
-      return next;
-    });
+    commit(advanceUnit(units, id));
+  }
+  function saveUnit(unit: HousingUnit) {
+    commit(upsertUnit(units, unit));
+    setEditing(null);
+    toast(t("common.save") + " · " + unit.id, "success");
+  }
+  function deleteUnit(id: string) {
+    commit(removeUnit(units, id));
+    toast(t("common.remove") + " · " + id);
   }
 
   const counts = useMemo(
@@ -74,7 +86,15 @@ export function Housing() {
           </h1>
           <p className="mt-1 max-w-xl text-sm text-ink-soft">{t("house.subtitle")}</p>
         </div>
-        <SimTag />
+        <div className="flex items-center gap-2">
+          {canEdit && (
+            <Button size="sm" onClick={() => setEditing("new")}>
+              <IconPlus width={15} height={15} />
+              {t("house.addUnit")}
+            </Button>
+          )}
+          <SimTag />
+        </div>
       </header>
 
       {/* Stat row */}
@@ -120,14 +140,34 @@ export function Housing() {
                       focus === u.id ? "ring-2 ring-primary ring-offset-2" : ""
                     }`}
                   >
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-2">
                       <span className="font-mono text-[13px] font-bold text-ink">{u.id}</span>
-                      <span
-                        className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide ${style.chip}`}
-                      >
-                        <span className={`h-1.5 w-1.5 rounded-full ${style.dot}`} />
-                        {t(`house.status.${u.status}`)}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        {canEdit && (
+                          <>
+                            <button
+                              onClick={() => setEditing(u)}
+                              title={t("common.edit")}
+                              className="text-ink-faint transition-colors hover:text-primary"
+                            >
+                              <IconGear width={13} height={13} />
+                            </button>
+                            <button
+                              onClick={() => deleteUnit(u.id)}
+                              title={t("common.remove")}
+                              className="text-ink-faint transition-colors hover:text-red"
+                            >
+                              <IconTrash width={13} height={13} />
+                            </button>
+                          </>
+                        )}
+                        <span
+                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide ${style.chip}`}
+                        >
+                          <span className={`h-1.5 w-1.5 rounded-full ${style.dot}`} />
+                          {t(`house.status.${u.status}`)}
+                        </span>
+                      </div>
                     </div>
                     <div className="mt-2 min-h-[20px] text-[13px]">
                       {u.occupant ? (
@@ -163,6 +203,89 @@ export function Housing() {
           </Card>
         );
       })}
+
+      {editing && (
+        <UnitForm
+          initial={editing === "new" ? null : editing}
+          zones={zones}
+          t={t}
+          onCancel={() => setEditing(null)}
+          onSave={saveUnit}
+        />
+      )}
+    </div>
+  );
+}
+
+const ALL_STATUSES: UnitStatus[] = ["Available", "Occupied", "Dirty", "Cleaning", "Ready"];
+
+function UnitForm({
+  initial,
+  zones,
+  t,
+  onCancel,
+  onSave,
+}: {
+  initial: HousingUnit | null;
+  zones: string[];
+  t: (k: string) => string;
+  onCancel: () => void;
+  onSave: (u: HousingUnit) => void;
+}) {
+  const [f, setF] = useState<HousingUnit>(
+    initial ?? { id: "", zone: zones[0] ?? "", type: "", species: "", status: "Available", occupant: "", since: "" }
+  );
+  const set = (k: keyof HousingUnit, v: string) => setF((p) => ({ ...p, [k]: v } as HousingUnit));
+  const inp =
+    "w-full rounded-md border border-line-strong bg-white px-2.5 py-1.5 text-[13px] text-ink focus:outline-none focus:ring-2 focus:ring-primary/30";
+  const canSave = f.id.trim() && f.zone.trim();
+
+  return (
+    <div className="no-print fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:items-center">
+      <div className="absolute inset-0 bg-ink/40" onClick={onCancel} />
+      <div className="relative w-full max-w-md rounded-xl2 border border-line bg-panel shadow-lift">
+        <div className="flex items-center justify-between border-b border-line px-5 py-3.5">
+          <span className="text-sm font-semibold text-ink">
+            {initial ? t("house.editUnit") : t("house.addUnit")}
+          </span>
+          <button onClick={onCancel} className="flex h-7 w-7 items-center justify-center rounded-lg bg-bg text-ink-soft hover:text-ink">
+            <IconClose width={15} height={15} />
+          </button>
+        </div>
+        <div className="grid grid-cols-1 gap-3 p-5 sm:grid-cols-2">
+          <label className="block">
+            <span className="mb-1 block text-[12px] text-ink-soft">{t("house.f.id")}</span>
+            <input className={`${inp} font-mono`} value={f.id} onChange={(e) => set("id", e.target.value)} placeholder="ST-A5" />
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-[12px] text-ink-soft">{t("house.f.zone")}</span>
+            <input className={inp} list="housing-zones" value={f.zone} onChange={(e) => set("zone", e.target.value)} placeholder="Stables A" />
+            <datalist id="housing-zones">{zones.map((z) => <option key={z} value={z} />)}</datalist>
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-[12px] text-ink-soft">{t("house.f.type")}</span>
+            <input className={inp} value={f.type} onChange={(e) => set("type", e.target.value)} placeholder="Stable" />
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-[12px] text-ink-soft">{t("house.f.species")}</span>
+            <input className={inp} value={f.species} onChange={(e) => set("species", e.target.value)} placeholder="Horses" />
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-[12px] text-ink-soft">{t("house.f.status")}</span>
+            <select className={inp} value={f.status} onChange={(e) => set("status", e.target.value)}>
+              {ALL_STATUSES.map((s) => <option key={s} value={s}>{t(`house.status.${s}`)}</option>)}
+            </select>
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-[12px] text-ink-soft">{t("house.f.occupant")}</span>
+            <input className={inp} value={f.occupant} onChange={(e) => set("occupant", e.target.value)} placeholder="—" />
+          </label>
+        </div>
+        <div className="flex items-center justify-end gap-2 border-t border-line px-5 py-3">
+          <Button variant="ghost" size="sm" onClick={onCancel}>{t("common.cancel")}</Button>
+          <Button size="sm" onClick={() => canSave && onSave(f)} disabled={!canSave}>{t("common.save")}</Button>
+        </div>
+      </div>
     </div>
   );
 }

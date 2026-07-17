@@ -90,6 +90,33 @@ export const DICT: Record<string, Entry> = {
     fr: "unités",
     es: "unidades",
   },
+  "common.add": {
+    en: "Add", nl: "Toevoegen", de: "Hinzufügen", fr: "Ajouter", es: "Añadir",
+  },
+  "common.edit": {
+    en: "Edit", nl: "Bewerken", de: "Bearbeiten", fr: "Modifier", es: "Editar",
+  },
+  "common.save": {
+    en: "Save", nl: "Opslaan", de: "Speichern", fr: "Enregistrer", es: "Guardar",
+  },
+  "common.cancel": {
+    en: "Cancel", nl: "Annuleren", de: "Abbrechen", fr: "Annuler", es: "Cancelar",
+  },
+  "common.remove": {
+    en: "Remove", nl: "Verwijderen", de: "Entfernen", fr: "Supprimer", es: "Eliminar",
+  },
+  "house.addUnit": {
+    en: "Add unit", nl: "Unit toevoegen", de: "Einheit hinzufügen", fr: "Ajouter une unité", es: "Añadir unidad",
+  },
+  "house.editUnit": {
+    en: "Edit unit", nl: "Unit bewerken", de: "Einheit bearbeiten", fr: "Modifier l’unité", es: "Editar unidad",
+  },
+  "house.f.id": { en: "Unit ID", nl: "Unit-ID", de: "Einheit-ID", fr: "ID d’unité", es: "ID de unidad" },
+  "house.f.zone": { en: "Zone", nl: "Zone", de: "Zone", fr: "Zone", es: "Zona" },
+  "house.f.type": { en: "Type", nl: "Type", de: "Typ", fr: "Type", es: "Tipo" },
+  "house.f.species": { en: "Species", nl: "Soort", de: "Art", fr: "Espèce", es: "Especie" },
+  "house.f.occupant": { en: "Occupant", nl: "Bewoner", de: "Belegung", fr: "Occupant", es: "Ocupante" },
+  "house.f.status": { en: "Status", nl: "Status", de: "Status", fr: "Statut", es: "Estado" },
   "house.status.Available": {
     en: "Available",
     nl: "Beschikbaar",
