@@ -78,7 +78,7 @@ export function Staffing() {
         ))}
       </div>
 
-      <div key={tab} className="animate-fade-up">
+      <div key={tab} className="animate-fade-in">
         {tab === "roster" && <RosterTab />}
         {tab === "timesheets" && <TimesheetsTab />}
         {tab === "leave" && <LeaveTab />}

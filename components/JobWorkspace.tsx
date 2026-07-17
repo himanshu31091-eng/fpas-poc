@@ -265,7 +265,7 @@ export function JobWorkspace({ jobId }: { jobId: string }) {
       </div>
 
       {/* Panels */}
-      <div key={tab} className="animate-fade-up">
+      <div key={tab} className="animate-fade-in">
       {tab === "source" && <SourceView job={job} />}
       {tab === "extraction" && (
         <ExtractionReview jobId={jobId} onConfirmed={() => setTab("booking")} />

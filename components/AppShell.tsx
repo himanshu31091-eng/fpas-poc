@@ -276,7 +276,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {/* Content */}
         <main className="mx-auto w-full max-w-[1180px] flex-1 px-4 py-6 sm:px-8 sm:py-8">
           {hydrated ? (
-            <div key={pathname} className="animate-fade-up">
+            // fade-in is opacity-only on purpose: a transform here would make
+            // fixed-position modals/drawers anchor to this wrapper, not the viewport
+            <div key={pathname} className="animate-fade-in">
               {children}
             </div>
           ) : (

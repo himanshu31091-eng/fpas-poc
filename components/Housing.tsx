@@ -241,10 +241,10 @@ function UnitForm({
   const canSave = f.id.trim() && f.zone.trim();
 
   return (
-    <div className="no-print fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:items-center">
-      <div className="absolute inset-0 bg-ink/40" onClick={onCancel} />
-      <div className="relative w-full max-w-md rounded-xl2 border border-line bg-panel shadow-lift">
-        <div className="flex items-center justify-between border-b border-line px-5 py-3.5">
+    <div className="no-print fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" onClick={onCancel} />
+      <div className="relative flex max-h-[88vh] w-full max-w-md flex-col overflow-hidden rounded-xl2 border border-line bg-panel shadow-lift">
+        <div className="flex shrink-0 items-center justify-between border-b border-line px-5 py-3.5">
           <span className="text-sm font-semibold text-ink">
             {initial ? t("house.editUnit") : t("house.addUnit")}
           </span>
@@ -252,7 +252,7 @@ function UnitForm({
             <IconClose width={15} height={15} />
           </button>
         </div>
-        <div className="grid grid-cols-1 gap-3 p-5 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 overflow-y-auto p-5 sm:grid-cols-2">
           <label className="block">
             <span className="mb-1 block text-[12px] text-ink-soft">{t("house.f.id")}</span>
             <input className={`${inp} font-mono`} value={f.id} onChange={(e) => set("id", e.target.value)} placeholder="ST-A5" />
@@ -281,7 +281,7 @@ function UnitForm({
             <input className={inp} value={f.occupant} onChange={(e) => set("occupant", e.target.value)} placeholder="—" />
           </label>
         </div>
-        <div className="flex items-center justify-end gap-2 border-t border-line px-5 py-3">
+        <div className="flex shrink-0 items-center justify-end gap-2 border-t border-line px-5 py-3">
           <Button variant="ghost" size="sm" onClick={onCancel}>{t("common.cancel")}</Button>
           <Button size="sm" onClick={() => canSave && onSave(f)} disabled={!canSave}>{t("common.save")}</Button>
         </div>

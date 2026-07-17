@@ -260,10 +260,10 @@ function AnimalForm({
   const canSave = f.name.trim().length > 0;
 
   return (
-    <div className="no-print fixed inset-0 z-50 flex items-start justify-center overflow-y-auto p-4 sm:items-center">
-      <div className="absolute inset-0 bg-ink/40" onClick={onCancel} />
-      <div className="relative my-4 w-full max-w-lg rounded-xl2 border border-line bg-panel shadow-lift">
-        <div className="flex items-center justify-between border-b border-line px-5 py-3.5">
+    <div className="no-print fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" onClick={onCancel} />
+      <div className="relative flex max-h-[88vh] w-full max-w-lg flex-col overflow-hidden rounded-xl2 border border-line bg-panel shadow-lift">
+        <div className="flex shrink-0 items-center justify-between border-b border-line px-5 py-3.5">
           <span className="text-sm font-semibold text-ink">
             {initial ? t("an.editAnimal") : t("an.addAnimal")}
           </span>
@@ -272,7 +272,7 @@ function AnimalForm({
           </button>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 p-5 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 overflow-y-auto p-5 sm:grid-cols-2">
           <Field label={t("an.f.name")}><input className={inp} value={f.name} onChange={(e) => set("name", e.target.value)} /></Field>
           <Field label={t("an.f.species")}><input className={inp} value={f.species} onChange={(e) => set("species", e.target.value)} /></Field>
           <Field label={t("an.f.breed")}><input className={inp} value={f.breed} onChange={(e) => set("breed", e.target.value)} /></Field>
@@ -307,7 +307,7 @@ function AnimalForm({
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-2 border-t border-line px-5 py-3">
+        <div className="flex shrink-0 items-center justify-end gap-2 border-t border-line px-5 py-3">
           <Button variant="ghost" size="sm" onClick={onCancel}>{t("common.cancel")}</Button>
           <Button size="sm" onClick={() => canSave && onSave(f)} disabled={!canSave}>{t("common.save")}</Button>
         </div>

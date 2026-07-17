@@ -259,7 +259,7 @@ export function Dashboard() {
       )}
 
       {view === "jobs" && (
-      <div className="animate-fade-up">
+      <div className="animate-fade-in">
       <div data-tour="briefing">
         <BriefingCard jobs={activeJobs} />
       </div>
