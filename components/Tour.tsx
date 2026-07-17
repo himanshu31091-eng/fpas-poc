@@ -17,57 +17,57 @@ const STEPS: Step[] = [
   {
     target: "hero",
     title: "Welcome to First Point Animal Services",
-    body: "A quick tour of the AI-assisted workflow. Each section is highlighted as we go — the rest of the screen stays visible so you keep your bearings.",
+    body: "A quick tour of the AI-assisted operations console. Each section is highlighted as we go — the rest of the screen stays visible so you keep your bearings.",
   },
   {
     target: "views",
-    title: "Five ways to view work",
-    body: "Switch between the Jobs list, a Calendar of arrivals & departures, an Insights dashboard, a Report you can export to Excel (.xlsx), and a Bin for deleted jobs.",
+    title: "Views of your operation",
+    body: "Switch between Today (a command view of what needs attention), the Jobs register (List / Board / Grid), a Calendar of arrivals & departures, Insights, an exportable Report, and a Bin for deleted jobs.",
   },
   {
-    target: "briefing",
-    title: "AI daily briefing",
-    body: "One click and the assistant reads the whole operation and tells you what's at risk — most urgent first, now including adverse arrival-day weather at Schiphol.",
-  },
-  {
-    target: "flightmanager",
-    title: "Flight Manager queue",
-    body: "Booked horse shipments arrive here as ‘Pending’. Click ‘Accept’ to turn one into a job.",
-  },
-  {
-    target: "layouts",
-    title: "List, Board & Grid",
-    body: "View the same jobs three ways — a detailed List, a Kanban Board grouped by status, or a card Grid. On the Board you can create a job inline with ‘+ New job’, or jump to the full intake.",
-  },
-  {
-    target: "joblist",
-    title: "Your shipments",
-    body: "Every job with its readiness status, its ops stage (Enquiry → Confirmed → Ready → …), open steps, (mock) flight status, and the live Amsterdam arrival-day weather — with a welfare flag when it's too hot or cold for live animals. Click any row to open its workspace — extraction, readiness, the horse loading-list builder (HC/passport checks, grooms, SPX), submissions, documents.",
+    target: "today",
+    title: "Operations Today",
+    body: "The default landing pulls together everything needing action across the whole operation — outstanding compliance, HC/passport document gaps, vaccination expiries, roster coverage shortfalls, arrival-day weather and the next 48 hours — each linking straight to the record. Open any job for a quick-look drawer with a QR you can scan from a phone.",
   },
   {
     target: "nav-new",
     title: "Create a booking",
-    body: "Start a job from a sample email, an uploaded PDF (the AI reads it), the customer enquiry form, a CSV import, or manually.",
+    body: "Start a job from a sample email, an uploaded PDF (the AI reads it), the customer enquiry form, a CSV import, or manually. The assistant extracts the fields and flags anything low-confidence; you confirm.",
+  },
+  {
+    target: "nav-housing",
+    title: "Housing & occupancy",
+    body: "The BIP holding units by zone (stables, kennels, aviary, aqua, isolation) with the between-shipment cleaning cycle and live utilisation. Add, edit or remove units; each carries a QR to open it from a phone.",
+  },
+  {
+    target: "nav-animals",
+    title: "Animal registry",
+    body: "Per-animal microchip, passport, owner and vaccinations — with due-soon / expired alerts and a CITES flag. Add, edit or remove animals; each has a scannable microchip QR.",
   },
   {
     target: "nav-staffing",
     title: "Staff planning",
-    body: "The FPAS Amsterdam roster: a weekly/monthly availability board, a leave request-and-approve calendar, and an AI import that reads the planning spreadsheet. It also derives coverage from the bookings — how many crew each day's shipments need vs. who's rostered on — and flags understaffed days. Each shipment can request and assign staff from those available that day.",
+    body: "A weekly/monthly roster with booking-derived coverage (crew needed vs. rostered, flagging understaffed days), timesheets with a payroll export, a leave request-and-approve calendar, and per-shipment staffing. AI can import the existing spreadsheet.",
   },
   {
     target: "nav-copilot",
     title: "Ask the AI Copilot",
-    body: "Ask questions across all shipments — ‘what's arriving in 48 hours?’ or ‘draft the NVWA notice’.",
+    body: "Ask questions across all shipments — ‘what's arriving in 48 hours?’ or ‘draft the NVWA notice’. It only sees your jobs; decision-support, not an autonomous agent.",
   },
   {
-    target: "nav-requirements",
-    title: "Requirements & traceability",
-    body: "See how the POC maps to the FPAS brief — every requirement with a Built / Simulated / Future status, plus the extras we added. Exportable as a PDF.",
+    target: "nav-rules",
+    title: "AI compliance rules",
+    body: "Pick a shipment and the assistant reasons the documents and checks its species, route and direction require — each with the responsible authority (NVWA / TRACES / CITES / IATA), a severity and a rationale.",
+  },
+  {
+    target: "nav-portal",
+    title: "Agent portal",
+    body: "A demo of the external surface agents and airlines use — submit a booking request, upload documents to a checklist, confirm the AWB, and track status.",
   },
   {
     target: "nav-guide",
-    title: "Full guide",
-    body: "The complete how-it-works guide lives here and can be saved as a PDF. That's the tour — enjoy!",
+    title: "Full guide & languages",
+    body: "The complete how-it-works guide lives here and can be saved as a PDF. The whole interface also runs in five languages — switch it from the Accessibility menu, top-right. That's the tour — enjoy!",
   },
 ];
 

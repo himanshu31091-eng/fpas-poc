@@ -164,7 +164,7 @@ export function OpsToday() {
     compliance.length + docGaps.length + vax.length + coverage.length + weather.length;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" data-tour="today">
       {/* Summary banner */}
       <div
         className={`flex items-center gap-3 rounded-card border px-4 py-3 ${

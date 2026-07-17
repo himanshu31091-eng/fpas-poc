@@ -45,8 +45,8 @@ const NAV_GROUPS: { section: string; items: NavItem[] }[] = [
     items: [
       { href: "/", key: "nav.dashboard", icon: IconGrid },
       { href: "/jobs/new", key: "nav.new", icon: IconPlus, tour: "nav-new", editOnly: true },
-      { href: "/housing", key: "nav.housing", icon: IconBox },
-      { href: "/animals", key: "nav.animals", icon: IconPaw },
+      { href: "/housing", key: "nav.housing", icon: IconBox, tour: "nav-housing" },
+      { href: "/animals", key: "nav.animals", icon: IconPaw, tour: "nav-animals" },
       { href: "/staffing", key: "nav.staffing", icon: IconUsers, tour: "nav-staffing" },
     ],
   },
@@ -54,7 +54,7 @@ const NAV_GROUPS: { section: string; items: NavItem[] }[] = [
     section: "nav.section.assistant",
     items: [
       { href: "/copilot", key: "nav.copilot", icon: IconSparkles, tour: "nav-copilot" },
-      { href: "/rules", key: "nav.rules", icon: IconClipboard },
+      { href: "/rules", key: "nav.rules", icon: IconClipboard, tour: "nav-rules" },
     ],
   },
   {
@@ -67,7 +67,7 @@ const NAV_GROUPS: { section: string; items: NavItem[] }[] = [
   {
     section: "nav.section.manage",
     items: [
-      { href: "/portal", key: "nav.portal", icon: IconArrowRight },
+      { href: "/portal", key: "nav.portal", icon: IconArrowRight, tour: "nav-portal" },
       { href: "/settings", key: "nav.settings", icon: IconGear },
     ],
   },
