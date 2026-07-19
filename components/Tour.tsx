@@ -9,63 +9,76 @@ interface Step {
   target: string; // data-tour attribute value
   title: string;
   body: string;
+  /** Route to open for this step, so the main view changes too (not just the sidebar). */
+  route?: string;
 }
 
-// All targets live on the dashboard (nav links are always visible there),
-// so the tour runs on "/" and spotlights each real section in turn.
+// Each step navigates to its section (route) and spotlights the matching
+// sidebar link, so both the sidebar and the main view move together.
 const STEPS: Step[] = [
   {
     target: "hero",
+    route: "/",
     title: "Welcome to First Point Animal Services",
     body: "A quick tour of the AI-assisted operations console. Each section is highlighted as we go — the rest of the screen stays visible so you keep your bearings.",
   },
   {
     target: "views",
+    route: "/",
     title: "Views of your operation",
     body: "Switch between Today (a command view of what needs attention), the Jobs register (List / Board / Grid), a Calendar of arrivals & departures, Insights, an exportable Report, and a Bin for deleted jobs.",
   },
   {
     target: "today",
+    route: "/",
     title: "Operations Today",
     body: "The default landing pulls together everything needing action across the whole operation — outstanding compliance, HC/passport document gaps, vaccination expiries, roster coverage shortfalls, arrival-day weather and the next 48 hours — each linking straight to the record. Open any job for a quick-look drawer with a QR you can scan from a phone.",
   },
   {
     target: "nav-new",
+    route: "/jobs/new",
     title: "Create a booking",
     body: "Start a job from a sample email, an uploaded PDF (the AI reads it), the customer enquiry form, a CSV import, or manually. The assistant extracts the fields and flags anything low-confidence; you confirm.",
   },
   {
     target: "nav-housing",
+    route: "/housing",
     title: "Housing & occupancy",
     body: "The BIP holding units by zone (stables, kennels, aviary, aqua, isolation) with the between-shipment cleaning cycle and live utilisation. Add, edit or remove units; each carries a QR to open it from a phone.",
   },
   {
     target: "nav-animals",
+    route: "/animals",
     title: "Animal registry",
     body: "Per-animal microchip, passport, owner and vaccinations — with due-soon / expired alerts and a CITES flag. Add, edit or remove animals; each has a scannable microchip QR.",
   },
   {
     target: "nav-staffing",
+    route: "/staffing",
     title: "Staff planning",
     body: "A weekly/monthly roster with booking-derived coverage (crew needed vs. rostered, flagging understaffed days), timesheets with a payroll export, a leave request-and-approve calendar, and per-shipment staffing. AI can import the existing spreadsheet.",
   },
   {
     target: "nav-copilot",
+    route: "/copilot",
     title: "Ask the AI Copilot",
     body: "Ask questions across all shipments — ‘what's arriving in 48 hours?’ or ‘draft the NVWA notice’. It only sees your jobs; decision-support, not an autonomous agent.",
   },
   {
     target: "nav-rules",
+    route: "/rules",
     title: "AI compliance rules",
     body: "Pick a shipment and the assistant reasons the documents and checks its species, route and direction require — each with the responsible authority (NVWA / TRACES / CITES / IATA), a severity and a rationale.",
   },
   {
     target: "nav-portal",
+    route: "/portal",
     title: "Agent portal",
     body: "A demo of the external surface agents and airlines use — submit a booking request, upload documents to a checklist, confirm the AWB, and track status.",
   },
   {
     target: "nav-guide",
+    route: "/guide",
     title: "Full guide & languages",
     body: "The complete how-it-works guide lives here and can be saved as a PDF. The whole interface also runs in five languages — switch it from the Accessibility menu, top-right. That's the tour — enjoy!",
   },
@@ -83,6 +96,16 @@ export function Tour() {
   // Locate + track the current step's target element.
   useEffect(() => {
     if (!open) return;
+
+    // Navigate to the step's section so the main view changes too, not just
+    // the sidebar. The pathname change re-runs this effect, then we locate.
+    const route = STEPS[i].route;
+    if (route && pathname !== route) {
+      setRect(null);
+      router.push(route);
+      return;
+    }
+
     let cancelled = false;
     let el: Element | null = null;
     let tries = 0;
