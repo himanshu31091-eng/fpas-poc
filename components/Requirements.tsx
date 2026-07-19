@@ -37,8 +37,9 @@ export function Requirements() {
               {t("req.title")}
             </h1>
             <p className="text-[13px] text-ink-soft">
-              How this POC maps to the FPAS Amsterdam Import requirements.
-              Statuses mirror the MoreYeahs traceability document.
+              How this POC maps to the FPAS Amsterdam import &amp; export
+              requirements. Statuses mirror the MoreYeahs traceability document;
+              “Beyond the brief” lists what we added on top.
             </p>
           </div>
         </div>

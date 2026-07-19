@@ -195,12 +195,12 @@ export function Guide() {
           <Step
             icon={IconBox}
             title="Housing & occupancy"
-            body="The BIP holding units by zone (stables, kennels, aviary, aqua, isolation) with the between-shipment cleaning lifecycle — Occupied → Dirty → Cleaning → Ready → Available — advanced in one click, plus live utilisation. Each unit carries a QR that opens (and highlights) that unit when scanned."
+            body="The BIP holding units by zone (stables, kennels, aviary, aqua, isolation) with the between-shipment cleaning lifecycle — Occupied → Dirty → Cleaning → Ready → Available — advanced in one click, plus live utilisation. Admins can add, edit and remove units. Each unit carries a QR that opens (and highlights) that unit when scanned."
           />
           <Step
             icon={IconPaw}
             title="Animal registry"
-            body="Per-animal welfare & compliance records: microchip, passport, owner, linked shipment and vaccinations — with expiry alerts (due-soon / expired), a CITES flag for regulated species, and a microchip QR that opens the animal's record when scanned."
+            body="Per-animal welfare & compliance records: microchip, passport, owner, linked shipment and vaccinations — with expiry alerts (due-soon / expired), a CITES flag for regulated species, and a microchip QR that opens the animal's record when scanned. Admins can add, edit and remove animals."
           />
           <Step
             icon={IconSparkles}
