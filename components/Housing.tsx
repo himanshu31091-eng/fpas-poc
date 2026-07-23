@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { usePrefs } from "./prefs";
 import { Button, Card, Eyebrow, SimTag } from "./ui";
-import { IconArrowRight, IconCheck, IconSparkles, IconBox, IconPlus, IconTrash, IconGear, IconClose } from "./icons";
+import { IconArrowRight, IconCheck, IconSparkles, IconBox, IconPlus, IconTrash, IconGear, IconClose, IconSearch } from "./icons";
 import { QRCode, useOrigin } from "./QRCode";
 import {
   seedUnits,
@@ -34,6 +34,12 @@ export function Housing() {
   const [units, setUnits] = useState<HousingUnit[]>(() => seedUnits());
   const [focus, setFocus] = useState<string | null>(null);
   const [editing, setEditing] = useState<HousingUnit | "new" | null>(null);
+  const [q, setQ] = useState("");
+  const matchUnit = (u: HousingUnit) =>
+    [u.id, u.zone, u.type, u.species, u.occupant, u.status]
+      .join(" ")
+      .toLowerCase()
+      .includes(q.trim().toLowerCase());
 
   useEffect(() => {
     const saved = loadUnits();
@@ -88,6 +94,22 @@ export function Housing() {
           <p className="mt-1 max-w-xl text-sm text-ink-soft">{t("house.subtitle")}</p>
         </div>
         <div className="flex items-center gap-2">
+          {units.length > 8 && (
+            <div className="flex items-center gap-2 rounded-lg border border-line-strong bg-white px-2.5 py-1.5">
+              <IconSearch width={14} height={14} className="shrink-0 text-ink-faint" />
+              <input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Search unit, zone, species, occupant…"
+                className="w-56 bg-transparent text-[13px] text-ink outline-none"
+              />
+              {q && (
+                <button onClick={() => setQ("")} title="Clear" className="text-ink-faint hover:text-ink">
+                  ×
+                </button>
+              )}
+            </div>
+          )}
           {canEdit && (
             <Button size="sm" onClick={() => setEditing("new")}>
               <IconPlus width={15} height={15} />
@@ -119,7 +141,8 @@ export function Housing() {
 
       {/* Zones */}
       {zones.map((zone) => {
-        const zoneUnits = units.filter((u) => u.zone === zone);
+        const zoneUnits = units.filter((u) => u.zone === zone && matchUnit(u));
+        if (zoneUnits.length === 0) return null;
         return (
           <Card key={zone} className="p-4">
             <div className="mb-3 flex items-center gap-2">

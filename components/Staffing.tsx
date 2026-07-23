@@ -6,7 +6,7 @@ import { useStore } from "./store";
 import { usePrefs } from "./prefs";
 import { Button, Card, Eyebrow, BrandLoader, SimTag } from "./ui";
 import { Markdown } from "./Markdown";
-import { IconSparkles, IconChevronLeft, IconDownload } from "./icons";
+import { IconSparkles, IconChevronLeft, IconDownload, IconSearch } from "./icons";
 import { downloadXlsx } from "@/lib/xlsx";
 import { requiredCrew, movementsOn } from "@/lib/jobs";
 import {
@@ -27,6 +27,7 @@ import {
   type AssetType,
   type ShiftPattern,
   type DayStatus,
+  type StaffProfile,
 } from "@/lib/staff";
 
 type Tab = "roster" | "timesheets" | "leave" | "resources" | "import";
@@ -102,7 +103,9 @@ function RosterTab() {
   const [mode, setMode] = useState<"week" | "month">("week");
   const [anchor, setAnchor] = useState<Date>(() => new Date());
   const [showHelp, setShowHelp] = useState(false);
+  const [q, setQ] = useState("");
   const todayStr = dateStr(new Date());
+  const shownTeam = team.filter((s) => matchStaff(s, profiles[s], q));
 
   const days = useMemo(() => {
     if (mode === "week") return weekDates(mondayOf(anchor));
@@ -313,6 +316,7 @@ function RosterTab() {
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-3">
             <div className="text-sm font-semibold text-ink">{label}</div>
+            <SearchBox value={q} onChange={setQ} placeholder="Search staff or role…" />
             <div className="flex items-center gap-0.5 rounded-full border border-line bg-white p-0.5">
               {(["week", "month"] as const).map((m) => (
                 <button
@@ -370,6 +374,11 @@ function RosterTab() {
           </div>
         </div>
 
+        {q && (
+          <div className="mb-2 text-[11px] text-ink-faint">
+            Showing {shownTeam.length} of {team.length} staff
+          </div>
+        )}
         <div className="-mx-1 overflow-x-auto px-1">
           <table className={`w-full ${minW} border-collapse text-[12px]`}>
             <thead>
@@ -403,7 +412,7 @@ function RosterTab() {
               </tr>
             </thead>
             <tbody>
-              {team.map((s) => (
+              {shownTeam.map((s) => (
                 <tr key={s} className="border-t border-line">
                   <td className="sticky left-0 z-10 bg-panel px-2 py-1.5">
                     <div className="font-medium text-ink">{displayName(s, profiles)}</div>
@@ -564,17 +573,12 @@ function AddShift() {
       {open && (
         <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           <Field label="Staff">
-            <select
+            <StaffPicker
+              team={team}
+              profiles={profiles}
               value={f.staff}
-              onChange={(e) => setF({ ...f, staff: e.target.value })}
-              className={selectCls}
-            >
-              {team.map((s) => (
-                <option key={s} value={s}>
-                  {displayName(s, profiles)}
-                </option>
-              ))}
-            </select>
+              onChange={(name) => setF({ ...f, staff: name })}
+            />
           </Field>
           <Field label="Date">
             <input
@@ -772,6 +776,7 @@ function TimesheetsTab() {
   const { t, toast } = usePrefs();
   const [actuals, setActuals] = useState<Record<string, { start: string; end: string }>>({});
   const [seeded, setSeeded] = useState(false);
+  const [q, setQ] = useState("");
 
   const week = useMemo(() => weekDates(mondayOf(new Date())).map((d) => dateStr(d)), []);
 
@@ -798,6 +803,8 @@ function TimesheetsTab() {
     setActuals(seed);
     setSeeded(true);
   }, [rows, seeded]);
+
+  const shownRows = rows.filter((r) => matchStaff(r.staff, profiles[r.staff], q));
 
   const actOf = (id: string, start: string, end: string) => actuals[id] ?? { start, end };
   const setAct = (id: string, key: "start" | "end", v: string) =>
@@ -839,10 +846,13 @@ function TimesheetsTab() {
           sub={t("ts.actualMinusPlanned")}
           tint={variance > 0 ? "text-red" : "text-green"}
         />
+        <div className="ml-auto">
+          <SearchBox value={q} onChange={setQ} placeholder="Search employee…" />
+        </div>
         <button
           onClick={exportPayroll}
           disabled={rows.length === 0}
-          className="ml-auto inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2 text-[13px] font-semibold text-fpasnavy shadow-glow transition-all hover:-translate-y-0.5 disabled:opacity-50"
+          className="inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2 text-[13px] font-semibold text-fpasnavy shadow-glow transition-all hover:-translate-y-0.5 disabled:opacity-50"
         >
           <IconDownload width={15} height={15} />
           {t("ts.approveExport")}
@@ -852,6 +862,8 @@ function TimesheetsTab() {
       <Card className="overflow-hidden">
         {rows.length === 0 ? (
           <p className="px-4 py-10 text-center text-sm text-ink-soft">{t("ts.empty")}</p>
+        ) : shownRows.length === 0 ? (
+          <p className="px-4 py-10 text-center text-sm text-ink-soft">No employee matches “{q}”.</p>
         ) : (
           <div className="-mx-1 overflow-x-auto px-1">
             <table className="w-full min-w-[720px] border-collapse text-[12.5px]">
@@ -867,7 +879,7 @@ function TimesheetsTab() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-line">
-                {rows.map((r) => {
+                {shownRows.map((r) => {
                   const a = actOf(r.id, r.start!, r.end!);
                   const h = hoursBetween(a.start, a.end);
                   const v = h - hoursBetween(r.start!, r.end!);
@@ -1006,17 +1018,12 @@ function LeaveTab() {
         <div className="text-sm font-semibold text-ink">Request leave</div>
         <div className="mt-3 space-y-3">
           <Field label="Staff">
-            <select
+            <StaffPicker
+              team={team}
+              profiles={profiles}
               value={form.staff}
-              onChange={(e) => setForm({ ...form, staff: e.target.value })}
-              className={selectCls}
-            >
-              {team.map((s) => (
-                <option key={s} value={s}>
-                  {displayName(s, profiles)}
-                </option>
-              ))}
-            </select>
+              onChange={(name) => setForm({ ...form, staff: name })}
+            />
           </Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="From">
@@ -1208,6 +1215,8 @@ function ResourcesTab() {
     type: ASSET_TYPES[0],
     quantity: 1,
   });
+  const [q, setQ] = useState("");
+  const shownTeam = team.filter((s) => matchStaff(s, profiles[s], q));
 
   function addPerson() {
     const fullName = person.fullName.trim();
@@ -1330,8 +1339,13 @@ function ResourcesTab() {
           </div>
         )}
 
+        {team.length > 6 && (
+          <div className="mt-3">
+            <SearchBox value={q} onChange={setQ} placeholder="Search staff or role…" />
+          </div>
+        )}
         <div className="mt-3 space-y-2">
-          {team.map((s) => {
+          {shownTeam.map((s) => {
             const p = profiles[s];
             const shift = p?.shift;
             return (
@@ -1583,6 +1597,111 @@ function ImportTab() {
 
 const selectCls =
   "w-full rounded-md border border-line-strong bg-white px-2.5 py-1.5 text-[13px] text-ink focus:outline-none focus:ring-2 focus:ring-primary/30";
+
+/** Does a staff key match a search query (by name, full name or role)? */
+function matchStaff(
+  name: string,
+  profile: { fullName?: string; role?: string } | undefined,
+  q: string
+): boolean {
+  const s = q.trim().toLowerCase();
+  if (!s) return true;
+  return (
+    name.toLowerCase().includes(s) ||
+    (profile?.fullName ?? "").toLowerCase().includes(s) ||
+    (profile?.role ?? "").toLowerCase().includes(s)
+  );
+}
+
+/** Compact search box used across the staffing tabs. */
+function SearchBox({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+}) {
+  return (
+    <div className="flex max-w-xs items-center gap-2 rounded-lg border border-line-strong bg-white px-2.5 py-1.5">
+      <IconSearch width={14} height={14} className="shrink-0 text-ink-faint" />
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full bg-transparent text-[13px] text-ink outline-none"
+      />
+      {value && (
+        <button
+          onClick={() => onChange("")}
+          className="text-ink-faint transition-colors hover:text-ink"
+          title="Clear"
+        >
+          ×
+        </button>
+      )}
+    </div>
+  );
+}
+
+/** Searchable staff picker (type-ahead) — works with a large team. Stores the key. */
+function StaffPicker({
+  team,
+  profiles,
+  value,
+  onChange,
+}: {
+  team: string[];
+  profiles: Record<string, StaffProfile>;
+  value: string;
+  onChange: (name: string) => void;
+}) {
+  const [q, setQ] = useState("");
+  const [open, setOpen] = useState(false);
+  const matches = team.filter((s) => matchStaff(s, profiles[s], q)).slice(0, 50);
+  return (
+    <div className="relative">
+      <input
+        value={open ? q : displayName(value, profiles)}
+        onFocus={() => {
+          setOpen(true);
+          setQ("");
+        }}
+        onBlur={() => setTimeout(() => setOpen(false), 120)}
+        onChange={(e) => setQ(e.target.value)}
+        placeholder="Search staff…"
+        className={selectCls}
+      />
+      {open && (
+        <div className="absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-md border border-line bg-panel shadow-lift">
+          {matches.length === 0 ? (
+            <div className="px-3 py-2 text-[12px] text-ink-faint">No match</div>
+          ) : (
+            matches.map((s) => (
+              <button
+                key={s}
+                type="button"
+                onMouseDown={() => {
+                  onChange(s);
+                  setOpen(false);
+                }}
+                className="flex w-full items-center justify-between gap-2 px-3 py-1.5 text-left text-[13px] text-ink hover:bg-bg"
+              >
+                <span>{displayName(s, profiles)}</span>
+                {profiles[s]?.role && (
+                  <span className="font-mono text-[10px] uppercase tracking-wide text-ink-faint">
+                    {profiles[s]!.role}
+                  </span>
+                )}
+              </button>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function Field({
   label,
