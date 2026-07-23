@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Card, Eyebrow } from "./ui";
+import { usePrefs } from "./prefs";
 import {
   IconArrowRight,
   IconBox,
@@ -20,25 +21,78 @@ function download() {
   if (typeof window !== "undefined") window.print();
 }
 
+/**
+ * Renders a translated string with markdown-lite emphasis:
+ * `**bold**` → <strong>, `*italic*` → <em>, `` `mono` `` → monospace span.
+ * Lets translations carry the same emphasis the English copy had.
+ */
+function RichText({ text }: { text: string }) {
+  const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g);
+  return (
+    <>
+      {parts.map((p, i) => {
+        if (p.startsWith("**") && p.endsWith("**"))
+          return <strong key={i}>{p.slice(2, -2)}</strong>;
+        if (p.startsWith("`") && p.endsWith("`"))
+          return (
+            <span key={i} className="font-mono text-[12px]">
+              {p.slice(1, -1)}
+            </span>
+          );
+        if (p.startsWith("*") && p.endsWith("*"))
+          return <em key={i}>{p.slice(1, -1)}</em>;
+        return <span key={i}>{p}</span>;
+      })}
+    </>
+  );
+}
+
+const STEPS: { icon: (p: { width?: number; height?: number }) => JSX.Element; key: string }[] = [
+  { icon: IconGrid, key: "dashboard" },
+  { icon: IconPlus, key: "newbooking" },
+  { icon: IconSparkles, key: "extraction" },
+  { icon: IconBox, key: "booking" },
+  { icon: IconPlane, key: "readiness" },
+  { icon: IconCheckCircle, key: "submissions" },
+  { icon: IconSparkles, key: "update" },
+  { icon: IconDoc, key: "artifacts" },
+  { icon: IconClock, key: "timeline" },
+  { icon: IconUsers, key: "staffing" },
+  { icon: IconBox, key: "housing" },
+  { icon: IconPaw, key: "animals" },
+  { icon: IconSparkles, key: "copilot" },
+  { icon: IconClipboard, key: "rules" },
+  { icon: IconArrowRight, key: "portal" },
+  { icon: IconClipboard, key: "requirements" },
+];
+
+const AROUND = ["dashboard", "new", "housing", "animals", "staffing", "copilot", "portal", "requirements"];
+const START = ["1", "2", "3", "4", "5", "6"];
+const BEFORE = ["1", "2", "3", "4"];
+const AFTER = ["1", "2", "3", "4"];
+const IMPORT = ["1", "2", "3", "4", "5"];
+const EXPORT = ["1", "2", "3", "4", "5"];
+const KNOW = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17"];
+
 export function Guide() {
+  const { t } = usePrefs();
   return (
     <div>
       {/* Header */}
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <Eyebrow>How it works</Eyebrow>
+          <Eyebrow>{t("guide.eyebrow")}</Eyebrow>
           <h1 className="mt-1 font-display text-3xl font-bold tracking-tight text-ink">
-            Using First Point Animal Services
+            {t("guide.title")}
           </h1>
           <p className="mt-1.5 max-w-2xl text-sm text-ink-soft">
-            A quick guide to what this tool does and how to operate it — from an
-            incoming shipment to the drafted documents and customer updates.
+            {t("guide.subtitle")}
           </p>
         </div>
         <span className="no-print">
           <Button onClick={download}>
             <IconDoc width={16} height={16} />
-            Download PDF
+            {t("guide.download")}
           </Button>
         </span>
       </div>
@@ -46,17 +100,10 @@ export function Guide() {
       {/* What it is */}
       <Card className="print-plain mb-5 p-5">
         <h2 className="font-display text-lg font-bold text-ink">
-          What this tool is
+          {t("guide.what.title")}
         </h2>
         <p className="mt-2 text-[14px] leading-relaxed text-ink-soft">
-          FPAS Job Manager tracks every live-animal shipment (import and export)
-          through Amsterdam Schiphol against the regulatory sequence. Its job is
-          the work a spreadsheet can&apos;t: an <strong>AI assistant reads an
-          agent&apos;s email</strong>, turns it into a structured booking, checks
-          it against the compliance rules, drafts the operational documents and
-          customer updates, and lets you <strong>ask questions about your whole
-          operation</strong> — with a person approving every step. Nothing is
-          ever submitted automatically.
+          <RichText text={t("guide.what.body")} />
         </p>
       </Card>
 
@@ -64,24 +111,22 @@ export function Guide() {
       <div className="mb-5 grid grid-cols-1 gap-4 md:grid-cols-2">
         <Card className="print-plain border-line-strong p-5">
           <div className="font-mono text-[11px] uppercase tracking-wide text-ink-faint">
-            Before — HCL Notes today
+            {t("guide.before.title")}
           </div>
           <ul className="mt-2 space-y-1.5 text-[13.5px] text-ink-soft">
-            <li>• Agent emails re-keyed by hand into the system.</li>
-            <li>• Amsterdam runs on spreadsheets held in someone&apos;s head.</li>
-            <li>• The pre-arrival checklist is manual and easy to miss.</li>
-            <li>• No cross-shipment view; no drafting help.</li>
+            {BEFORE.map((n) => (
+              <li key={n}>• {t(`guide.before.${n}`)}</li>
+            ))}
           </ul>
         </Card>
         <Card className="print-plain border-primary/30 p-5">
           <div className="font-mono text-[11px] uppercase tracking-wide text-primary">
-            After — FPAS AI
+            {t("guide.after.title")}
           </div>
           <ul className="mt-2 space-y-1.5 text-[13.5px] text-ink">
-            <li>• Email/PDF → structured booking in seconds.</li>
-            <li>• Compliance gate encodes the rules, with an audit trail.</li>
-            <li>• AI drafts documents, notices and customer updates.</li>
-            <li>• Ask the copilot anything across the whole operation.</li>
+            {AFTER.map((n) => (
+              <li key={n}>• {t(`guide.after.${n}`)}</li>
+            ))}
           </ul>
         </Card>
       </div>
@@ -89,139 +134,52 @@ export function Guide() {
       {/* Getting around */}
       <Card className="print-plain mb-5 p-5">
         <h2 className="font-display text-lg font-bold text-ink">
-          Getting around
+          {t("guide.around.title")}
         </h2>
-        <p className="mt-1 text-[13.5px] text-ink-soft">
-          The top bar has these areas:
-        </p>
+        <p className="mt-1 text-[13.5px] text-ink-soft">{t("guide.around.intro")}</p>
         <ul className="mt-2 grid grid-cols-1 gap-1.5 text-[13.5px] text-ink-soft sm:grid-cols-2">
-          <li><strong>Dashboard</strong> — opens on <em>Today</em> (a command view), plus jobs (List / Board / Grid), Calendar, Insights and a Report.</li>
-          <li><strong>New booking</strong> — six ways to create a job.</li>
-          <li><strong>Housing</strong> — BIP units + cleaning lifecycle.</li>
-          <li><strong>Animals</strong> — registry with vaccination alerts.</li>
-          <li><strong>Staffing</strong> — roster, coverage, timesheets & payroll.</li>
-          <li><strong>Copilot &amp; Compliance rules</strong> — ask across shipments; AI-reason required docs.</li>
-          <li><strong>Agent portal</strong> — the external submit/upload/track view (demo).</li>
-          <li><strong>Requirements</strong> — how the POC traces to the brief.</li>
+          {AROUND.map((k) => (
+            <li key={k}>
+              <RichText text={t(`guide.around.${k}`)} />
+            </li>
+          ))}
         </ul>
         <p className="mt-2 text-[13px] text-ink-faint">
-          You sign in by picking a role on the landing page. Top-right: a{" "}
-          <strong>notifications bell</strong>, the <strong>♿ accessibility</strong>{" "}
-          menu, and your <strong>account menu</strong> (dark mode, Settings,
-          Contacts, and sign out / switch role). Press{" "}
-          <span className="font-mono text-[12px]">Ctrl/⌘ K</span> for the command
-          palette, a <strong>Take a tour</strong> button in the top bar, and the{" "}
-          <strong>help button</strong> (bottom-right) for the guide or support.
+          <RichText text={t("guide.around.note")} />
         </p>
       </Card>
 
       {/* Ways to create a job */}
       <Card className="print-plain mb-5 p-5">
         <h2 className="font-display text-lg font-bold text-ink">
-          Six ways to start a job
+          {t("guide.start.title")}
         </h2>
         <ol className="mt-2 grid grid-cols-1 gap-1.5 text-[13.5px] text-ink-soft sm:grid-cols-2">
-          <li>1. <strong>From a sample email</strong> → AI extracts the fields.</li>
-          <li>2. <strong>Upload a PDF</strong> → the AI reads the document itself.</li>
-          <li>3. <strong>Paste email text</strong> → AI extracts the fields.</li>
-          <li>4. <strong>Customer enquiry form</strong> (the website form).</li>
-          <li>5. <strong>Import CSV</strong> — a whole spreadsheet at once.</li>
-          <li>6. <strong>Manual entry</strong> — a blank booking.</li>
+          {START.map((n) => (
+            <li key={n}>
+              {n}. <RichText text={t(`guide.start.${n}`)} />
+            </li>
+          ))}
         </ol>
         <p className="mt-2 text-[13px] text-ink-faint">
-          The AI reads <strong>other languages</strong> too (there&apos;s a French
-          sample email). Booked <strong>horse</strong> shipments also arrive
-          automatically from Flight Manager on the dashboard as “Pending” — click{" "}
-          <em>Accept</em> to turn one into a job.
+          <RichText text={t("guide.start.note")} />
         </p>
       </Card>
 
       {/* The screens / flow */}
       <div className="mb-5">
         <h2 className="mb-3 font-display text-lg font-bold text-ink">
-          The screens
+          {t("guide.screens.title")}
         </h2>
         <div className="stagger space-y-2.5">
-          <Step
-            icon={IconGrid}
-            title="Dashboard"
-            body="Opens on Today — a command view that pulls together what needs you now: outstanding compliance, HC/passport document gaps, vaccination expiries, roster coverage shortfalls, weather-welfare flags and arrivals in the next 48h, each linking to the relevant job or module. Other views: Jobs (List / Board / Grid), Calendar, Insights, Report (Excel/PDF) and Bin. Click any job for a quick-look drawer with a QR code that opens the shipment when scanned. The Flight Manager “Pending” queue and a one-click AI daily briefing round it out."
-          />
-          <Step
-            icon={IconPlus}
-            title="New booking"
-            body="Create a job the six ways above. AI-based ones (email/paste/PDF) run extraction; enquiry/manual/CSV create the booking directly."
-          />
-          <Step
-            icon={IconSparkles}
-            title="Extraction (AI)"
-            body="The assistant pulls fields out of the message with a confidence level on each. Low-confidence values are flagged; fix them and confirm to create the booking."
-          />
-          <Step
-            icon={IconBox}
-            title="Booking"
-            body="The shipment details, fully editable. Choose Import or Export: Import shows Govt Vet inspection time; Export shows warehouse arrival time. Horse shipments pick up the OKTF path automatically. Set the ops stage (Enquiry → Quoted → Confirmed → … → Completed) from the job header — a manual handling lifecycle shown alongside the auto-derived readiness status."
-          />
-          <Step
-            icon={IconPlane}
-            title="Readiness (import) / Load plan (export)"
-            body="Import: a live compliance rail — mark each step done with a reference for the audit trail (critical steps require one). Export: a horse loading-list builder — per-stall contour, gender/weight, per-horse HC & passport ticks with a doc-readiness banner, accompanying grooms and the SPX security declaration — then send the AI-drafted load list to the airline."
-          />
-          <Step
-            icon={IconCheckCircle}
-            title="Submissions"
-            body="Track regulatory notifications across the lifecycle. Draft each with AI, then record it as submitted with a reference."
-          />
-          <Step
-            icon={IconSparkles}
-            title="Update"
-            body="Draft a movement update to the customer/agent with AI, from the shipment's current state. Copy it and mark it sent."
-          />
-          <Step
-            icon={IconDoc}
-            title="Artifacts"
-            body="The offloading list (Loslijst) and delivery note, drafted from the booking. Copy, or download each as a genuine branded FPAS PDF (navy header, DRAFT watermark, and a QR that opens the shipment when scanned) — generated in the browser with no external library."
-          />
-          <Step
-            icon={IconClock}
-            title="Timeline"
-            body="The full lifecycle of the shipment, plus a one-click “Print job pack (PDF)” — a clean dossier of the booking and its activity."
-          />
-          <Step
-            icon={IconUsers}
-            title="Staffing"
-            body="The FPAS Amsterdam staff roster: a weekly/monthly availability board (working / off / leave / sick / holiday), a leave request-and-approve flow, booking-derived coverage (crew required per day vs. rostered, flagging shortfalls), and a Timesheets tab — planned shifts vs. clock in/out actuals, variance, and an approve-and-export-to-payroll workbook. Each shipment can request and assign staff, and the assistant answers coverage questions."
-          />
-          <Step
-            icon={IconBox}
-            title="Housing & occupancy"
-            body="The BIP holding units by zone (stables, kennels, aviary, aqua, isolation) with the between-shipment cleaning lifecycle — Occupied → Dirty → Cleaning → Ready → Available — advanced in one click, plus live utilisation. Admins can add, edit and remove units. Each unit carries a QR that opens (and highlights) that unit when scanned."
-          />
-          <Step
-            icon={IconPaw}
-            title="Animal registry"
-            body="Per-animal welfare & compliance records: microchip, passport, owner, linked shipment and vaccinations — with expiry alerts (due-soon / expired), a CITES flag for regulated species, and a microchip QR that opens the animal's record when scanned. Admins can add, edit and remove animals."
-          />
-          <Step
-            icon={IconSparkles}
-            title="Copilot"
-            body="Ask questions across all jobs — “what's arriving in 48 hours?”, “what's blocking the EQUITRANS job?”, or “draft the NVWA notice.” It only sees your jobs; it's decision-support, not an autonomous agent."
-          />
-          <Step
-            icon={IconClipboard}
-            title="Compliance rules (AI)"
-            body="Pick a shipment and the assistant reasons the documents and checks its species, route and direction require — each with the authority (NVWA / EU TRACES / CITES / IATA LAR / Customs / Airline), a severity (mandatory / conditional / recommended) and a rationale. Decision-support, not legal advice."
-          />
-          <Step
-            icon={IconArrowRight}
-            title="Agent portal"
-            body="A demo of the external surface agents and airlines use: submit a booking request, upload documents to a checklist, confirm the AWB, and track status. Every submitted request lands in the ops Dashboard's “From the agent portal” queue — staff Accept it to spin up a pre-filled job (or Dismiss it), and the agent sees an “Accepted by ops” badge. In production this is a separate authenticated portal."
-          />
-          <Step
-            icon={IconClipboard}
-            title="Requirements & Traceability"
-            body="A live, in-app map of how the POC covers the FPAS brief: every requirement with a Built / Simulated / Future status and a coverage summary, plus the extras added on top. Export it as a PDF."
-          />
+          {STEPS.map((s) => (
+            <Step
+              key={s.key}
+              icon={s.icon}
+              title={t(`guide.step.${s.key}.title`)}
+              body={t(`guide.step.${s.key}.body`)}
+            />
+          ))}
         </div>
       </div>
 
@@ -233,15 +191,15 @@ export function Guide() {
               <IconArrowRight width={16} height={16} />
             </span>
             <h3 className="font-display text-base font-bold text-ink">
-              Walkthrough — an import
+              {t("guide.import.title")}
             </h3>
           </div>
           <ol className="mt-3 space-y-2 text-[13.5px] leading-relaxed text-ink-soft">
-            <li>1. New booking → pick a sample email → <em>Create &amp; extract</em>. (Or, if an agent submitted via the portal, <em>Accept &amp; create job</em> from the Dashboard&apos;s “From the agent portal” queue.)</li>
-            <li>2. On Extraction, correct any flagged field → <em>Confirm &amp; create booking</em>.</li>
-            <li>3. Open Readiness. <em>Mark done</em> on a step, add the reference (e.g. NVWA approval no.).</li>
-            <li>4. When all steps clear, <em>Draft operational documents</em>.</li>
-            <li>5. Optionally draft a customer <em>Update</em>, then open <em>Timeline → Print job pack</em>.</li>
+            {IMPORT.map((n) => (
+              <li key={n}>
+                {n}. <RichText text={t(`guide.import.${n}`)} />
+              </li>
+            ))}
           </ol>
         </Card>
 
@@ -251,15 +209,15 @@ export function Guide() {
               <IconPlane width={16} height={16} />
             </span>
             <h3 className="font-display text-base font-bold text-ink">
-              Walkthrough — an export
+              {t("guide.export.title")}
             </h3>
           </div>
           <ol className="mt-3 space-y-2 text-[13.5px] leading-relaxed text-ink-soft">
-            <li>1. Open an Export job (or set Booking → Export).</li>
-            <li>2. On Load plan, build the loading list — each stall's horse, gender, weight, contour, and HC/passport ticks; add grooms and the SPX declaration. Watch the doc-readiness banner clear.</li>
-            <li>3. Pick the airline (e.g. Etihad → six addresses) → <em>Draft &amp; send to airline</em>.</li>
-            <li>4. Use <em>Submissions</em> to draft &amp; record regulatory notices.</li>
-            <li>5. Draft a customer <em>Update</em> and print the <em>Timeline</em> job pack.</li>
+            {EXPORT.map((n) => (
+              <li key={n}>
+                {n}. <RichText text={t(`guide.export.${n}`)} />
+              </li>
+            ))}
           </ol>
         </Card>
       </div>
@@ -267,88 +225,19 @@ export function Guide() {
       {/* Good to know */}
       <Card className="print-plain mt-4 p-5">
         <h3 className="font-display text-base font-bold text-ink">
-          Good to know
+          {t("guide.know.title")}
         </h3>
         <ul className="mt-3 grid grid-cols-1 gap-2 text-[13.5px] leading-relaxed text-ink-soft sm:grid-cols-2">
-          <li>
-            <strong>Human in the loop.</strong> The AI drafts and reasons; you
-            approve. Nothing is sent to a regulator or airline for real.
-          </li>
-          <li>
-            <strong>Audit trail.</strong> Marking a step done or a notice sent
-            records who, when, and the reference.
-          </li>
-          <li>
-            <strong>Statuses.</strong> New → Needs review → In progress → Ready,
-            shown as a coloured tag on every job.
-          </li>
-          <li>
-            <strong>It saves automatically.</strong> Jobs persist in your browser
-            and survive a refresh. “Reset demo data” restores the samples.
-          </li>
-          <li>
-            <strong>Live AI.</strong> The AI screens call Claude live; if a call
-            fails you&apos;ll see a clean “retry” panel, never a broken screen.
-          </li>
-          <li>
-            <strong>Spreadsheet migration.</strong> Import CSV turns an existing
-            spreadsheet into jobs in one step.
-          </li>
-          <li>
-            <strong>Arrival weather.</strong> Each job shows the live Amsterdam
-            arrival-day forecast with a welfare flag when it&apos;s too hot or
-            cold for live animals; the daily briefing factors it in.
-          </li>
-          <li>
-            <strong>Traceability.</strong> The Requirements page maps the POC to
-            the brief in-app — Built / Simulated / Future — so scope is explicit.
-          </li>
-          <li>
-            <strong>Print to PDF.</strong> The guide and each job&apos;s Timeline
-            can be saved as a PDF from your browser.
-          </li>
-          <li>
-            <strong>Photos, optional.</strong> Jobs show an on-brand commodity
-            thumbnail; drop licensed images into <span className="font-mono text-[12px]">public/animals/</span>{" "}
-            and real photos appear automatically.
-          </li>
-          <li>
-            <strong>Roles.</strong> Sign in as Admin, Operations or Viewer on the
-            landing page; switch by signing out. Viewer is read-only.
-          </li>
-          <li>
-            <strong>Assignments.</strong> Assign a job to a staff member and use
-            the “My jobs” filter on the dashboard.
-          </li>
-          <li>
-            <strong>Command palette.</strong> Press Ctrl/⌘ K to jump to any job,
-            page or action.
-          </li>
-          <li>
-            <strong>Themes.</strong> Settings → Appearance offers six accent
-            themes plus dark mode; the choice applies everywhere and is
-            remembered on this device.
-          </li>
-          <li>
-            <strong>Accessibility &amp; language.</strong> The ♿ button in the top
-            bar offers larger text, high-contrast mode, and a{" "}
-            <strong>portal language</strong> switch (English, Dutch, German,
-            French, Spanish) — all remembered on this device.
-          </li>
-          <li>
-            <strong>Take a tour.</strong> The button in the top bar walks new
-            users through the whole flow, spotlighting each section.
-          </li>
-          <li>
-            <strong>Proof of concept.</strong> All data is fictional and every
-            integration is mocked — this is a demo, not a production system.
-          </li>
+          {KNOW.map((n) => (
+            <li key={n}>
+              <RichText text={t(`guide.know.${n}`)} />
+            </li>
+          ))}
         </ul>
       </Card>
 
       <p className="mt-5 text-center font-mono text-[11px] text-ink-faint">
-        Tip: “Download PDF” opens your browser&apos;s print dialog — choose “Save
-        as PDF” as the destination.
+        {t("guide.tip")}
       </p>
     </div>
   );

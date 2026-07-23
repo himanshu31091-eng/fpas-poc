@@ -10,6 +10,8 @@
 // missing string falls back to English, so a partial translation never breaks.
 // ---------------------------------------------------------------------------
 
+import { EXTRA_DICT } from "./i18nExtra";
+
 export type Lang = "en" | "nl" | "de" | "fr" | "es";
 
 export const LANGS: { id: Lang; label: string; native: string; flag: string }[] = [
@@ -1670,6 +1672,9 @@ export const DICT: Record<string, Entry> = {
     es: "Eliminar",
   },
 };
+
+// Merge the extended guide/requirements dictionary (generated) into DICT.
+Object.assign(DICT, EXTRA_DICT);
 
 /**
  * Translate a key into the given language, falling back to English then the
