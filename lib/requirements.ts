@@ -87,7 +87,7 @@ export const INTEGRATION: ReqSection = {
     { id: "IR-02", text: "NetSuite — invoicing (accounts receivable / payable).", origin: "Client-stated", status: "future" },
     { id: "IR-03", text: "Regulatory systems — submission to the Dutch authority, pre-registration and customs.", origin: "Client-stated", status: "future" },
     { id: "IR-04", text: "Partner systems — airport ground handler and airline load-list delivery.", origin: "Client-stated", status: "future" },
-    { id: "IR-05", text: "Customer portal — website enquiry and booking-email intake.", origin: "Client-stated", status: "partial", note: "Enquiry form mirrored + an Agent portal demo (submit request, upload docs to a checklist, confirm AWB, track status)." },
+    { id: "IR-05", text: "Customer portal — website enquiry and booking-email intake.", origin: "Client-stated", status: "partial", note: "Enquiry form mirrored + an Agent portal demo (submit request, upload docs to a checklist, confirm AWB, track status) that feeds the ops Dashboard queue — staff Accept a request to create a pre-filled job." },
   ],
 };
 
@@ -130,6 +130,7 @@ export const BEYOND: ReqSection = {
     { id: "EX-17", text: "Real branded PDF documents (offloading list, delivery note) — generated in the browser with no external library.", origin: "Recommended", status: "built" },
     { id: "EX-18", text: "Dynamic QR codes on jobs, housing units and animals (and on the PDFs) that deep-link to the record when scanned.", origin: "Recommended", status: "built", note: "The hook for a future mobile warehouse app." },
     { id: "EX-19", text: "Agent portal (external surface) demo — submit a booking request, upload documents to a per-commodity checklist, confirm the AWB, and track status.", origin: "Client-stated", status: "built", note: "Day-one item on the client's roadmap." },
+    { id: "EX-20", text: "Agent portal → operations bridge — submitted requests surface in the ops Dashboard's pending queue; staff Accept to create a pre-filled job (or Dismiss), and the agent sees an “Accepted by ops” status.", origin: "Recommended", status: "built", note: "Closes the loop between the external portal and the internal job board." },
     { id: "EX-20", text: "Automated unit-test suite (Vitest) over the core domain logic — including an independent QR round-trip decode.", origin: "Recommended", status: "built" },
   ],
 };
