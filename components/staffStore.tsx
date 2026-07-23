@@ -184,6 +184,9 @@ export function StaffProvider({ children }: { children: ReactNode }) {
           delete next[name];
           return next;
         });
+        // Clean up so the person doesn't linger in timesheets/leave after removal.
+        setRoster((prev) => prev.filter((r) => r.staff !== name));
+        setLeave((prev) => prev.filter((l) => l.staff !== name));
       },
       restoreTeam: () => {
         const seeded = seedProfiles();

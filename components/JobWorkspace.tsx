@@ -17,7 +17,7 @@ import { Timeline } from "./Timeline";
 import { CommodityArt } from "./CommodityArt";
 import { WeatherPanel } from "./weather";
 import { useStaff, StaffingChip } from "./staffStore";
-import { availableStaff, statusOnDate, STATUS_META } from "@/lib/staff";
+import { availableStaff, statusOnDate, displayName, STATUS_META } from "@/lib/staff";
 import {
   IconBox,
   IconChevronLeft,
@@ -311,7 +311,7 @@ export function JobWorkspace({ jobId }: { jobId: string }) {
 }
 
 function JobStaffing({ job }: { job: Job }) {
-  const { roster, leave, team, assets, staffing, getStaffing, setStaffing } =
+  const { roster, leave, team, assets, staffing, profiles, getStaffing, setStaffing } =
     useStaff();
   const { jobs } = useStore();
   const { canEdit, toast } = usePrefs();
@@ -451,7 +451,7 @@ function JobStaffing({ job }: { job: Job }) {
                     }`}
                   >
                     {clash ? "⚠ " : ""}
-                    {s}
+                    {displayName(s, profiles)}
                   </button>
                 );
               })}
@@ -472,7 +472,7 @@ function JobStaffing({ job }: { job: Job }) {
                     STATUS_META[st!.status].cell
                   }`}
                 >
-                  {s} · {STATUS_META[st!.status].label}
+                  {displayName(s, profiles)} · {STATUS_META[st!.status].label}
                 </span>
               ))}
             </div>

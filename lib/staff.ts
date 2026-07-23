@@ -362,9 +362,11 @@ export function entriesFromPattern(
 
 // --- Persistence ------------------------------------------------------------
 
-const ROSTER_KEY = "fpas.roster.v2";
-const LEAVE_KEY = "fpas.leave.v2";
-const STAFFING_KEY = "fpas.staffing.v3";
+// v3/v4: bumped so any inconsistent local state (e.g. a partially-deleted
+// team) is discarded and everyone reloads the clean, consistent seed.
+const ROSTER_KEY = "fpas.roster.v3";
+const LEAVE_KEY = "fpas.leave.v3";
+const STAFFING_KEY = "fpas.staffing.v4";
 
 function load<T>(key: string): T | null {
   if (typeof window === "undefined") return null;
@@ -391,9 +393,9 @@ export const saveLeave = (v: LeaveRequest[]) => save(LEAVE_KEY, v);
 export const loadStaffing = () => load<StaffingAssignment[]>(STAFFING_KEY);
 export const saveStaffing = (v: StaffingAssignment[]) => save(STAFFING_KEY, v);
 
-const TEAM_KEY = "fpas.team.v1";
+const TEAM_KEY = "fpas.team.v2";
 const ASSETS_KEY = "fpas.assets.v1";
-const PROFILES_KEY = "fpas.profiles.v1";
+const PROFILES_KEY = "fpas.profiles.v2";
 export const loadTeam = () => load<string[]>(TEAM_KEY);
 export const saveTeam = (v: string[]) => save(TEAM_KEY, v);
 export const loadAssets = () => load<Asset[]>(ASSETS_KEY);

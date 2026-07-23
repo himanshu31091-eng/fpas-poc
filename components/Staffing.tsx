@@ -184,7 +184,7 @@ function RosterTab() {
           `${DOW_LABELS[(d.getDay() + 6) % 7]} ${d.getDate()}/${d.getMonth() + 1}`
       ),
     ];
-    const rows = team.map((s) => [s, ...days.map((d) => cellText(s, d))]);
+    const rows = team.map((s) => [displayName(s, profiles), ...days.map((d) => cellText(s, d))]);
     const availRow = ["Available", ...avail.map((n) => n)];
     const requiredRow = ["Required (bookings)", ...coverage.map((c) => c.required)];
     const scheduledRow = ["Scheduled", ...coverage.map((c) => c.scheduled)];
@@ -754,7 +754,7 @@ const hoursBetween = (start: string, end: string) =>
   Math.max(0, (toMin(end) - toMin(start)) / 60);
 
 function TimesheetsTab() {
-  const { roster } = useStaff();
+  const { roster, profiles } = useStaff();
   const { t, toast } = usePrefs();
   const [actuals, setActuals] = useState<Record<string, { start: string; end: string }>>({});
   const [seeded, setSeeded] = useState(false);
@@ -802,7 +802,7 @@ function TimesheetsTab() {
       const a = actOf(r.id, r.start!, r.end!);
       const h = hoursBetween(a.start, a.end);
       const v = h - hoursBetween(r.start!, r.end!);
-      return [r.staff, r.date, `${r.start}-${r.end}`, a.start, a.end, h.toFixed(2), v.toFixed(2)];
+      return [displayName(r.staff, profiles), r.date, `${r.start}-${r.end}`, a.start, a.end, h.toFixed(2), v.toFixed(2)];
     });
     const totals = ["", "", planned.toFixed(2), "", "", actual.toFixed(2), variance.toFixed(2)];
     downloadXlsx(`FPAS-timesheets-${week[0]}`, [
@@ -859,7 +859,7 @@ function TimesheetsTab() {
                   const v = h - hoursBetween(r.start!, r.end!);
                   return (
                     <tr key={r.id}>
-                      <td className="px-3 py-2 font-medium text-ink">{r.staff}</td>
+                      <td className="px-3 py-2 font-medium text-ink">{displayName(r.staff, profiles)}</td>
                       <td className="px-3 py-2 font-mono text-ink-soft">{r.date.slice(5)}</td>
                       <td className="px-3 py-2 font-mono text-ink-faint">
                         {r.start}–{r.end}
