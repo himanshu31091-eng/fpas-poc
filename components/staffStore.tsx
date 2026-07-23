@@ -268,6 +268,11 @@ export function StaffProvider({ children }: { children: ReactNode }) {
         // (and given a profile) so it gets a row — otherwise the entry would be
         // stored but invisible, since the grid only renders team members.
         const { normalized, newNames } = planRosterImport(entries, team);
+        // A brand-new person introduced by import becomes a proper employee:
+        // they get a default Mon–Fri shift plan, and that plan is laid onto the
+        // roster — so their row isn't blank apart from the one imported entry
+        // (e.g. a single leave day). The imported entries override the plan.
+        const DEFAULT_SHIFT = { start: "09:00", end: "17:00", days: [0, 1, 2, 3, 4] };
         if (newNames.length) {
           setTeam((prev) => [
             ...prev,
@@ -275,12 +280,22 @@ export function StaffProvider({ children }: { children: ReactNode }) {
           ]);
           setProfiles((prev) => {
             const next = { ...prev };
-            for (const n of newNames) if (!next[n]) next[n] = { name: n, fullName: n };
+            for (const n of newNames)
+              if (!next[n]) next[n] = { name: n, fullName: n, shift: { ...DEFAULT_SHIFT } };
             return next;
           });
         }
         setRoster((prev) => {
           const map = new Map(prev.map((r) => [`${r.staff}|${r.date}`, r]));
+          // Lay each new person's default plan first (blanks only)…
+          const monday = mondayOf(new Date());
+          for (const n of newNames) {
+            for (const e of entriesFromPattern(n, monday, DEFAULT_SHIFT, 2)) {
+              const key = `${e.staff}|${e.date}`;
+              if (!map.has(key)) map.set(key, { ...e, id: uid("r") });
+            }
+          }
+          // …then the imported entries override (e.g. a leave day).
           for (const e of normalized) {
             const key = `${e.staff}|${e.date}`;
             map.set(key, { ...e, id: map.get(key)?.id ?? uid("r") });
