@@ -12,6 +12,8 @@ import {
   type ReqSection,
 } from "@/lib/requirements";
 
+type T = (key: string, params?: Record<string, string | number>) => string;
+
 /**
  * In-app requirements traceability — mirrors the MoreYeahs requirements
  * document so the running POC reports its own coverage against the brief.
@@ -36,17 +38,13 @@ export function Requirements() {
             <h1 className="font-display text-xl font-bold text-ink">
               {t("req.title")}
             </h1>
-            <p className="text-[13px] text-ink-soft">
-              How this POC maps to the FPAS Amsterdam import &amp; export
-              requirements. Statuses mirror the MoreYeahs traceability document;
-              “Beyond the brief” lists what we added on top.
-            </p>
+            <p className="text-[13px] text-ink-soft">{t("req.subtitle")}</p>
           </div>
         </div>
         <span className="no-print">
           <Button variant="ghost" onClick={print}>
             <IconPrinter width={15} height={15} />
-            Save as PDF
+            {t("req.savePdf")}
           </Button>
         </span>
       </Card>
@@ -54,12 +52,12 @@ export function Requirements() {
       {/* Functional coverage summary */}
       <Card className="print-plain mb-5 p-5">
         <div className="mb-3 text-sm font-semibold text-ink">
-          Functional coverage
+          {t("req.funcCoverage")}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <CoveragePill status="built" n={fc.built} total={FUNCTIONAL.items.length} />
-          <CoveragePill status="simulated" n={fc.simulated} total={FUNCTIONAL.items.length} />
-          <CoveragePill status="not-built" n={fc["not-built"]} total={FUNCTIONAL.items.length} />
+          <CoveragePill t={t} status="built" n={fc.built} total={FUNCTIONAL.items.length} />
+          <CoveragePill t={t} status="simulated" n={fc.simulated} total={FUNCTIONAL.items.length} />
+          <CoveragePill t={t} status="not-built" n={fc["not-built"]} total={FUNCTIONAL.items.length} />
         </div>
         <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-bg">
           <div className="flex h-full w-full">
@@ -77,18 +75,13 @@ export function Requirements() {
             />
           </div>
         </div>
-        <p className="mt-3 text-[12px] text-ink-faint">
-          Genuinely real in the POC: AI extraction, reasoning and drafting; the
-          encoded regulatory sequence; the operator workflow; and the audit
-          trail. Simulated: all data, every external integration, and access
-          control.
-        </p>
+        <p className="mt-3 text-[12px] text-ink-faint">{t("req.coverageNote")}</p>
       </Card>
 
       {/* Sections */}
       <div className="space-y-5">
         {SECTIONS.map((section) => (
-          <SectionCard key={section.key} section={section} />
+          <SectionCard key={section.key} section={section} t={t} />
         ))}
       </div>
     </div>
@@ -96,10 +89,12 @@ export function Requirements() {
 }
 
 function CoveragePill({
+  t,
   status,
   n,
   total,
 }: {
+  t: T;
   status: keyof typeof STATUS_META;
   n: number;
   total: number;
@@ -109,31 +104,35 @@ function CoveragePill({
     <span
       className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-mono text-[12px] font-semibold ${meta.cls}`}
     >
-      {n} {meta.label}
-      <span className="font-normal opacity-70">of {total}</span>
+      {n} {t(`req.status.${status}`)}
+      <span className="font-normal opacity-70">
+        {t("req.of")} {total}
+      </span>
     </span>
   );
 }
 
-function StatusBadge({ status }: { status: Req["status"] }) {
+function StatusBadge({ t, status }: { t: T; status: Req["status"] }) {
   const meta = STATUS_META[status];
   return (
     <span
       className={`inline-block rounded-full px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide ${meta.cls}`}
     >
-      {meta.label}
+      {t(`req.status.${status}`)}
     </span>
   );
 }
 
-function SectionCard({ section }: { section: ReqSection }) {
+function SectionCard({ section, t }: { section: ReqSection; t: T }) {
   return (
     <Card className="print-plain p-5">
       <h2 className="font-display text-lg font-bold text-ink">
-        {section.title}
+        {t(`req.section.${section.key}.title`)}
       </h2>
       {section.blurb && (
-        <p className="mt-1 text-[13px] text-ink-soft">{section.blurb}</p>
+        <p className="mt-1 text-[13px] text-ink-soft">
+          {t(`req.section.${section.key}.blurb`)}
+        </p>
       )}
       <div className="mt-3 divide-y divide-line">
         {section.items.map((item) => (
@@ -147,10 +146,12 @@ function SectionCard({ section }: { section: ReqSection }) {
               </span>
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-[13.5px] text-ink">{item.text}</div>
+              <div className="text-[13.5px] text-ink">
+                {t(`req.item.${item.id}.text`)}
+              </div>
               <div className="mt-0.5 flex flex-wrap items-center gap-2">
                 <span className="font-mono text-[10px] uppercase tracking-wide text-ink-faint">
-                  {item.origin}
+                  {t(`req.origin.${item.origin}`)}
                 </span>
                 {item.src && (
                   <span className="font-mono text-[10px] text-ink-faint">
@@ -159,13 +160,13 @@ function SectionCard({ section }: { section: ReqSection }) {
                 )}
                 {item.note && (
                   <span className="text-[11.5px] text-ink-soft">
-                    — {item.note}
+                    — {t(`req.item.${item.id}.note`)}
                   </span>
                 )}
               </div>
             </div>
             <div className="shrink-0">
-              <StatusBadge status={item.status} />
+              <StatusBadge t={t} status={item.status} />
             </div>
           </div>
         ))}
