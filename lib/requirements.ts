@@ -132,6 +132,12 @@ export const BEYOND: ReqSection = {
     { id: "EX-19", text: "Agent portal (external surface) demo — submit a booking request, upload documents to a per-commodity checklist, confirm the AWB, and track status.", origin: "Client-stated", status: "built", note: "Day-one item on the client's roadmap." },
     { id: "EX-20", text: "Agent portal → operations bridge — submitted requests surface in the ops Dashboard's pending queue; staff Accept to create a pre-filled job (or Dismiss), and the agent sees an “Accepted by ops” status.", origin: "Recommended", status: "built", note: "Closes the loop between the external portal and the internal job board." },
     { id: "EX-21", text: "Automated unit-test suite (Vitest) over the core domain logic — including an independent QR round-trip decode.", origin: "Recommended", status: "built" },
+    { id: "EX-22", text: "Guided setup journey — a dismissible getting-started checklist on the dashboard plus empty-state prompts, so a new user knows what to set up first (people & equipment → roster → settings) before operating.", origin: "Recommended", status: "built", note: "Onboarding for first-time users." },
+    { id: "EX-23", text: "Resource profiles & roster plan — each staff member has a full name, role and a default shift plan; “Fill from plan” lays the plan onto the visible week or month.", origin: "Client-stated", status: "built" },
+    { id: "EX-24", text: "Leave management end-to-end — request / approve / decline / remove; a pending request shows on the roster immediately, and leave entered via import or roster is reconciled on the Leave tab.", origin: "Client-stated", status: "built" },
+    { id: "EX-25", text: "Animal ↔ housing link — place a registered animal into a holding unit from either side; the unit shows the animal and the animal shows its unit.", origin: "Recommended", status: "built" },
+    { id: "EX-26", text: "Search across large lists — jobs, the animal registry, staff (roster / resources / timesheets, plus a type-ahead staff picker) and housing, so the app scales to a large team.", origin: "Recommended", status: "built", note: "For sites with hundreds of staff." },
+    { id: "EX-27", text: "Coverage-aware assistant & guided flow — the Copilot and briefing answer who’s on leave and which days are understaffed; after readiness clears, the app routes to staffing then to the operational documents.", origin: "Recommended", status: "built" },
   ],
 };
 
