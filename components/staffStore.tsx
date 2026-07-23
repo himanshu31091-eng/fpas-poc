@@ -63,6 +63,8 @@ interface StaffState {
     shift?: ShiftPattern;
   }) => void;
   removeStaff: (name: string) => void;
+  /** Re-add the default seed employees (and their profiles) without touching roster/leave. */
+  restoreTeam: () => void;
   setProfile: (name: string, patch: Partial<StaffProfile>) => void;
   /** (Re)apply a person's saved shift pattern to the roster from this week. */
   applyShiftPattern: (name: string, weeks?: number) => void;
@@ -180,6 +182,19 @@ export function StaffProvider({ children }: { children: ReactNode }) {
         setProfiles((prev) => {
           const next = { ...prev };
           delete next[name];
+          return next;
+        });
+      },
+      restoreTeam: () => {
+        const seeded = seedProfiles();
+        setTeam((prev) => {
+          const have = new Set(prev.map((s) => s.toLowerCase()));
+          const additions = STAFF_MEMBERS.filter((s) => !have.has(s.toLowerCase()));
+          return additions.length ? [...prev, ...additions] : prev;
+        });
+        setProfiles((prev) => {
+          const next = { ...prev };
+          for (const [k, v] of Object.entries(seeded)) if (!next[k]) next[k] = v;
           return next;
         });
       },

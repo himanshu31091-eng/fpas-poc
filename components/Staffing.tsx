@@ -1176,6 +1176,7 @@ function ResourcesTab() {
     profiles,
     addStaff,
     removeStaff,
+    restoreTeam,
     applyShiftPattern,
     addAsset,
     removeAsset,
@@ -1226,7 +1227,21 @@ function ResourcesTab() {
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       {/* Team / people */}
       <Card className="p-5">
-        <div className="text-sm font-semibold text-ink">Team ({team.length})</div>
+        <div className="flex items-center justify-between gap-2">
+          <div className="text-sm font-semibold text-ink">Team ({team.length})</div>
+          {canEdit && (
+            <button
+              onClick={() => {
+                restoreTeam();
+                toast("Default team restored", "success");
+              }}
+              title="Re-add the default employees without touching the roster or leave"
+              className="rounded-lg border border-line px-2.5 py-1 text-[11px] text-ink-soft transition-colors hover:border-primary/40 hover:text-ink"
+            >
+              ↺ Restore default team
+            </button>
+          )}
+        </div>
         <p className="mt-1 text-[12px] text-ink-soft">
           People who appear on the roster and can be assigned to shipments. A new
           resource gets a name, a role and a default shift plan — the plan fills
