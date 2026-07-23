@@ -109,7 +109,7 @@ export function advanceUnit(units: HousingUnit[], id: string): HousingUnit[] {
 /** Insert a new unit or replace an existing one (matched by id). */
 export function upsertUnit(units: HousingUnit[], unit: HousingUnit): HousingUnit[] {
   const i = units.findIndex((u) => u.id === unit.id);
-  if (i === -1) return [...units, unit];
+  if (i === -1) return [unit, ...units]; // new entries appear at the top
   const next = units.slice();
   next[i] = unit;
   return next;

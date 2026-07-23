@@ -155,7 +155,7 @@ export function StaffProvider({ children }: { children: ReactNode }) {
       addStaff: (input) => {
         const n = input.name.trim();
         if (!n) return;
-        setTeam((prev) => (prev.includes(n) ? prev : [...prev, n]));
+        setTeam((prev) => (prev.includes(n) ? prev : [n, ...prev]));
         setProfiles((prev) => ({
           ...prev,
           [n]: {
@@ -226,8 +226,8 @@ export function StaffProvider({ children }: { children: ReactNode }) {
         const n = a.name.trim();
         if (!n) return;
         setAssets((prev) => [
-          ...prev,
           { id: uid("as"), name: n, type: a.type, quantity: a.quantity },
+          ...prev,
         ]);
       },
       removeAsset: (id) => setAssets((prev) => prev.filter((x) => x.id !== id)),

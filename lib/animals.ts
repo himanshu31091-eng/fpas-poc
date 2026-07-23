@@ -60,7 +60,7 @@ export function saveAnimals(animals: Animal[]) {
 /** Insert a new animal or replace an existing one (matched by id). */
 export function upsertAnimal(animals: Animal[], a: Animal): Animal[] {
   const i = animals.findIndex((x) => x.id === a.id);
-  if (i === -1) return [...animals, a];
+  if (i === -1) return [a, ...animals]; // new entries appear at the top
   const next = animals.slice();
   next[i] = a;
   return next;
