@@ -98,7 +98,7 @@ export function Staffing() {
 
 function RosterTab() {
   const { roster, leave, team, profiles, addRosterEntries } = useStaff();
-  const { canEdit, toast } = usePrefs();
+  const { canEdit, toast, t } = usePrefs();
   const { jobs } = useStore();
   const [mode, setMode] = useState<"week" | "month">("week");
   const [anchor, setAnchor] = useState<Date>(() => new Date());
@@ -316,7 +316,7 @@ function RosterTab() {
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-3">
             <div className="text-sm font-semibold text-ink">{label}</div>
-            <SearchBox value={q} onChange={setQ} placeholder="Search staff or role…" />
+            <SearchBox value={q} onChange={setQ} placeholder={t("ui.staff.searchRole")} />
             <div className="flex items-center gap-0.5 rounded-full border border-line bg-white p-0.5">
               {(["week", "month"] as const).map((m) => (
                 <button
@@ -360,7 +360,7 @@ function RosterTab() {
                 className="ml-1 inline-flex items-center gap-1.5 rounded-lg border border-primary/40 bg-primary-soft px-2.5 py-1.5 text-[12px] font-medium text-primary transition-colors hover:bg-primary-soft/70"
                 title="Lay each person's default shift plan onto the next two weeks"
               >
-                Fill from plan
+                {t("ui.staff.fillPlan")}
               </button>
             )}
             <button
@@ -376,7 +376,7 @@ function RosterTab() {
 
         {q && (
           <div className="mb-2 text-[11px] text-ink-faint">
-            Showing {shownTeam.length} of {team.length} staff
+            {t("ui.staff.showing", { n: shownTeam.length, total: team.length })}
           </div>
         )}
         <div className="-mx-1 overflow-x-auto px-1">
@@ -847,7 +847,7 @@ function TimesheetsTab() {
           tint={variance > 0 ? "text-red" : "text-green"}
         />
         <div className="ml-auto">
-          <SearchBox value={q} onChange={setQ} placeholder="Search employee…" />
+          <SearchBox value={q} onChange={setQ} placeholder={t("ui.staff.searchEmployee")} />
         </div>
         <button
           onClick={exportPayroll}
@@ -947,7 +947,7 @@ const STATUS_BADGE: Record<string, string> = {
 function LeaveTab() {
   const { leave, roster, requestLeave, decideLeave, removeLeave, removeRosterEntries, team, profiles } =
     useStaff();
-  const { canEdit, user, toast } = usePrefs();
+  const { canEdit, user, toast, t } = usePrefs();
 
   // Absences entered directly on the roster (Import tab / Add shift with status
   // leave|sick) — not leave *requests*. Surface them here too, grouped into
@@ -1078,10 +1078,10 @@ function LeaveTab() {
       {/* Requests list */}
       <Card className="p-4">
         <div className="mb-3 text-sm font-semibold text-ink">
-          Leave &amp; absences ({leave.length + rosterAbsences.length})
+          {t("ui.leave.title", { n: leave.length + rosterAbsences.length })}
         </div>
         {sorted.length === 0 && rosterAbsences.length === 0 ? (
-          <p className="text-[13px] text-ink-soft">No leave or absences yet.</p>
+          <p className="text-[13px] text-ink-soft">{t("ui.leave.none")}</p>
         ) : (
           <div className="space-y-2">
             {sorted.map((l) => (
@@ -1141,7 +1141,7 @@ function LeaveTab() {
                       title="Remove this leave and revert the roster"
                       className="rounded-xl px-2.5 py-1.5 text-[12px] text-ink-faint transition-colors hover:text-red"
                     >
-                      Remove
+                      {t("common.remove")}
                     </button>
                   </div>
                 )}
@@ -1159,7 +1159,7 @@ function LeaveTab() {
                       {displayName(g.staff, profiles)}
                     </span>
                     <span className="rounded-full bg-primary-soft px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wide text-primary">
-                      On roster
+                      {t("ui.leave.onRoster")}
                     </span>
                   </div>
                   <div className="mt-0.5 font-mono text-[11px] text-ink-soft">
@@ -1176,7 +1176,7 @@ function LeaveTab() {
                     title="Remove this absence and revert the roster"
                     className="rounded-xl px-2.5 py-1.5 text-[12px] text-ink-faint transition-colors hover:text-red"
                   >
-                    Remove
+                    {t("common.remove")}
                   </button>
                 )}
               </div>
@@ -1202,7 +1202,7 @@ function ResourcesTab() {
     addAsset,
     removeAsset,
   } = useStaff();
-  const { canEdit, toast } = usePrefs();
+  const { canEdit, toast, t } = usePrefs();
   const [person, setPerson] = useState({
     fullName: "",
     role: STAFF_ROLES[1],
@@ -1261,7 +1261,7 @@ function ResourcesTab() {
               title="Re-add the default employees without touching the roster or leave"
               className="rounded-lg border border-line px-2.5 py-1 text-[11px] text-ink-soft transition-colors hover:border-primary/40 hover:text-ink"
             >
-              ↺ Restore default team
+              ↺ {t("ui.staff.restoreTeam")}
             </button>
           )}
         </div>
@@ -1273,7 +1273,7 @@ function ResourcesTab() {
 
         {canEdit && (
           <div className="mt-3 space-y-2.5 rounded-card border border-line bg-bg/40 p-3">
-            <Field label="Full name">
+            <Field label={t("ui.staff.fullName")}>
               <input
                 value={person.fullName}
                 onChange={(e) =>
@@ -1282,12 +1282,12 @@ function ResourcesTab() {
                 onKeyDown={(e) => {
                   if (e.key === "Enter") addPerson();
                 }}
-                placeholder="e.g. Sanne de Boer"
+                placeholder={t("ui.staff.fullNamePh")}
                 className={selectCls}
               />
             </Field>
             <div className="grid grid-cols-3 gap-2">
-              <Field label="Role">
+              <Field label={t("ui.staff.role")}>
                 <select
                   value={person.role}
                   onChange={(e) => setPerson({ ...person, role: e.target.value })}
@@ -1298,7 +1298,7 @@ function ResourcesTab() {
                   ))}
                 </select>
               </Field>
-              <Field label="Shift start">
+              <Field label={t("ui.staff.shiftStart")}>
                 <input
                   type="time"
                   value={person.start}
@@ -1308,7 +1308,7 @@ function ResourcesTab() {
                   className={selectCls}
                 />
               </Field>
-              <Field label="Shift end">
+              <Field label={t("ui.staff.shiftEnd")}>
                 <input
                   type="time"
                   value={person.end}
@@ -1317,7 +1317,7 @@ function ResourcesTab() {
                 />
               </Field>
             </div>
-            <Field label="Works on">
+            <Field label={t("ui.staff.worksOn")}>
               <div className="flex flex-wrap gap-1">
                 {DOW_LABELS.map((d, i) => (
                   <button
@@ -1335,13 +1335,13 @@ function ResourcesTab() {
                 ))}
               </div>
             </Field>
-            <Button onClick={addPerson}>Add resource</Button>
+            <Button onClick={addPerson}>{t("ui.staff.addResource")}</Button>
           </div>
         )}
 
         {team.length > 6 && (
           <div className="mt-3">
-            <SearchBox value={q} onChange={setQ} placeholder="Search staff or role…" />
+            <SearchBox value={q} onChange={setQ} placeholder={t("ui.staff.searchRole")} />
           </div>
         )}
         <div className="mt-3 space-y-2">
@@ -1369,7 +1369,7 @@ function ResourcesTab() {
                       ? `${shift.start}–${shift.end} · ${shift.days
                           .map((d) => DOW_LABELS[d])
                           .join(" ")}`
-                      : "No shift plan"}
+                      : t("ui.staff.noShiftPlan")}
                   </div>
                 </div>
                 {canEdit && (
@@ -1383,7 +1383,7 @@ function ResourcesTab() {
                         title="Lay this person's shift plan onto the next two weeks"
                         className="rounded-lg border border-line px-2 py-1 text-[11px] text-ink-soft transition-colors hover:border-primary/40 hover:text-ink"
                       >
-                        Apply plan
+                        {t("ui.staff.applyPlan")}
                       </button>
                     ) : null}
                     <button
@@ -1657,6 +1657,7 @@ function StaffPicker({
   value: string;
   onChange: (name: string) => void;
 }) {
+  const { t } = usePrefs();
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const matches = team.filter((s) => matchStaff(s, profiles[s], q)).slice(0, 50);
@@ -1670,13 +1671,13 @@ function StaffPicker({
         }}
         onBlur={() => setTimeout(() => setOpen(false), 120)}
         onChange={(e) => setQ(e.target.value)}
-        placeholder="Search staff…"
+        placeholder={t("ui.staff.pickerSearch")}
         className={selectCls}
       />
       {open && (
         <div className="absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-md border border-line bg-panel shadow-lift">
           {matches.length === 0 ? (
-            <div className="px-3 py-2 text-[12px] text-ink-faint">No match</div>
+            <div className="px-3 py-2 text-[12px] text-ink-faint">{t("ui.staff.noMatch")}</div>
           ) : (
             matches.map((s) => (
               <button

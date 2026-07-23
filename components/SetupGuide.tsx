@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Card } from "./ui";
+import { usePrefs } from "./prefs";
 import { IconArrowRight, IconClose } from "./icons";
 
 // ---------------------------------------------------------------------------
@@ -15,54 +16,23 @@ const DISMISS_KEY = "fpas.setupGuide.dismissed.v1";
 
 interface Step {
   n: number;
-  title: string;
-  desc: string;
+  key: string; // ui.setup.<key>.title/.desc/.cta
   href: string;
-  cta: string;
 }
 
 const PHASE_1: Step[] = [
-  {
-    n: 1,
-    title: "Add your people & equipment",
-    desc: "Staffing → Resources: add each person (full name, role, default shift) and your trucks, crates and stalls.",
-    href: "/staffing",
-    cta: "Open Staffing",
-  },
-  {
-    n: 2,
-    title: "Set the roster",
-    desc: "Staffing → Roster: press “Fill from plan” to lay everyone’s shifts onto the week, then adjust any day.",
-    href: "/staffing",
-    cta: "Open roster",
-  },
-  {
-    n: 3,
-    title: "Check your settings",
-    desc: "Organisation basics, appearance and language for this workspace.",
-    href: "/settings",
-    cta: "Open Settings",
-  },
+  { n: 1, key: "s1", href: "/staffing" },
+  { n: 2, key: "s2", href: "/staffing" },
+  { n: 3, key: "s3", href: "/settings" },
 ];
 
 const PHASE_2: Step[] = [
-  {
-    n: 4,
-    title: "Take your first booking",
-    desc: "New booking: paste an agent email and let the AI extract it, or key one in by hand.",
-    href: "/jobs/new",
-    cta: "New booking",
-  },
-  {
-    n: 5,
-    title: "House the animals",
-    desc: "Animals → “Place in housing”, or Housing → assign an animal to a holding unit.",
-    href: "/animals",
-    cta: "Open Animals",
-  },
+  { n: 4, key: "s4", href: "/jobs/new" },
+  { n: 5, key: "s5", href: "/animals" },
 ];
 
 export function SetupGuide() {
+  const { t } = usePrefs();
   const [dismissed, setDismissed] = useState(true); // default hidden until we read storage
 
   useEffect(() => {
@@ -89,19 +59,18 @@ export function SetupGuide() {
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="font-mono text-[10px] uppercase tracking-wide text-primary">
-            New here? Start here
+            {t("ui.setup.eyebrow")}
           </div>
           <h2 className="mt-0.5 font-display text-lg font-bold text-ink">
-            Getting started
+            {t("ui.setup.title")}
           </h2>
           <p className="mt-1 max-w-2xl text-[13px] text-ink-soft">
-            Set your workspace up once, then run shipments through it. Work down
-            the list — it takes about five minutes.
+            {t("ui.setup.subtitle")}
           </p>
         </div>
         <button
           onClick={dismiss}
-          title="Hide this"
+          title={t("ui.setup.dismiss")}
           className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/70 text-ink-soft transition-colors hover:text-ink"
         >
           <IconClose width={15} height={15} />
@@ -109,21 +78,29 @@ export function SetupGuide() {
       </div>
 
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <StepGroup label="First — set up (one time)" steps={PHASE_1} />
-        <StepGroup label="Then — operate (every day)" steps={PHASE_2} />
+        <StepGroup label={t("ui.setup.phase1")} steps={PHASE_1} t={t} />
+        <StepGroup label={t("ui.setup.phase2")} steps={PHASE_2} t={t} />
       </div>
 
       <button
         onClick={dismiss}
         className="mt-4 text-[12px] font-medium text-ink-faint transition-colors hover:text-ink"
       >
-        Got it — hide this
+        {t("ui.setup.dismiss")}
       </button>
     </Card>
   );
 }
 
-function StepGroup({ label, steps }: { label: string; steps: Step[] }) {
+function StepGroup({
+  label,
+  steps,
+  t,
+}: {
+  label: string;
+  steps: Step[];
+  t: (key: string, params?: Record<string, string | number>) => string;
+}) {
   return (
     <div>
       <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-ink-faint">
@@ -139,15 +116,17 @@ function StepGroup({ label, steps }: { label: string; steps: Step[] }) {
               {s.n}
             </span>
             <div className="min-w-0 flex-1">
-              <div className="text-[13px] font-semibold text-ink">{s.title}</div>
+              <div className="text-[13px] font-semibold text-ink">
+                {t(`ui.setup.${s.key}.title`)}
+              </div>
               <p className="mt-0.5 text-[12px] leading-relaxed text-ink-soft">
-                {s.desc}
+                {t(`ui.setup.${s.key}.desc`)}
               </p>
               <Link
                 href={s.href}
                 className="mt-1.5 inline-flex items-center gap-1 text-[12px] font-medium text-primary hover:underline"
               >
-                {s.cta}
+                {t(`ui.setup.${s.key}.cta`)}
                 <IconArrowRight width={13} height={13} />
               </Link>
             </div>

@@ -37,7 +37,7 @@ export function ComplianceReadiness({
   onAssign?: () => void;
 }) {
   const { getJob, ui, resolveItem, resolveAllSteps, resetSteps, runReadiness } = useStore();
-  const { canEdit } = usePrefs();
+  const { canEdit, t } = usePrefs();
   const job = getJob(jobId);
   const state = ui[jobId] ?? {};
 
@@ -124,13 +124,13 @@ export function ComplianceReadiness({
       {canEdit && (
         <div className="mb-5 flex flex-wrap items-center gap-2">
           <Button size="sm" onClick={() => resolveAllSteps(jobId)} disabled={cleared}>
-            ✓ Mark all steps done
+            ✓ {t("ui.rd.markAll")}
           </Button>
           <Button variant="ghost" size="sm" onClick={() => resetSteps(jobId)}>
-            ↺ Reset steps
+            ↺ {t("ui.rd.reset")}
           </Button>
           <span className="font-mono text-[10px] uppercase tracking-wide text-ink-faint">
-            demo shortcut
+            {t("ui.rd.demoShortcut")}
           </span>
         </div>
       )}
@@ -180,7 +180,7 @@ export function ComplianceReadiness({
             : "Resolve outstanding steps to clear the gate."}
         </span>
         <Button onClick={() => onAssign?.()} disabled={!cleared}>
-          Assign staff &amp; equipment →
+          {t("ui.rd.assign")}
         </Button>
       </div>
 
