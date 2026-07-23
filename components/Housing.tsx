@@ -100,7 +100,7 @@ export function Housing() {
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="Search unit, zone, species, occupant…"
+                placeholder={t("ui.house.searchPh")}
                 className="w-56 bg-transparent text-[13px] text-ink outline-none"
               />
               {q && (
@@ -323,10 +323,10 @@ function UnitForm({
           </label>
           <label className="block sm:col-span-2">
             <span className="mb-1 block text-[12px] text-ink-soft">
-              Assign animal (from registry)
+              {t("ui.house.assignAnimal")}
             </span>
             <select className={inp} value={f.animalId ?? ""} onChange={(e) => assignAnimal(e.target.value)}>
-              <option value="">— none / type below —</option>
+              <option value="">{t("ui.house.assignNone")}</option>
               {animals.map((a) => (
                 <option key={a.id} value={a.id}>
                   {a.name} · {a.species}
@@ -340,7 +340,7 @@ function UnitForm({
               className={inp}
               value={f.occupant}
               onChange={(e) => setF((p) => ({ ...p, occupant: e.target.value, animalId: undefined }))}
-              placeholder="Or type a consignment (e.g. Koi consignment)"
+              placeholder={t("ui.house.occupantPh")}
             />
           </label>
         </div>

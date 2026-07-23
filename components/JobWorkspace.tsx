@@ -318,7 +318,7 @@ function JobStaffing({ job, onDraft }: { job: Job; onDraft?: () => void }) {
   const { roster, leave, team, assets, staffing, profiles, getStaffing, setStaffing } =
     useStaff();
   const { jobs } = useStore();
-  const { canEdit, toast } = usePrefs();
+  const { canEdit, toast, t } = usePrefs();
   const date = job.booking?.arrivalDate ?? "";
   const existing = getStaffing(job.id);
   const [needed, setNeeded] = useState(existing?.needed ?? 2);
@@ -522,7 +522,7 @@ function JobStaffing({ job, onDraft }: { job: Job; onDraft?: () => void }) {
         <div className="mt-5 flex flex-wrap items-center justify-end gap-2">
           {canEdit && (
             <Button variant="ghost" onClick={saveStaffing}>
-              Save staffing
+              {t("ui.js.saveStaffing")}
             </Button>
           )}
           {onDraft && (
@@ -532,7 +532,7 @@ function JobStaffing({ job, onDraft }: { job: Job; onDraft?: () => void }) {
                 onDraft();
               }}
             >
-              Draft operational documents →
+              {t("ui.js.draftDocs")}
             </Button>
           )}
         </div>

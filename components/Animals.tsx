@@ -102,8 +102,8 @@ export function Animals() {
         <Card className="border-dashed p-8 text-center">
           <p className="text-[13px] text-ink-soft">
             {animals.length === 0
-              ? "No animals in the registry yet. Add your first with “Add animal”, or they’ll appear as you create shipments."
-              : `No animals match “${q}”.`}
+              ? t("ui.an.emptyRegistry")
+              : t("ui.an.noMatch", { q })}
           </p>
         </Card>
       )}
@@ -203,7 +203,7 @@ function AnimalCard({
       <div className="mt-2.5 border-t border-line pt-2.5">
         <div className="flex items-center justify-between gap-2 text-[12.5px]">
           <span className="font-mono text-[10px] uppercase tracking-wide text-ink-faint">
-            Housing
+            {t("ui.an.housing")}
           </span>
           {unit ? (
             <a
@@ -213,7 +213,7 @@ function AnimalCard({
               {unit.id} · {unit.zone}
             </a>
           ) : (
-            <span className="font-mono text-ink-faint">Not housed</span>
+            <span className="font-mono text-ink-faint">{t("ui.an.notHoused")}</span>
           )}
         </div>
         {canEdit && !unit && (
@@ -224,7 +224,7 @@ function AnimalCard({
                 onChange={(e) => setPick(e.target.value)}
                 className="min-w-0 flex-1 rounded-md border border-line-strong bg-white px-2 py-1 text-[12px] text-ink focus:outline-none focus:ring-2 focus:ring-primary/30"
               >
-                <option value="">Choose a free unit…</option>
+                <option value="">{t("ui.an.chooseFreeUnit")}</option>
                 {availableUnits.map((u) => (
                   <option key={u.id} value={u.id}>
                     {u.id} · {u.zone} ({u.species})
@@ -242,7 +242,7 @@ function AnimalCard({
                 }}
                 disabled={!pick}
               >
-                Place
+                {t("ui.an.place")}
               </Button>
             </div>
           ) : (
@@ -251,7 +251,7 @@ function AnimalCard({
               disabled={availableUnits.length === 0}
               className="mt-2 w-full rounded-lg border border-line px-2.5 py-1.5 text-[12px] text-ink-soft transition-colors hover:border-primary/40 hover:text-ink disabled:opacity-50"
             >
-              {availableUnits.length ? "Place in housing →" : "No free units"}
+              {availableUnits.length ? t("ui.an.placeInHousing") : t("ui.an.noFreeUnits")}
             </button>
           )
         )}
