@@ -32,6 +32,7 @@ import {
   seedJobs,
   seedLeads,
 } from "@/lib/jobs";
+import { IMPORT_SEQUENCE } from "@/lib/importSequence";
 
 // ---------------------------------------------------------------------------
 // Jobs store. Holds every import job, persists to localStorage, and exposes
@@ -85,6 +86,10 @@ interface StoreState {
     factKey: keyof ComplianceFacts,
     evidence?: { reference?: string; note?: string }
   ) => Promise<void>;
+  /** Demo shortcut: satisfy every applicable readiness step in one go. */
+  resolveAllSteps: (id: string) => void;
+  /** Demo shortcut: clear readiness back to just "booking registered". */
+  resetSteps: (id: string) => void;
   regenerateArtifacts: (id: string) => Promise<void>;
 
   // Flight Manager intake
@@ -757,6 +762,51 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     await callReadiness(id, booking);
   }
 
+  /** Demo shortcut — mark every applicable step satisfied in a single update
+   * (no per-step AI call, so it's instant). Records a demo evidence reference. */
+  function resolveAllSteps(id: string) {
+    const job = getJob(id);
+    if (!job?.booking) return;
+    const facts = { ...job.booking.facts };
+    const evidence = { ...job.booking.evidence };
+    for (const rule of IMPORT_SEQUENCE) {
+      if (rule.horsesOnly && !job.booking.isHorses) continue;
+      if (!facts[rule.factKey]) {
+        facts[rule.factKey] = true;
+        evidence[rule.factKey] = {
+          reference: "DEMO",
+          note: "Marked via demo shortcut",
+          markedBy: CURRENT_USER,
+          markedAt: nowIso(),
+        };
+      }
+    }
+    patchJob(id, {
+      booking: {
+        ...job.booking,
+        facts,
+        evidence,
+        govtVetInspectionTime:
+          job.booking.govtVetInspectionTime || "09:00 (day of arrival)",
+      },
+      readiness: null, // fall back to "all steps satisfied" rather than a stale summary
+    });
+  }
+
+  /** Demo shortcut — reset the rail to the start (only "booking registered"). */
+  function resetSteps(id: string) {
+    const job = getJob(id);
+    if (!job?.booking) return;
+    patchJob(id, {
+      booking: {
+        ...job.booking,
+        facts: { ...DEFAULT_FACTS, bookingCreated: true },
+        evidence: {},
+      },
+      readiness: null,
+    });
+  }
+
   async function regenerateArtifacts(id: string) {
     const job = getJob(id);
     if (!job?.booking) return;
@@ -811,6 +861,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       confirmBooking,
       runReadiness,
       resolveItem,
+      resolveAllSteps,
+      resetSteps,
       regenerateArtifacts,
       leads,
       acceptLead,

@@ -36,7 +36,7 @@ export function ComplianceReadiness({
   jobId: string;
   onDraft?: () => void;
 }) {
-  const { getJob, ui, resolveItem, runReadiness } = useStore();
+  const { getJob, ui, resolveItem, resolveAllSteps, resetSteps, runReadiness } = useStore();
   const { canEdit } = usePrefs();
   const job = getJob(jobId);
   const state = ui[jobId] ?? {};
@@ -119,6 +119,21 @@ export function ComplianceReadiness({
           </div>
         )}
       </div>
+
+      {/* Demo shortcuts — clear or reset the whole rail in one click. */}
+      {canEdit && (
+        <div className="mb-5 flex flex-wrap items-center gap-2">
+          <Button size="sm" onClick={() => resolveAllSteps(jobId)} disabled={cleared}>
+            ✓ Mark all steps done
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => resetSteps(jobId)}>
+            ↺ Reset steps
+          </Button>
+          <span className="font-mono text-[10px] uppercase tracking-wide text-ink-faint">
+            demo shortcut
+          </span>
+        </div>
+      )}
 
       {/* AI briefing controls / error */}
       {state.readinessError ? (
