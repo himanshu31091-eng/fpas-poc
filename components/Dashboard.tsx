@@ -18,6 +18,15 @@ import { Button, Card, CountUp, FlightStatusChip, OpsStageChip, SimTag, StatusBa
 import { Markdown } from "./Markdown";
 import { JobDrawer } from "./JobDrawer";
 import { OpsToday } from "./OpsToday";
+import {
+  loadRequests,
+  saveRequests,
+  seedRequests,
+  pendingForOps,
+  markAccepted,
+  markDismissed,
+  type PortalRequest,
+} from "@/lib/portal";
 import { CommodityArt } from "./CommodityArt";
 import { Calendar } from "./Calendar";
 import { Insights } from "./Insights";
@@ -96,12 +105,50 @@ export function Dashboard() {
     leads,
     acceptLead,
     dismissLead,
+    createQuickJob,
+    updateJob,
   } = useStore();
   const { canEdit, user, toast, t } = usePrefs();
   const router = useRouter();
   const [view, setView] = useState<View>("today");
   const [layout, setLayout] = useState<Layout>("list");
   const [drawerId, setDrawerId] = useState<string | null>(null);
+  const [portalReqs, setPortalReqs] = useState<PortalRequest[]>([]);
+
+  // Agent-portal requests (submitted on the external surface) surfaced here for
+  // ops to accept into a job — the customer-portal → operations hand-off.
+  useEffect(() => {
+    setPortalReqs(loadRequests() ?? seedRequests());
+  }, []);
+
+  const pendingAgentReqs = pendingForOps(portalReqs);
+
+  function acceptAgentRequest(req: PortalRequest) {
+    const id = createQuickJob({
+      jobType: "import",
+      awb: req.awb || "",
+      shippingAgent: req.agent,
+      commodity: req.commodity,
+      animalCount: req.animalCount,
+      flight: req.flight,
+      origin: req.origin,
+      arrivalDate: req.date,
+      arrivalTime: "",
+    });
+    updateJob(id, { stage: "Confirmed" });
+    const next = markAccepted(portalReqs, req.id, id);
+    setPortalReqs(next);
+    saveRequests(next);
+    toast("Agent request accepted → job created", "success");
+    router.push(`/jobs/${id}`);
+  }
+
+  function dismissAgentRequest(req: PortalRequest) {
+    const next = markDismissed(portalReqs, req.id);
+    setPortalReqs(next);
+    saveRequests(next);
+    toast("Request dismissed");
+  }
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<JobStatus | "all">("all");
   const [mineOnly, setMineOnly] = useState(false);
@@ -292,6 +339,56 @@ export function Dashboard() {
                 onDismiss={() => dismissLead(lead.id)}
               />
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Agent portal intake — requests submitted on the external portal */}
+      {pendingAgentReqs.length > 0 && (
+        <div className="mb-6">
+          <div className="mb-2 flex items-center gap-2">
+            <IconArrowRight width={16} height={16} className="text-primary" />
+            <span className="text-sm font-semibold text-ink">From the agent portal</span>
+            <span className="rounded-full bg-primary-soft px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide text-primary">
+              {pendingAgentReqs.length} to review
+            </span>
+            <SimTag />
+          </div>
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+            {pendingAgentReqs.map((r) => {
+              const have = r.docs.filter((d) => d.uploaded).length;
+              return (
+                <div key={r.id} className="rounded-card border border-line bg-panel p-3.5 shadow-panel">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-[13px] font-semibold text-ink">{r.flight || "TBC"}</span>
+                    <span className="rounded-full bg-bg px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide text-ink-soft">
+                      {r.agent}
+                    </span>
+                    <span className="ml-auto font-mono text-[11px] text-ink-faint">
+                      {have}/{r.docs.length} docs
+                    </span>
+                  </div>
+                  <div className="mt-1 text-[12.5px] text-ink-soft">
+                    {r.commodity}
+                    {r.origin ? ` · ${r.origin}` : ""} {r.date ? `· ${r.date}` : ""}
+                    {r.animalCount ? ` · ${r.animalCount}` : ""}
+                  </div>
+                  {canEdit && (
+                    <div className="mt-3 flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => dismissAgentRequest(r)}
+                        className="text-[12px] text-ink-faint transition-colors hover:text-red"
+                      >
+                        Dismiss
+                      </button>
+                      <Button size="sm" onClick={() => acceptAgentRequest(r)}>
+                        Accept &amp; create job →
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

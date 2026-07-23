@@ -25,6 +25,11 @@ export interface PortalRequest {
   awb: string;
   docs: PortalDoc[];
   createdAt: string;
+  /** Ops accepted this request into a job (holds the created job id). */
+  accepted?: boolean;
+  acceptedJobId?: string;
+  /** Ops dismissed this request (removed from the ops queue). */
+  dismissed?: boolean;
 }
 
 export const PORTAL_KEY = "fpas.portal.v2";
@@ -86,6 +91,19 @@ export function seedRequests(): PortalRequest[] {
       createdAt: "2026-07-23T14:20:00.000Z",
     },
   ];
+}
+
+/** Requests awaiting an ops decision (not yet accepted or dismissed). */
+export function pendingForOps(list: PortalRequest[]): PortalRequest[] {
+  return list.filter((r) => !r.accepted && !r.dismissed);
+}
+
+export function markAccepted(list: PortalRequest[], id: string, jobId: string): PortalRequest[] {
+  return list.map((r) => (r.id === id ? { ...r, accepted: true, acceptedJobId: jobId } : r));
+}
+
+export function markDismissed(list: PortalRequest[], id: string): PortalRequest[] {
+  return list.map((r) => (r.id === id ? { ...r, dismissed: true } : r));
 }
 
 export function loadRequests(): PortalRequest[] | null {
