@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useStore } from "./store";
 import { usePrefs, STAFF } from "./prefs";
 import { Button, Card, FlightStatusChip, OpsStageChip, StatusBadge } from "./ui";
@@ -89,12 +89,23 @@ function defaultTab(job: Job): Tab {
 
 export function JobWorkspace({ jobId }: { jobId: string }) {
   const router = useRouter();
-  const { getJob, deleteJob, restoreJob, regenerateArtifacts, assignJob, updateJob } =
+  const { getJob, jobs, deleteJob, restoreJob, regenerateArtifacts, assignJob, updateJob } =
     useStore();
   const { canEdit, toast } = usePrefs();
   const job = getJob(jobId);
 
   const [tab, setTab] = useState<Tab>(() => (job ? defaultTab(job) : "source"));
+
+  // Deep-link resilience: a QR/link may carry ?awb= — if this device doesn't
+  // have that exact job id (e.g. scanned from another device), resolve to the
+  // job with the same AWB instead of showing "doesn't exist".
+  useEffect(() => {
+    if (job) return;
+    const awb = new URLSearchParams(window.location.search).get("awb");
+    if (!awb) return;
+    const match = jobs.find((j) => !j.deletedAt && j.booking?.awb === awb);
+    if (match && match.id !== jobId) router.replace(`/jobs/${match.id}`);
+  }, [job, jobs, jobId, router]);
 
   if (!job) {
     return (

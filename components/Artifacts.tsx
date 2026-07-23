@@ -86,7 +86,7 @@ export function Artifacts({ jobId }: { jobId: string }) {
 
         <div className="space-y-4">
           {artifacts.map((a) => (
-            <ArtifactCard key={a.id} artifact={a} subtitle={docMeta} jobId={jobId} />
+            <ArtifactCard key={a.id} artifact={a} subtitle={docMeta} jobId={jobId} awb={b.awb} />
           ))}
         </div>
       </div>
@@ -130,10 +130,12 @@ function ArtifactCard({
   artifact,
   subtitle,
   jobId,
+  awb,
 }: {
   artifact: DraftArtifact;
   subtitle: string;
   jobId: string;
+  awb?: string;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -146,7 +148,9 @@ function ArtifactCard({
 
   function pdf() {
     const qr =
-      typeof window !== "undefined" ? `${window.location.origin}/jobs/${jobId}` : undefined;
+      typeof window !== "undefined"
+        ? `${window.location.origin}/jobs/${jobId}${awb ? `?awb=${encodeURIComponent(awb)}` : ""}`
+        : undefined;
     downloadPdf(artifact.filename.replace(/\.[^.]+$/, ""), {
       title: artifact.title,
       subtitle,

@@ -149,7 +149,7 @@ export function JobDrawer({
 
               {b.awb && origin && (
                 <div className="mt-4 flex flex-col items-center rounded-card border border-line bg-white py-4">
-                  <QRCode value={`${origin}/jobs/${job.id}`} size={176} caption={`Scan → AWB ${b.awb}`} />
+                  <QRCode value={`${origin}/jobs/${job.id}?awb=${encodeURIComponent(b.awb)}`} size={176} caption={`Scan → AWB ${b.awb}`} />
                 </div>
               )}
             </div>
