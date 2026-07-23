@@ -1492,7 +1492,7 @@ function ImportTab() {
       const res = await fetch("/api/roster", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ text, today: dateStr(new Date()) }),
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
