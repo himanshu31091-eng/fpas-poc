@@ -81,7 +81,11 @@ interface StaffState {
   decideLeave: (id: string, status: LeaveStatus, by: string) => void;
   /** Remove a leave entirely (cancels it and reverts the roster). */
   removeLeave: (id: string) => void;
-  importRoster: (entries: RosterEntry[]) => number;
+  importRoster: (entries: RosterEntry[]) => {
+    imported: number;
+    addedNew: string[];
+    matched: { from: string; to: string }[];
+  };
   upsertRosterEntry: (entry: Omit<RosterEntry, "id">) => void;
   /** Add entries for staff|date keys that don't already exist (never overwrites). */
   addRosterEntries: (entries: Omit<RosterEntry, "id">[]) => void;
@@ -261,13 +265,13 @@ export function StaffProvider({ children }: { children: ReactNode }) {
       removeLeave: (id) => setLeave((prev) => prev.filter((l) => l.id !== id)),
 
       importRoster: (entries) => {
-        if (!entries.length) return 0;
+        if (!entries.length) return { imported: 0, addedNew: [], matched: [] };
         // Canonicalise each entry's staff name against the current team
         // (case-insensitive), so "Himanshu Pandey" lands on the existing
         // "Himanshu pandey" row. Any genuinely new name is added to the team
         // (and given a profile) so it gets a row — otherwise the entry would be
         // stored but invisible, since the grid only renders team members.
-        const { normalized, newNames } = planRosterImport(entries, team);
+        const { normalized, newNames, matched } = planRosterImport(entries ?? [], team);
         // A brand-new person introduced by import becomes a proper employee:
         // they get a default Mon–Fri shift plan, and that plan is laid onto the
         // roster — so their row isn't blank apart from the one imported entry
@@ -302,7 +306,7 @@ export function StaffProvider({ children }: { children: ReactNode }) {
           }
           return Array.from(map.values());
         });
-        return normalized.length;
+        return { imported: normalized.length, addedNew: newNames, matched };
       },
 
       upsertRosterEntry: (entry) => {
