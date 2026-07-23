@@ -245,42 +245,16 @@ function RosterTab() {
           className="flex w-full items-center justify-between gap-2 text-left"
         >
           <span className="text-[13px] font-semibold text-ink">
-            How the roster works
+            {t("ui.roster.helpTitle")}
           </span>
           <span className="font-mono text-[11px] text-primary">
-            {showHelp ? "Hide" : "Show"}
+            {showHelp ? t("ui.common.hide") : t("ui.common.show")}
           </span>
         </button>
         {showHelp && (
-          <ol className="mt-2 space-y-1 text-[12.5px] leading-relaxed text-ink-soft">
-            <li>
-              <strong>1. Each person has a shift plan</strong> — a default
-              start/end and the weekdays they normally work. You set it when you
-              add a resource (or edit it on the Resources tab).
-            </li>
-            <li>
-              <strong>2. Fill from the plan</strong> — the &ldquo;Fill from
-              plan&rdquo; button lays each person&apos;s default shift onto the
-              range you&apos;re viewing (this week, or the whole month in Month
-              view), skipping any day that already has a shift or leave. You can
-              then tweak any single day.
-            </li>
-            <li>
-              <strong>3. Add or change one shift</strong> — use &ldquo;Add /
-              update shift&rdquo; below to set a person to working, off, sick,
-              training, etc. on a specific date.
-            </li>
-            <li>
-              <strong>4. Leave shows automatically</strong> — approved leave
-              (Leave tab) overrides the roster; a pending request shows faded
-              until it&apos;s approved.
-            </li>
-            <li>
-              <strong>5. Coverage checks bookings</strong> — the
-              &ldquo;Req · sched&rdquo; row compares crew each shipment needs
-              against who&apos;s rostered on, flagging thin days.
-            </li>
-          </ol>
+          <div className="mt-2 text-[12.5px] leading-relaxed text-ink-soft">
+            <Markdown text={t("ui.roster.helpMd")} />
+          </div>
         )}
       </Card>
 
@@ -863,7 +837,7 @@ function TimesheetsTab() {
         {rows.length === 0 ? (
           <p className="px-4 py-10 text-center text-sm text-ink-soft">{t("ts.empty")}</p>
         ) : shownRows.length === 0 ? (
-          <p className="px-4 py-10 text-center text-sm text-ink-soft">No employee matches “{q}”.</p>
+          <p className="px-4 py-10 text-center text-sm text-ink-soft">{t("ui.staff.noEmployeeMatch", { q })}</p>
         ) : (
           <div className="-mx-1 overflow-x-auto px-1">
             <table className="w-full min-w-[720px] border-collapse text-[12.5px]">

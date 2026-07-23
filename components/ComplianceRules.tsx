@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useStore } from "./store";
 import { usePrefs } from "./prefs";
 import { Button, Card, Eyebrow, SimTag, BrandLoader, ErrorRetry } from "./ui";
+import { Markdown } from "./Markdown";
 import { IconSparkles, IconCheckCircle } from "./icons";
 import { jobAwb, jobAgent } from "@/lib/jobs";
 
@@ -92,71 +93,16 @@ export function ComplianceRules() {
           className="flex w-full items-center justify-between gap-2 text-left"
         >
           <span className="text-[13.5px] font-semibold text-ink">
-            How compliance works in this tool
+            {t("ui.rules.explainerTitle")}
           </span>
           <span className="font-mono text-[11px] text-primary">
-            {showHelp ? "Hide" : "Show"}
+            {showHelp ? t("ui.common.hide") : t("ui.common.show")}
           </span>
         </button>
 
         {showHelp && (
-          <div className="mt-3 space-y-4 border-t border-line pt-3 text-[12.5px] leading-relaxed text-ink-soft">
-            <p>
-              The POC checks compliance in <strong>two layers</strong> that
-              answer different questions.
-            </p>
-
-            <div>
-              <div className="mb-1 text-[13px] font-semibold text-ink">
-                1. Readiness — the per-shipment gate
-              </div>
-              <p>
-                On each job&apos;s <strong>Readiness</strong> tab. It encodes the
-                real <strong>Amsterdam import sequence</strong> step by step —
-                booking → OKTF (horses) → health-certificate draft →{" "}
-                <strong>NVWA pre-approval</strong> → inspection slot → Scope
-                pre-registration → GDB to customs → offloading list. Staff mark
-                each step done <strong>with a reference</strong> (the audit
-                trail); it lists <strong>outstanding steps first, by urgency</strong>,
-                so the blocker is obvious. It knows an{" "}
-                <strong>origin-country vet endorsement is not the same as NVWA
-                pre-approval</strong>, so a step can&apos;t be ticked off falsely —
-                the most common real pre-arrival blocker. This runs
-                deterministically, so it behaves the same with or without the AI.
-              </p>
-            </div>
-
-            <div>
-              <div className="mb-1 text-[13px] font-semibold text-ink">
-                2. Compliance rules (this screen) — the per-species engine
-              </div>
-              <p>
-                Pick any shipment and the AI reasons{" "}
-                <strong>which documents and checks that species, route and
-                direction require</strong> — each tagged with the responsible{" "}
-                <strong>authority</strong> (NVWA / EU&nbsp;TRACES / CITES /
-                IATA&nbsp;LAR / Customs / Airline), a{" "}
-                <strong>severity</strong> (mandatory / conditional / recommended)
-                and a one-line <strong>rationale</strong>. CITES only appears when
-                the species is actually protected. Where Readiness is tuned to the
-                horse-import path FPAS runs most, this generalises to{" "}
-                <strong>every animal they move</strong> — cats, dogs, birds, fish,
-                reptiles — import or export.
-              </p>
-            </div>
-
-            <div className="rounded-lg border border-line bg-panel px-3 py-2 text-[12px]">
-              <strong className="text-ink">In short:</strong> Readiness = &ldquo;for
-              this shipment, what&apos;s outstanding and blocking arrival?&rdquo;
-              · Compliance rules = &ldquo;for this species and route, what does
-              the law require in the first place?&rdquo;
-            </div>
-
-            <p className="text-[11.5px] text-ink-faint">
-              Both are operational decision-support for trained staff — not legal
-              advice. Nothing is ever submitted to an authority automatically; a
-              person approves every step.
-            </p>
+          <div className="mt-3 border-t border-line pt-3 text-[12.5px] leading-relaxed text-ink-soft">
+            <Markdown text={t("ui.rules.explainerMd")} />
           </div>
         )}
       </Card>

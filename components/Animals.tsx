@@ -102,8 +102,8 @@ export function Animals() {
         <Card className="border-dashed p-8 text-center">
           <p className="text-[13px] text-ink-soft">
             {animals.length === 0
-              ? "No animals in the registry yet. Add your first with “Add animal”, or they’ll appear as you create shipments."
-              : `No animals match “${q}”.`}
+              ? t("ui.an.emptyRegistry")
+              : t("ui.an.noMatch", { q })}
           </p>
         </Card>
       )}
