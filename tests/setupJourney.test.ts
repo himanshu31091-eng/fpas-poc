@@ -4,6 +4,7 @@ import {
   availableStaff,
   entriesFromPattern,
   planRosterImport,
+  staffContext,
   displayName,
   dateStr,
   type RosterEntry,
@@ -102,6 +103,42 @@ describe("staff · displayName", () => {
     expect(displayName("Ann", profiles)).toBe("Ann Jansen");
     expect(displayName("Bob", profiles)).toBe("Bob");
     expect(displayName("Ann", null)).toBe("Ann");
+  });
+});
+
+describe("staff · staffContext (AI copilot / briefing)", () => {
+  const now = new Date("2026-07-23T00:00:00");
+  const team = ["Ann", "Bea"];
+
+  it("reports who is on leave (from a roster entry) in the window", () => {
+    const roster: RosterEntry[] = [
+      { id: "r1", staff: "Ann", date: "2026-07-24", status: "leave" },
+    ];
+    const ctx = staffContext(team, roster, [], now);
+    expect(ctx).toContain("On leave/absent:");
+    expect(ctx).toContain("Ann");
+    expect(ctx).toContain("2026-07-24");
+  });
+
+  it("marks a pending (requested) leave as pending", () => {
+    const leave: LeaveRequest[] = [
+      { id: "l1", staff: "Bea", startDate: "2026-07-24", endDate: "2026-07-25", type: "vacation", status: "requested", requestedAt: "" },
+    ];
+    const ctx = staffContext(team, [], leave, now);
+    expect(ctx).toContain("Bea");
+    expect(ctx).toContain("pending approval");
+  });
+
+  it("flags an understaffed shipment day when demand exceeds rostered crew", () => {
+    const ctx = staffContext(team, [], [], now, () => 5); // need 5, nobody rostered
+    expect(ctx).toContain("Understaffed shipment days:");
+    expect(ctx).toMatch(/short 5/);
+  });
+
+  it("says none when nobody is away and coverage is fine", () => {
+    const ctx = staffContext(team, [], [], now, () => 0);
+    expect(ctx).toContain("On leave/absent: none");
+    expect(ctx).toContain("Understaffed shipment days: none");
   });
 });
 

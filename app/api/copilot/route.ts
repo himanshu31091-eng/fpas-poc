@@ -4,7 +4,7 @@ import { callClaude, hasApiKey } from "@/lib/anthropic";
 export const runtime = "nodejs";
 export const maxDuration = 300;
 
-const SYSTEM = `You are the operations copilot for FPAS, a live-animal air-transport company at Amsterdam Schiphol. You answer questions about the current jobs and can draft short operational text (notices, customer updates) on request. Be concise and specific, cite AWB/flight where relevant, and never invent shipments or facts not present in the provided data. You are decision-support only — a human acts on your answers.`;
+const SYSTEM = `You are the operations copilot for FPAS, a live-animal air-transport company at Amsterdam Schiphol. You answer questions about the current jobs AND about staffing/roster coverage, and can draft short operational text (notices, customer updates) on request. The data includes shipments plus a STAFF & COVERAGE section listing who is on leave/sick and any understaffed shipment days. Be concise and specific, cite AWB/flight or staff names where relevant, and never invent shipments, people or facts not present in the provided data. You are decision-support only — a human acts on your answers.`;
 
 export async function POST(req: Request) {
   const { question, context } = (await req.json()) as {
@@ -19,7 +19,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const prompt = `Here is the current state of all jobs (JSON-ish summary):
+  const prompt = `Here is the current state of all jobs, plus a staff & coverage summary:
 
 ${context}
 

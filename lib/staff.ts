@@ -258,6 +258,87 @@ export function planRosterImport<T extends { staff: string }>(
   return { normalized, newNames };
 }
 
+function summariseDateRanges(dates: string[]): string {
+  const sorted = [...dates].sort();
+  const nextDay = (d: string) => {
+    const [y, m, dd] = d.split("-").map(Number);
+    return dateStr(addDays(new Date(y, m - 1, dd), 1));
+  };
+  const ranges: [string, string][] = [];
+  for (const d of sorted) {
+    const last = ranges[ranges.length - 1];
+    if (last && nextDay(last[1]) === d) last[1] = d;
+    else ranges.push([d, d]);
+  }
+  return ranges.map(([a, b]) => (a === b ? a : `${a}→${b}`)).join(", ");
+}
+
+/**
+ * Plain-text staff/coverage summary for the AI copilot and daily briefing, so
+ * they can answer leave and coverage questions. Reads the same live data as
+ * every screen; `requiredForDate` (optional) supplies booking-derived crew
+ * demand per day without coupling this module to lib/jobs.
+ */
+export function staffContext(
+  team: string[],
+  roster: RosterEntry[],
+  leave: LeaveRequest[],
+  now: Date,
+  requiredForDate?: (date: string) => number,
+  days = 7,
+  profiles?: Record<string, StaffProfile> | null
+): string {
+  const dates = Array.from({ length: days }, (_, i) => dateStr(addDays(now, i)));
+  const absence = new Map<string, { dates: string[]; sick: boolean; pending: boolean }>();
+  for (const d of dates) {
+    for (const s of team) {
+      const st = statusOnDate(s, d, roster, leave);
+      if (st && (st.status === "leave" || st.status === "sick")) {
+        const rec = absence.get(s) ?? { dates: [], sick: false, pending: false };
+        rec.dates.push(d);
+        if (st.status === "sick") rec.sick = true;
+        if ("pending" in st && st.pending) rec.pending = true;
+        absence.set(s, rec);
+      }
+    }
+  }
+
+  const lines: string[] = [];
+  lines.push(`STAFF & COVERAGE — ${days} days from ${dates[0]} (team of ${team.length}):`);
+  if (absence.size === 0) {
+    lines.push("On leave/absent: none in this window.");
+  } else {
+    lines.push("On leave/absent:");
+    for (const [s, rec] of Array.from(absence.entries())) {
+      lines.push(
+        `- ${displayName(s, profiles)}: ${rec.sick ? "sick" : "leave"}${
+          rec.pending ? " (pending approval)" : ""
+        } on ${summariseDateRanges(rec.dates)}`
+      );
+    }
+  }
+  if (requiredForDate) {
+    const short: string[] = [];
+    for (const d of dates) {
+      const required = requiredForDate(d);
+      if (required <= 0) continue;
+      const scheduled = team.filter((s) => {
+        const st = statusOnDate(s, d, roster, leave);
+        return st && (st.status === "working" || st.status === "training");
+      }).length;
+      if (scheduled < required) {
+        short.push(`${d}: need ${required}, ${scheduled} rostered (short ${required - scheduled})`);
+      }
+    }
+    lines.push(
+      short.length
+        ? `Understaffed shipment days: ${short.join("; ")}`
+        : "Understaffed shipment days: none"
+    );
+  }
+  return lines.join("\n");
+}
+
 /** Build working roster entries from a shift pattern, over `weeks` from a Monday. */
 export function entriesFromPattern(
   staff: string,
