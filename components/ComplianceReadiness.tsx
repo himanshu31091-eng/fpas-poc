@@ -31,10 +31,10 @@ const ORDER: (keyof ComplianceFacts)[] = [
 
 export function ComplianceReadiness({
   jobId,
-  onDraft,
+  onAssign,
 }: {
   jobId: string;
-  onDraft?: () => void;
+  onAssign?: () => void;
 }) {
   const { getJob, ui, resolveItem, resolveAllSteps, resetSteps, runReadiness } = useStore();
   const { canEdit } = usePrefs();
@@ -176,11 +176,11 @@ export function ComplianceReadiness({
       <div className="mt-6 flex items-center justify-end gap-3">
         <span className="text-[12px] text-ink-faint">
           {cleared
-            ? "All steps satisfied — you can draft the operational documents."
+            ? "All steps satisfied — assign the staff & equipment for the shipment."
             : "Resolve outstanding steps to clear the gate."}
         </span>
-        <Button onClick={() => onDraft?.()} disabled={!cleared}>
-          Draft operational documents →
+        <Button onClick={() => onAssign?.()} disabled={!cleared}>
+          Assign staff &amp; equipment →
         </Button>
       </div>
 
