@@ -241,21 +241,43 @@ export function availableStaff(
 export function planRosterImport<T extends { staff: string }>(
   entries: T[],
   team: string[]
-): { normalized: T[]; newNames: string[] } {
-  const canon = new Map(team.map((s) => [s.toLowerCase(), s]));
+): { normalized: T[]; newNames: string[]; matched: { from: string; to: string }[] } {
+  const exact = new Map(team.map((s) => [s.toLowerCase(), s]));
+  const tokens = team.map((s) => ({ name: s, parts: s.toLowerCase().split(/\s+/).filter(Boolean) }));
   const newNames: string[] = [];
+  const matched: { from: string; to: string }[] = [];
+
+  // Resolve an imported name to an existing team member:
+  // 1) exact (case-insensitive); 2) a UNIQUE partial match — every token of the
+  // imported name is a whole word in exactly one member's name (so "Himanshu"
+  // or "Pandey" → "Himanshu Pandey"), or the imported name is a substring of
+  // exactly one member. Ambiguous or no match → treat as a new person.
+  const resolve = (raw: string): string | null => {
+    const lc = raw.toLowerCase();
+    if (exact.has(lc)) return exact.get(lc)!;
+    const q = lc.split(/\s+/).filter(Boolean);
+    if (q.length) {
+      const byToken = tokens.filter(({ parts }) => q.every((qt) => parts.includes(qt)));
+      if (byToken.length === 1) return byToken[0].name;
+    }
+    const bySubstring = team.filter((s) => s.toLowerCase().includes(lc));
+    if (bySubstring.length === 1) return bySubstring[0];
+    return null;
+  };
+
   const normalized = entries.map((e) => {
     const raw = (e.staff ?? "").trim();
-    const lc = raw.toLowerCase();
-    let name = canon.get(lc);
-    if (!name) {
-      name = raw;
-      canon.set(lc, raw);
-      if (raw) newNames.push(raw);
+    if (!raw) return { ...e, staff: raw };
+    const hit = resolve(raw);
+    if (hit) {
+      if (hit.toLowerCase() !== raw.toLowerCase()) matched.push({ from: raw, to: hit });
+      return { ...e, staff: hit };
     }
-    return { ...e, staff: name };
+    if (!newNames.some((n) => n.toLowerCase() === raw.toLowerCase())) newNames.push(raw);
+    exact.set(raw.toLowerCase(), raw); // dedupe repeats of the same new name
+    return { ...e, staff: raw };
   });
-  return { normalized, newNames };
+  return { normalized, newNames, matched };
 }
 
 function summariseDateRanges(dates: string[]): string {

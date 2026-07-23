@@ -1499,8 +1499,14 @@ function ImportTab() {
         throw new Error(d.error || `Request failed (${res.status})`);
       }
       const data = await res.json();
-      const n = importRoster(data.entries ?? []);
-      toast(`Imported ${n} roster ${n === 1 ? "entry" : "entries"}`, "success");
+      const { imported, addedNew, matched } = importRoster(data.entries ?? []);
+      const bits = [`Imported ${imported} roster ${imported === 1 ? "entry" : "entries"}`];
+      if (matched.length) {
+        const uniq = Array.from(new Set(matched.map((m) => `${m.from} → ${m.to}`)));
+        bits.push(`matched ${uniq.join(", ")}`);
+      }
+      if (addedNew.length) bits.push(`added new: ${addedNew.join(", ")}`);
+      toast(bits.join(" · "), "success");
       setText("");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Import failed.");

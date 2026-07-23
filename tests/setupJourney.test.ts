@@ -85,6 +85,33 @@ describe("staff · planRosterImport (import → roster row)", () => {
     expect(newNames).toEqual(["Nieuwe Persoon"]);
   });
 
+  it("matches a first-name-only import to the unique full-name team member", () => {
+    const { normalized, newNames, matched } = planRosterImport(
+      [{ staff: "Himanshu", date: "2026-07-25", status: "leave" }],
+      ["Lotte van Dijk", "Himanshu Pandey"]
+    );
+    expect(normalized[0].staff).toBe("Himanshu Pandey"); // no duplicate created
+    expect(newNames).toEqual([]);
+    expect(matched).toEqual([{ from: "Himanshu", to: "Himanshu Pandey" }]);
+  });
+
+  it("matches a last-name-only import too", () => {
+    const { normalized } = planRosterImport(
+      [{ staff: "Pandey", date: "2026-07-25", status: "off" }],
+      ["Lotte van Dijk", "Himanshu Pandey"]
+    );
+    expect(normalized[0].staff).toBe("Himanshu Pandey");
+  });
+
+  it("does not partial-match when it would be ambiguous (adds new instead)", () => {
+    const { normalized, newNames } = planRosterImport(
+      [{ staff: "Maya", date: "2026-07-25", status: "off" }],
+      ["Maya Visser", "Maya de Jong"]
+    );
+    expect(normalized[0].staff).toBe("Maya"); // two Mayas → ambiguous → kept as-is
+    expect(newNames).toEqual(["Maya"]);
+  });
+
   it("does not report the same new name twice", () => {
     const { newNames } = planRosterImport(
       [
