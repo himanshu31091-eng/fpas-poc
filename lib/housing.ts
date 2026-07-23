@@ -30,23 +30,23 @@ export const UNIT_FLOW: Record<
   Available: { next: null, actionKey: null },
 };
 
-export const HOUSING_KEY = "fpas.housing.v2";
+export const HOUSING_KEY = "fpas.housing.v3";
 
 export function seedUnits(): HousingUnit[] {
   return [
-    { id: "ST-A1", zone: "Stables A", type: "Stable", species: "Horses", status: "Occupied", occupant: "Baloubet", since: "2026-07-14" },
-    { id: "ST-A2", zone: "Stables A", type: "Stable", species: "Horses", status: "Occupied", occupant: "Cornetto", since: "2026-07-14" },
+    { id: "ST-A1", zone: "Stables A", type: "Stable", species: "Horses", status: "Occupied", occupant: "Baloubet", since: "2026-07-22" },
+    { id: "ST-A2", zone: "Stables A", type: "Stable", species: "Horses", status: "Occupied", occupant: "Cornetto", since: "2026-07-22" },
     { id: "ST-A3", zone: "Stables A", type: "Stable", species: "Horses", status: "Dirty", occupant: "", since: "" },
     { id: "ST-A4", zone: "Stables A", type: "Stable", species: "Horses", status: "Available", occupant: "", since: "" },
     { id: "ST-B1", zone: "Stables B", type: "Stable", species: "Horses", status: "Available", occupant: "", since: "" },
     { id: "ST-B2", zone: "Stables B", type: "Stable", species: "Horses", status: "Cleaning", occupant: "", since: "" },
-    { id: "K-1", zone: "Kennels", type: "Kennel L", species: "Dogs", status: "Occupied", occupant: "Rocky", since: "2026-07-15" },
+    { id: "K-1", zone: "Kennels", type: "Kennel L", species: "Dogs", status: "Occupied", occupant: "Rocky", since: "2026-07-22" },
     { id: "K-2", zone: "Kennels", type: "Kennel M", species: "Dogs", status: "Available", occupant: "", since: "" },
     { id: "K-3", zone: "Kennels", type: "Kennel S", species: "Dogs", status: "Ready", occupant: "", since: "" },
     { id: "AV-1", zone: "Aviary", type: "Aviary", species: "Birds / insects", status: "Available", occupant: "", since: "" },
-    { id: "TQ-1", zone: "Aqua", type: "Tank", species: "Ornamental fish", status: "Occupied", occupant: "Koi consignment", since: "2026-07-13" },
+    { id: "TQ-1", zone: "Aqua", type: "Tank", species: "Ornamental fish", status: "Occupied", occupant: "Koi consignment", since: "2026-07-21" },
     { id: "TQ-2", zone: "Aqua", type: "Tank", species: "Ornamental fish", status: "Available", occupant: "", since: "" },
-    { id: "ISO-1", zone: "Isolation", type: "Isolation", species: "Any (quarantine)", status: "Occupied", occupant: "Reticulated python", since: "2026-07-15" },
+    { id: "ISO-1", zone: "Isolation", type: "Isolation", species: "Any (quarantine)", status: "Occupied", occupant: "Reticulated python", since: "2026-07-22" },
     { id: "ISO-2", zone: "Isolation", type: "Isolation", species: "Any (quarantine)", status: "Available", occupant: "", since: "" },
   ];
 }

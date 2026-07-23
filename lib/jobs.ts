@@ -38,8 +38,8 @@ export const AIRLINES = Object.keys(AIRLINE_RECIPIENTS);
 // only the reasoned narrative on the Readiness tab needs a live AI call.
 // ---------------------------------------------------------------------------
 
-const STORAGE_KEY = "fpas.jobs.v1";
-const LEADS_KEY = "fpas.leads.v1";
+const STORAGE_KEY = "fpas.jobs.v2";
+const LEADS_KEY = "fpas.leads.v2";
 
 export const DEFAULT_FACTS: ComplianceFacts = {
   bookingCreated: false,
@@ -289,7 +289,7 @@ export function seedJobs(): Job[] {
     animalCount: "4",
     flight: "EK9021",
     origin: "DXB (Dubai)",
-    arrivalDate: "2026-07-04",
+    arrivalDate: "2026-07-24",
     arrivalTime: "06:30",
     govtVetInspectionTime: "",
     specialCargo: "2 mares in foal; temperature-sensitive",
@@ -310,7 +310,7 @@ export function seedJobs(): Job[] {
     animalCount: "18 (12 dogs, 6 cats)",
     flight: "QR273",
     origin: "DOH (Doha)",
-    arrivalDate: "2026-07-06",
+    arrivalDate: "2026-07-25",
     arrivalTime: "07:15",
     govtVetInspectionTime: "09:30 (day of arrival)",
     specialCargo: "One crate flagged oversize",
@@ -335,7 +335,7 @@ export function seedJobs(): Job[] {
     animalCount: "3",
     flight: "EK9022",
     origin: "AMS",
-    arrivalDate: "2026-07-08",
+    arrivalDate: "2026-07-24",
     arrivalTime: "",
     govtVetInspectionTime: "",
     warehouseArrivalTime: "05:30",
@@ -356,8 +356,8 @@ export function seedJobs(): Job[] {
   return [
     {
       id: "job-1",
-      createdAt: "2026-07-02T08:20:00.000Z",
-      updatedAt: "2026-07-02T08:20:00.000Z",
+      createdAt: "2026-07-21T08:20:00.000Z",
+      updatedAt: "2026-07-21T08:20:00.000Z",
       source: { emailId: "email-1", email: email1 },
       extraction: null,
       stage: "Confirmed",
@@ -367,8 +367,8 @@ export function seedJobs(): Job[] {
     },
     {
       id: "job-2",
-      createdAt: "2026-07-02T09:50:00.000Z",
-      updatedAt: "2026-07-02T09:50:00.000Z",
+      createdAt: "2026-07-21T09:50:00.000Z",
+      updatedAt: "2026-07-21T09:50:00.000Z",
       source: { emailId: "email-2", email: email2 },
       extraction: null,
       stage: "Docs pending",
@@ -378,8 +378,8 @@ export function seedJobs(): Job[] {
     },
     {
       id: "job-3",
-      createdAt: "2026-07-02T10:10:00.000Z",
-      updatedAt: "2026-07-02T10:10:00.000Z",
+      createdAt: "2026-07-21T10:10:00.000Z",
+      updatedAt: "2026-07-21T10:10:00.000Z",
       source: { emailId: "email-3", email: email3 },
       extraction: null,
       stage: "Enquiry",
@@ -389,8 +389,8 @@ export function seedJobs(): Job[] {
     },
     {
       id: "job-4",
-      createdAt: "2026-07-02T11:00:00.000Z",
-      updatedAt: "2026-07-02T11:00:00.000Z",
+      createdAt: "2026-07-21T11:00:00.000Z",
+      updatedAt: "2026-07-21T11:00:00.000Z",
       source: { manual: true },
       extraction: null,
       stage: "Confirmed",
@@ -415,13 +415,13 @@ export function seedLeads(): FlightManagerLead[] {
       isHorses: true,
       animalCount: "6",
       origin: "DXB (Dubai)",
-      arrivalDate: "2026-07-09",
+      arrivalDate: "2026-07-26",
       arrivalTime: "05:40",
       horses: [
         { name: "Zephyr", gender: "Gelding", weightKg: "560" },
         { name: "Maple", gender: "Mare", weightKg: "505" },
       ],
-      receivedAt: "2026-07-03T06:15:00.000Z",
+      receivedAt: "2026-07-22T06:15:00.000Z",
     },
     {
       id: "fm-2",
@@ -431,10 +431,10 @@ export function seedLeads(): FlightManagerLead[] {
       isHorses: true,
       animalCount: "2",
       origin: "DOH (Doha)",
-      arrivalDate: "2026-07-10",
+      arrivalDate: "2026-07-27",
       arrivalTime: "07:20",
       horses: [{ name: "Onyx", gender: "Stallion", weightKg: "590" }],
-      receivedAt: "2026-07-03T07:02:00.000Z",
+      receivedAt: "2026-07-22T07:02:00.000Z",
     },
   ];
 }

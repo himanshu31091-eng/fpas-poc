@@ -27,7 +27,7 @@ export interface PortalRequest {
   createdAt: string;
 }
 
-export const PORTAL_KEY = "fpas.portal.v1";
+export const PORTAL_KEY = "fpas.portal.v2";
 
 /** Documents an agent must upload, by commodity. */
 export function requiredDocNames(commodity: string): string[] {
@@ -57,7 +57,7 @@ export function seedRequests(): PortalRequest[] {
       commodity: "Live horses",
       origin: "DXB",
       flight: "EK9022",
-      date: "2026-07-22",
+      date: "2026-07-25",
       animalCount: "6",
       notes: "3 mares, 3 geldings. Grooms travelling.",
       awb: "176-13092796",
@@ -67,7 +67,7 @@ export function seedRequests(): PortalRequest[] {
         { name: "Import permit", uploaded: false },
         { name: "Booking confirmation", uploaded: true, filename: "booking-EK9022.pdf" },
       ],
-      createdAt: "2026-07-15T09:00:00.000Z",
+      createdAt: "2026-07-22T09:00:00.000Z",
     },
     {
       id: "req-2",
@@ -75,7 +75,7 @@ export function seedRequests(): PortalRequest[] {
       commodity: "Companion animals",
       origin: "DOH",
       flight: "QR273",
-      date: "2026-07-24",
+      date: "2026-07-27",
       animalCount: "1",
       notes: "One beagle, IATA crate.",
       awb: "",
@@ -83,7 +83,7 @@ export function seedRequests(): PortalRequest[] {
         { name: "Health certificate", uploaded: false },
         { name: "Booking confirmation", uploaded: false },
       ],
-      createdAt: "2026-07-16T14:20:00.000Z",
+      createdAt: "2026-07-23T14:20:00.000Z",
     },
   ];
 }

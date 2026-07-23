@@ -173,9 +173,9 @@ export function availableStaff(
 
 // --- Persistence ------------------------------------------------------------
 
-const ROSTER_KEY = "fpas.roster.v1";
-const LEAVE_KEY = "fpas.leave.v1";
-const STAFFING_KEY = "fpas.staffing.v2";
+const ROSTER_KEY = "fpas.roster.v2";
+const LEAVE_KEY = "fpas.leave.v2";
+const STAFFING_KEY = "fpas.staffing.v3";
 
 function load<T>(key: string): T | null {
   if (typeof window === "undefined") return null;
