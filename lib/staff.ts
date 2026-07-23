@@ -384,9 +384,9 @@ export function entriesFromPattern(
 
 // --- Persistence ------------------------------------------------------------
 
-// v3/v4: bumped so any inconsistent local state (e.g. a partially-deleted
-// team) is discarded and everyone reloads the clean, consistent seed.
-const ROSTER_KEY = "fpas.roster.v3";
+// v4/v4: bumped so local state is discarded and everyone reloads the clean
+// seed. Roster v4 fills the previous + current month (June + July in the demo).
+const ROSTER_KEY = "fpas.roster.v4";
 const LEAVE_KEY = "fpas.leave.v3";
 const STAFFING_KEY = "fpas.staffing.v4";
 
@@ -481,28 +481,32 @@ const SHIFTS = [
 ];
 
 export function seedRoster(today: Date): RosterEntry[] {
-  const monday = mondayOf(today);
+  // Populate the whole of the previous month + the current month (e.g. June +
+  // July when "today" is in July), so the roster board is full in both week and
+  // month views. Deterministic — no Date.now / random.
+  const start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+  const end = new Date(today.getFullYear(), today.getMonth() + 1, 0); // last day of current month
   const out: RosterEntry[] = [];
   STAFF_MEMBERS.forEach((staff, si) => {
-    for (let d = 0; d < 14; d++) {
-      const date = dateStr(addDays(monday, d));
-      const dow = d % 7; // 0 = Mon
-      const key = si * 31 + d;
-      // Weekends: about half the team is scheduled on a rotation.
-      if (dow >= 5 && (si + Math.floor(d / 7)) % 2 !== 0) continue;
+    for (let dt = new Date(start); dt <= end; dt = addDays(dt, 1)) {
+      const date = dateStr(dt);
+      const dow = (dt.getDay() + 6) % 7; // 0 = Mon
+      const dayIndex = Math.round((dt.getTime() - start.getTime()) / 86_400_000);
+      const h = si * 7 + dayIndex; // deterministic per person+day
+      // Weekends: about half the team is scheduled on a rotation; rest blank.
+      if (dow >= 5 && (si + Math.floor(dayIndex / 7)) % 2 !== 0) continue;
       let status: ShiftStatus = "working";
-      if (si === 2 && d <= 1) status = "leave"; // Maud on leave to start
-      else if (si === 3 && d === 2) status = "sick"; // Esther sick Wed
-      else if (si === 6 && d >= 7) status = "leave"; // Chiara leave next week
-      else if (si === 4 && d === 9) status = "training"; // Maya training
-      else if (key % 13 === 0 && dow < 5) status = "off";
-      const [start, end] = SHIFTS[(si + d) % SHIFTS.length];
+      if (h % 17 === 0) status = "leave";
+      else if (h % 23 === 0) status = "sick";
+      else if (h % 19 === 0) status = "training";
+      else if (h % 11 === 0 && dow < 5) status = "off";
+      const [start_, end_] = SHIFTS[(si + dayIndex) % SHIFTS.length];
       out.push({
         id: `seed-${staff}-${date}`,
         staff,
         date,
         status,
-        ...(status === "working" ? { start, end } : {}),
+        ...(status === "working" ? { start: start_, end: end_ } : {}),
       });
     }
   });
