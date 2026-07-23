@@ -18,6 +18,7 @@ import { Button, Card, CountUp, FlightStatusChip, OpsStageChip, SimTag, StatusBa
 import { Markdown } from "./Markdown";
 import { JobDrawer } from "./JobDrawer";
 import { OpsToday } from "./OpsToday";
+import { SetupGuide } from "./SetupGuide";
 import {
   loadRequests,
   saveRequests,
@@ -286,7 +287,12 @@ export function Dashboard() {
         })}
       </div>
 
-      {view === "today" && <OpsToday />}
+      {view === "today" && (
+        <>
+          <SetupGuide />
+          <OpsToday />
+        </>
+      )}
       {view === "calendar" && <Calendar />}
       {view === "insights" && <Insights />}
       {view === "report" && <Report />}

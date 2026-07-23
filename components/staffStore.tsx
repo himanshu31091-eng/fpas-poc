@@ -20,10 +20,15 @@ import {
   seedLeave,
   seedStaffing,
   seedAssets,
+  seedProfiles,
   loadTeam,
   saveTeam,
   loadAssets,
   saveAssets,
+  loadProfiles,
+  saveProfiles,
+  entriesFromPattern,
+  mondayOf,
   STAFF_MEMBERS,
   type RosterEntry,
   type LeaveRequest,
@@ -32,6 +37,8 @@ import {
   type StaffingAssignment,
   type Asset,
   type AssetType,
+  type StaffProfile,
+  type ShiftPattern,
 } from "@/lib/staff";
 
 // ---------------------------------------------------------------------------
@@ -46,9 +53,18 @@ interface StaffState {
   staffing: StaffingAssignment[];
   team: string[];
   assets: Asset[];
+  profiles: Record<string, StaffProfile>;
 
-  addStaff: (name: string) => void;
+  addStaff: (input: {
+    name: string;
+    fullName?: string;
+    role?: string;
+    shift?: ShiftPattern;
+  }) => void;
   removeStaff: (name: string) => void;
+  setProfile: (name: string, patch: Partial<StaffProfile>) => void;
+  /** (Re)apply a person's saved shift pattern to the roster from this week. */
+  applyShiftPattern: (name: string, weeks?: number) => void;
   addAsset: (a: { name: string; type: AssetType; quantity: number }) => void;
   removeAsset: (id: string) => void;
 
@@ -83,6 +99,7 @@ export function StaffProvider({ children }: { children: ReactNode }) {
   const [staffing, setStaffing] = useState<StaffingAssignment[]>([]);
   const [team, setTeam] = useState<string[]>(STAFF_MEMBERS);
   const [assets, setAssets] = useState<Asset[]>([]);
+  const [profiles, setProfiles] = useState<Record<string, StaffProfile>>({});
   const rosterRef = useRef(roster);
   rosterRef.current = roster;
 
@@ -93,6 +110,7 @@ export function StaffProvider({ children }: { children: ReactNode }) {
     setStaffing(loadStaffing() ?? seedStaffing());
     setTeam(loadTeam() ?? STAFF_MEMBERS);
     setAssets(loadAssets() ?? seedAssets());
+    setProfiles(loadProfiles() ?? seedProfiles());
     setHydrated(true);
   }, []);
 
@@ -111,6 +129,9 @@ export function StaffProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (hydrated) saveAssets(assets);
   }, [assets, hydrated]);
+  useEffect(() => {
+    if (hydrated) saveProfiles(profiles);
+  }, [profiles, hydrated]);
 
   const value = useMemo<StaffState>(
     () => ({
@@ -120,13 +141,62 @@ export function StaffProvider({ children }: { children: ReactNode }) {
       staffing,
       team,
       assets,
+      profiles,
 
-      addStaff: (name) => {
-        const n = name.trim();
+      addStaff: (input) => {
+        const n = input.name.trim();
         if (!n) return;
         setTeam((prev) => (prev.includes(n) ? prev : [...prev, n]));
+        setProfiles((prev) => ({
+          ...prev,
+          [n]: {
+            name: n,
+            fullName: input.fullName?.trim() || n,
+            role: input.role,
+            shift: input.shift,
+          },
+        }));
+        // If a default shift was given, lay it onto the roster from this week.
+        if (input.shift && input.shift.days.length) {
+          const monday = mondayOf(new Date());
+          const entries = entriesFromPattern(n, monday, input.shift, 2);
+          setRoster((prev) => {
+            const map = new Map(prev.map((r) => [`${r.staff}|${r.date}`, r]));
+            for (const e of entries) {
+              const key = `${e.staff}|${e.date}`;
+              map.set(key, { ...e, id: map.get(key)?.id ?? uid("r") });
+            }
+            return Array.from(map.values());
+          });
+        }
       },
-      removeStaff: (name) => setTeam((prev) => prev.filter((s) => s !== name)),
+      removeStaff: (name) => {
+        setTeam((prev) => prev.filter((s) => s !== name));
+        setProfiles((prev) => {
+          const next = { ...prev };
+          delete next[name];
+          return next;
+        });
+      },
+      setProfile: (name, patch) =>
+        setProfiles((prev) => ({
+          ...prev,
+          [name]: { ...prev[name], name, ...patch },
+        })),
+      applyShiftPattern: (name, weeks = 2) => {
+        const pattern = profiles[name]?.shift;
+        if (!pattern || !pattern.days.length) return;
+        const monday = mondayOf(new Date());
+        const entries = entriesFromPattern(name, monday, pattern, weeks);
+        setRoster((prev) => {
+          const map = new Map(prev.map((r) => [`${r.staff}|${r.date}`, r]));
+          for (const e of entries) {
+            const key = `${e.staff}|${e.date}`;
+            map.set(key, { ...e, id: map.get(key)?.id ?? uid("r") });
+          }
+          return Array.from(map.values());
+        });
+      },
       addAsset: (a) => {
         const n = a.name.trim();
         if (!n) return;
@@ -192,6 +262,7 @@ export function StaffProvider({ children }: { children: ReactNode }) {
         setStaffing(seedStaffing());
         setTeam(STAFF_MEMBERS);
         setAssets(seedAssets());
+        setProfiles(seedProfiles());
       },
 
       getStaffing: (jobId) => staffing.find((s) => s.jobId === jobId),
@@ -201,7 +272,7 @@ export function StaffProvider({ children }: { children: ReactNode }) {
           return [...others, a];
         }),
     }),
-    [hydrated, roster, leave, staffing, team, assets]
+    [hydrated, roster, leave, staffing, team, assets, profiles]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

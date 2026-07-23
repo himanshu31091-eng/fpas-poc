@@ -12,22 +12,39 @@ import {
   upsertAnimal,
   removeAnimal,
   daysUntil,
+  PROTO_TODAY,
   type Animal,
   type Vax,
 } from "@/lib/animals";
+import {
+  seedUnits,
+  loadUnits,
+  saveUnits,
+  placeAnimal,
+  type HousingUnit,
+} from "@/lib/housing";
 
 export function Animals() {
   const { t, canEdit, toast } = usePrefs();
   const [q, setQ] = useState("");
   const [animals, setAnimals] = useState<Animal[]>(() => SEED_ANIMALS);
+  const [units, setUnits] = useState<HousingUnit[]>([]);
   const [editing, setEditing] = useState<Animal | "new" | null>(null);
 
   useEffect(() => {
     const saved = loadAnimals();
     if (saved && saved.length) setAnimals(saved);
+    setUnits(loadUnits() ?? seedUnits());
     const chip = new URLSearchParams(window.location.search).get("chip");
     if (chip) setQ(chip);
   }, []);
+
+  function placeInUnit(animal: Animal, unitId: string) {
+    const next = placeAnimal(units, unitId, { id: animal.id, name: animal.name }, PROTO_TODAY);
+    setUnits(next);
+    saveUnits(next);
+    toast(`${animal.name} → ${unitId}`, "success");
+  }
 
   function commit(next: Animal[]) {
     setAnimals(next);
@@ -81,6 +98,16 @@ export function Animals() {
         />
       </div>
 
+      {list.length === 0 && (
+        <Card className="border-dashed p-8 text-center">
+          <p className="text-[13px] text-ink-soft">
+            {animals.length === 0
+              ? "No animals in the registry yet. Add your first with “Add animal”, or they’ll appear as you create shipments."
+              : `No animals match “${q}”.`}
+          </p>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
         {list.map((a) => (
           <AnimalCard
@@ -88,6 +115,9 @@ export function Animals() {
             a={a}
             t={t}
             canEdit={canEdit}
+            unit={units.find((u) => u.animalId === a.id) ?? null}
+            availableUnits={units.filter((u) => u.status === "Available")}
+            onPlace={(unitId) => placeInUnit(a, unitId)}
             onEdit={() => setEditing(a)}
             onDelete={() => deleteAnimal(a.id, a.name)}
           />
@@ -112,16 +142,24 @@ function AnimalCard({
   a,
   t,
   canEdit,
+  unit,
+  availableUnits,
+  onPlace,
   onEdit,
   onDelete,
 }: {
   a: Animal;
   t: (k: string) => string;
   canEdit: boolean;
+  unit: HousingUnit | null;
+  availableUnits: HousingUnit[];
+  onPlace: (unitId: string) => void;
   onEdit: () => void;
   onDelete: () => void;
 }) {
   const origin = useOrigin();
+  const [placing, setPlacing] = useState(false);
+  const [pick, setPick] = useState("");
   const expired = a.vax.find((v) => daysUntil(v.exp) < 0);
   const soon = a.vax.find((v) => daysUntil(v.exp) >= 0 && daysUntil(v.exp) <= 45);
 
@@ -159,6 +197,64 @@ function AnimalCard({
         <Kv k={t("an.owner")} v={a.owner} />
         <Kv k={t("an.weight")} v={`${a.weightKg} kg`} />
         <Kv k={t("an.linkedJob")} v={a.job} />
+      </div>
+
+      {/* Housing placement — the animal → housing link. */}
+      <div className="mt-2.5 border-t border-line pt-2.5">
+        <div className="flex items-center justify-between gap-2 text-[12.5px]">
+          <span className="font-mono text-[10px] uppercase tracking-wide text-ink-faint">
+            Housing
+          </span>
+          {unit ? (
+            <a
+              href={`/housing?unit=${encodeURIComponent(unit.id)}`}
+              className="font-mono text-right text-primary hover:underline"
+            >
+              {unit.id} · {unit.zone}
+            </a>
+          ) : (
+            <span className="font-mono text-ink-faint">Not housed</span>
+          )}
+        </div>
+        {canEdit && !unit && (
+          placing ? (
+            <div className="mt-2 flex items-center gap-1.5">
+              <select
+                value={pick}
+                onChange={(e) => setPick(e.target.value)}
+                className="min-w-0 flex-1 rounded-md border border-line-strong bg-white px-2 py-1 text-[12px] text-ink focus:outline-none focus:ring-2 focus:ring-primary/30"
+              >
+                <option value="">Choose a free unit…</option>
+                {availableUnits.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.id} · {u.zone} ({u.species})
+                  </option>
+                ))}
+              </select>
+              <Button
+                size="sm"
+                onClick={() => {
+                  if (pick) {
+                    onPlace(pick);
+                    setPlacing(false);
+                    setPick("");
+                  }
+                }}
+                disabled={!pick}
+              >
+                Place
+              </Button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setPlacing(true)}
+              disabled={availableUnits.length === 0}
+              className="mt-2 w-full rounded-lg border border-line px-2.5 py-1.5 text-[12px] text-ink-soft transition-colors hover:border-primary/40 hover:text-ink disabled:opacity-50"
+            >
+              {availableUnits.length ? "Place in housing →" : "No free units"}
+            </button>
+          )
+        )}
       </div>
 
       <div className="mt-3 border-t border-line pt-2.5">

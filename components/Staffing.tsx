@@ -14,15 +14,19 @@ import {
   LEAVE_TYPE_LABEL,
   DOW_LABELS,
   ASSET_TYPES,
+  STAFF_ROLES,
   mondayOf,
   addDays,
   weekDates,
   dateStr,
   statusOnDate,
+  displayName,
   type RosterEntry,
   type LeaveType,
   type ShiftStatus,
   type AssetType,
+  type ShiftPattern,
+  type DayStatus,
 } from "@/lib/staff";
 
 type Tab = "roster" | "timesheets" | "leave" | "resources" | "import";
@@ -92,11 +96,24 @@ export function Staffing() {
 // --- Roster board + coverage Q&A -------------------------------------------
 
 function RosterTab() {
-  const { roster, leave, team } = useStaff();
+  const { roster, leave, team, profiles, applyShiftPattern } = useStaff();
+  const { canEdit, toast } = usePrefs();
   const { jobs } = useStore();
   const [mode, setMode] = useState<"week" | "month">("week");
   const [anchor, setAnchor] = useState<Date>(() => new Date());
+  const [showHelp, setShowHelp] = useState(false);
   const todayStr = dateStr(new Date());
+
+  function fillFromPlan() {
+    const withPlan = team.filter((s) => profiles[s]?.shift?.days.length);
+    withPlan.forEach((s) => applyShiftPattern(s, 2));
+    toast(
+      withPlan.length
+        ? `Filled ${withPlan.length} shift plan${withPlan.length === 1 ? "" : "s"} for the next 2 weeks`
+        : "No shift plans set yet — add a default shift on a resource",
+      withPlan.length ? "success" : "default"
+    );
+  }
 
   const days = useMemo(() => {
     if (mode === "week") return weekDates(mondayOf(anchor));
@@ -206,6 +223,50 @@ function RosterTab() {
     <div className="space-y-4">
       <CoverageCard weekStart={mondayOf(anchor)} />
 
+      {/* How the roster works — a plain-language primer for new users. */}
+      <Card className="border-primary/20 bg-primary-soft/20 p-3">
+        <button
+          onClick={() => setShowHelp((v) => !v)}
+          className="flex w-full items-center justify-between gap-2 text-left"
+        >
+          <span className="text-[13px] font-semibold text-ink">
+            How the roster works
+          </span>
+          <span className="font-mono text-[11px] text-primary">
+            {showHelp ? "Hide" : "Show"}
+          </span>
+        </button>
+        {showHelp && (
+          <ol className="mt-2 space-y-1 text-[12.5px] leading-relaxed text-ink-soft">
+            <li>
+              <strong>1. Each person has a shift plan</strong> — a default
+              start/end and the weekdays they normally work. You set it when you
+              add a resource (or edit it on the Resources tab).
+            </li>
+            <li>
+              <strong>2. Fill the week from the plan</strong> — the
+              &ldquo;Fill from plan&rdquo; button lays each person&apos;s default
+              shift onto the next two weeks. You can then tweak any single day.
+            </li>
+            <li>
+              <strong>3. Add or change one shift</strong> — use &ldquo;Add /
+              update shift&rdquo; below to set a person to working, off, sick,
+              training, etc. on a specific date.
+            </li>
+            <li>
+              <strong>4. Leave shows automatically</strong> — approved leave
+              (Leave tab) overrides the roster; a pending request shows faded
+              until it&apos;s approved.
+            </li>
+            <li>
+              <strong>5. Coverage checks bookings</strong> — the
+              &ldquo;Req · sched&rdquo; row compares crew each shipment needs
+              against who&apos;s rostered on, flagging thin days.
+            </li>
+          </ol>
+        )}
+      </Card>
+
       {shortDays.length > 0 ? (
         <Card className="border-red/30 bg-red-soft/40 p-3">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px]">
@@ -275,6 +336,15 @@ function RosterTab() {
             >
               <IconChevronLeft width={16} height={16} />
             </button>
+            {canEdit && (
+              <button
+                onClick={fillFromPlan}
+                className="ml-1 inline-flex items-center gap-1.5 rounded-lg border border-primary/40 bg-primary-soft px-2.5 py-1.5 text-[12px] font-medium text-primary transition-colors hover:bg-primary-soft/70"
+                title="Lay each person's default shift plan onto the next two weeks"
+              >
+                Fill from plan
+              </button>
+            )}
             <button
               onClick={exportXlsx}
               className="ml-1 inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-2.5 py-1.5 text-[12px] text-ink-soft transition-colors hover:border-primary/40 hover:text-ink"
@@ -321,8 +391,11 @@ function RosterTab() {
             <tbody>
               {team.map((s) => (
                 <tr key={s} className="border-t border-line">
-                  <td className="sticky left-0 z-10 bg-panel px-2 py-1.5 font-medium text-ink">
-                    {s}
+                  <td className="sticky left-0 z-10 bg-panel px-2 py-1.5">
+                    <div className="font-medium text-ink">{displayName(s, profiles)}</div>
+                    {profiles[s]?.role && (
+                      <div className="text-[10px] text-ink-faint">{profiles[s].role}</div>
+                    )}
                   </td>
                   {days.map((d) => (
                     <td key={dateStr(d)} className="px-0.5 py-1 text-center">
@@ -403,30 +476,32 @@ function RosterCell({
   st,
   compact,
 }: {
-  st: RosterEntry | { status: ShiftStatus } | null;
+  st: DayStatus | null;
   compact?: boolean;
 }) {
   if (!st) return <span className="text-ink-faint">·</span>;
   const meta = STATUS_META[st.status];
   const working = st.status === "working";
+  const pending = "pending" in st && st.pending;
   const start = "start" in st ? st.start : undefined;
-  const full = working
+  const base = working
     ? start
       ? `${start}–${"end" in st && st.end ? st.end : ""}`
       : "Working"
     : meta.label;
+  const full = pending ? `${base} (pending approval)` : base;
   const display = compact
     ? working
       ? start ?? "W"
-      : meta.label[0]
+      : `${meta.label[0]}${pending ? "·" : ""}`
     : working
-    ? full
-    : meta.label;
+    ? base
+    : `${meta.label}${pending ? " ·" : ""}`;
   return (
     <span
       className={`inline-block w-full truncate rounded-md px-1 py-1 font-mono ${
         compact ? "text-[10px]" : "text-[11px]"
-      } ${meta.cell}`}
+      } ${meta.cell} ${pending ? "opacity-60 ring-1 ring-dashed ring-current" : ""}`}
       title={"note" in st && st.note ? `${full} · ${st.note}` : full}
     >
       {display}
@@ -435,7 +510,7 @@ function RosterCell({
 }
 
 function AddShift() {
-  const { upsertRosterEntry, team } = useStaff();
+  const { upsertRosterEntry, team, profiles } = useStaff();
   const { canEdit, toast } = usePrefs();
   const [open, setOpen] = useState(false);
   const [f, setF] = useState({
@@ -481,7 +556,9 @@ function AddShift() {
               className={selectCls}
             >
               {team.map((s) => (
-                <option key={s}>{s}</option>
+                <option key={s} value={s}>
+                  {displayName(s, profiles)}
+                </option>
               ))}
             </select>
           </Field>
@@ -842,7 +919,7 @@ const STATUS_BADGE: Record<string, string> = {
 };
 
 function LeaveTab() {
-  const { leave, requestLeave, decideLeave, team } = useStaff();
+  const { leave, requestLeave, decideLeave, team, profiles } = useStaff();
   const { canEdit, user, toast } = usePrefs();
 
   const today = dateStr(new Date());
@@ -888,7 +965,9 @@ function LeaveTab() {
               className={selectCls}
             >
               {team.map((s) => (
-                <option key={s}>{s}</option>
+                <option key={s} value={s}>
+                  {displayName(s, profiles)}
+                </option>
               ))}
             </select>
           </Field>
@@ -934,6 +1013,11 @@ function LeaveTab() {
           <Button onClick={submit} disabled={!canSubmit}>
             Submit request
           </Button>
+          <p className="text-[11px] text-ink-faint">
+            Submitted requests show on the roster straight away as
+            &ldquo;pending&rdquo; (faded), and become solid once approved on the
+            right.
+          </p>
         </div>
       </Card>
 
@@ -954,7 +1038,7 @@ function LeaveTab() {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="text-[13px] font-semibold text-ink">
-                      {l.staff}
+                      {displayName(l.staff, profiles)}
                     </span>
                     <span
                       className={`rounded-full px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wide ${
@@ -1005,15 +1089,57 @@ function LeaveTab() {
 // --- Resources: team + equipment/assets ------------------------------------
 
 function ResourcesTab() {
-  const { team, assets, addStaff, removeStaff, addAsset, removeAsset } =
-    useStaff();
+  const {
+    team,
+    assets,
+    profiles,
+    addStaff,
+    removeStaff,
+    applyShiftPattern,
+    addAsset,
+    removeAsset,
+  } = useStaff();
   const { canEdit, toast } = usePrefs();
-  const [name, setName] = useState("");
+  const [person, setPerson] = useState({
+    fullName: "",
+    role: STAFF_ROLES[1],
+    start: "09:00",
+    end: "17:00",
+    days: [0, 1, 2, 3, 4] as number[],
+  });
   const [asset, setAsset] = useState({
     name: "",
     type: ASSET_TYPES[0],
     quantity: 1,
   });
+
+  function addPerson() {
+    const fullName = person.fullName.trim();
+    if (!fullName) return;
+    addStaff({
+      name: fullName,
+      fullName,
+      role: person.role,
+      shift: { start: person.start, end: person.end, days: person.days },
+    });
+    setPerson({
+      fullName: "",
+      role: STAFF_ROLES[1],
+      start: "09:00",
+      end: "17:00",
+      days: [0, 1, 2, 3, 4],
+    });
+    toast("Resource added — shift plan applied to the roster", "success");
+  }
+
+  function toggleDay(i: number) {
+    setPerson((p) => ({
+      ...p,
+      days: p.days.includes(i)
+        ? p.days.filter((d) => d !== i)
+        : [...p.days, i].sort((a, b) => a - b),
+    }));
+  }
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -1021,56 +1147,136 @@ function ResourcesTab() {
       <Card className="p-5">
         <div className="text-sm font-semibold text-ink">Team ({team.length})</div>
         <p className="mt-1 text-[12px] text-ink-soft">
-          People who appear on the roster and can be assigned to shipments.
+          People who appear on the roster and can be assigned to shipments. A new
+          resource gets a name, a role and a default shift plan — the plan fills
+          straight onto the roster.
         </p>
+
         {canEdit && (
-          <div className="mt-3 flex gap-2">
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && name.trim()) {
-                  addStaff(name);
-                  setName("");
-                  toast("Staff added", "success");
+          <div className="mt-3 space-y-2.5 rounded-card border border-line bg-bg/40 p-3">
+            <Field label="Full name">
+              <input
+                value={person.fullName}
+                onChange={(e) =>
+                  setPerson({ ...person, fullName: e.target.value })
                 }
-              }}
-              placeholder="Add a staff member…"
-              className={selectCls}
-            />
-            <Button
-              onClick={() => {
-                if (!name.trim()) return;
-                addStaff(name);
-                setName("");
-                toast("Staff added", "success");
-              }}
-            >
-              Add
-            </Button>
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") addPerson();
+                }}
+                placeholder="e.g. Sanne de Boer"
+                className={selectCls}
+              />
+            </Field>
+            <div className="grid grid-cols-3 gap-2">
+              <Field label="Role">
+                <select
+                  value={person.role}
+                  onChange={(e) => setPerson({ ...person, role: e.target.value })}
+                  className={selectCls}
+                >
+                  {STAFF_ROLES.map((r) => (
+                    <option key={r}>{r}</option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Shift start">
+                <input
+                  type="time"
+                  value={person.start}
+                  onChange={(e) =>
+                    setPerson({ ...person, start: e.target.value })
+                  }
+                  className={selectCls}
+                />
+              </Field>
+              <Field label="Shift end">
+                <input
+                  type="time"
+                  value={person.end}
+                  onChange={(e) => setPerson({ ...person, end: e.target.value })}
+                  className={selectCls}
+                />
+              </Field>
+            </div>
+            <Field label="Works on">
+              <div className="flex flex-wrap gap-1">
+                {DOW_LABELS.map((d, i) => (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => toggleDay(i)}
+                    className={`rounded-md px-2 py-1 text-[11px] font-medium transition-colors ${
+                      person.days.includes(i)
+                        ? "bg-brand text-white"
+                        : "border border-line bg-white text-ink-soft hover:border-primary/40"
+                    }`}
+                  >
+                    {d}
+                  </button>
+                ))}
+              </div>
+            </Field>
+            <Button onClick={addPerson}>Add resource</Button>
           </div>
         )}
-        <div className="mt-3 flex flex-wrap gap-2">
-          {team.map((s) => (
-            <span
-              key={s}
-              className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-2.5 py-1 text-[12px] text-ink-soft"
-            >
-              {s}
-              {canEdit && (
-                <button
-                  onClick={() => {
-                    removeStaff(s);
-                    toast("Staff removed");
-                  }}
-                  title="Remove"
-                  className="text-ink-faint transition-colors hover:text-red"
-                >
-                  ×
-                </button>
-              )}
-            </span>
-          ))}
+
+        <div className="mt-3 space-y-2">
+          {team.map((s) => {
+            const p = profiles[s];
+            const shift = p?.shift;
+            return (
+              <div
+                key={s}
+                className="flex items-center justify-between gap-2 rounded-card border border-line bg-panel px-3 py-2"
+              >
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-[13px] font-medium text-ink">
+                      {displayName(s, profiles)}
+                    </span>
+                    {p?.role && (
+                      <span className="rounded-full bg-bg px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-ink-faint">
+                        {p.role}
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-0.5 font-mono text-[11px] text-ink-faint">
+                    {shift?.days.length
+                      ? `${shift.start}–${shift.end} · ${shift.days
+                          .map((d) => DOW_LABELS[d])
+                          .join(" ")}`
+                      : "No shift plan"}
+                  </div>
+                </div>
+                {canEdit && (
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    {shift?.days.length ? (
+                      <button
+                        onClick={() => {
+                          applyShiftPattern(s, 2);
+                          toast(`Applied ${displayName(s, profiles)}'s plan`, "success");
+                        }}
+                        title="Lay this person's shift plan onto the next two weeks"
+                        className="rounded-lg border border-line px-2 py-1 text-[11px] text-ink-soft transition-colors hover:border-primary/40 hover:text-ink"
+                      >
+                        Apply plan
+                      </button>
+                    ) : null}
+                    <button
+                      onClick={() => {
+                        removeStaff(s);
+                        toast("Staff removed");
+                      }}
+                      title="Remove"
+                      className="text-ink-faint transition-colors hover:text-red"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </Card>
 
