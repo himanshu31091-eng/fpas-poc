@@ -28,6 +28,7 @@ import {
   loadProfiles,
   saveProfiles,
   entriesFromPattern,
+  planRosterImport,
   mondayOf,
   STAFF_MEMBERS,
   type RosterEntry,
@@ -235,15 +236,32 @@ export function StaffProvider({ children }: { children: ReactNode }) {
 
       importRoster: (entries) => {
         if (!entries.length) return 0;
+        // Canonicalise each entry's staff name against the current team
+        // (case-insensitive), so "Himanshu Pandey" lands on the existing
+        // "Himanshu pandey" row. Any genuinely new name is added to the team
+        // (and given a profile) so it gets a row — otherwise the entry would be
+        // stored but invisible, since the grid only renders team members.
+        const { normalized, newNames } = planRosterImport(entries, team);
+        if (newNames.length) {
+          setTeam((prev) => [
+            ...prev,
+            ...newNames.filter((n) => !prev.some((p) => p.toLowerCase() === n.toLowerCase())),
+          ]);
+          setProfiles((prev) => {
+            const next = { ...prev };
+            for (const n of newNames) if (!next[n]) next[n] = { name: n, fullName: n };
+            return next;
+          });
+        }
         setRoster((prev) => {
           const map = new Map(prev.map((r) => [`${r.staff}|${r.date}`, r]));
-          for (const e of entries) {
+          for (const e of normalized) {
             const key = `${e.staff}|${e.date}`;
             map.set(key, { ...e, id: map.get(key)?.id ?? uid("r") });
           }
           return Array.from(map.values());
         });
-        return entries.length;
+        return normalized.length;
       },
 
       upsertRosterEntry: (entry) => {

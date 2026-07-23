@@ -8,9 +8,9 @@ export const maxDuration = 300;
 const SYSTEM = `You convert a pasted staff-rostering spreadsheet (FPAS Amsterdam) into structured roster entries. The sheet is a weekly grid: staff names down the side, dates across the top, and each cell describes that person's day. You never invent people or shifts — only structure what is present.`;
 
 function buildPrompt(text: string, year: number): string {
-  return `Parse the roster text below into JSON. It is a weekly grid with day headers (e.g. "Jul 6th", "6-Aug") and one row per staff member.
+  return `Parse the roster text below into JSON. It is usually a weekly grid with day headers (e.g. "Jul 6th", "6-Aug") and one row per staff member — but it may instead be a short free-text instruction, e.g. "Himanshu Pandey will be on leave on 25 July" or "Bart works 8-16 on Mon and Tue". Handle both: turn each stated person + day + state into an entry.
 
-Cell meaning (Dutch labels appear in the source):
+Cell / statement meaning (Dutch labels appear in the source):
 - A time range like "8:30-17:30" → status "working", with start and end in HH:MM (24h).
 - "Vakantie" → status "leave". "Vrij"/"vrij" → status "off". "Ziek" → status "sick".
 - "x" or an otherwise-marked unavailable cell → status "off".
@@ -19,8 +19,8 @@ Cell meaning (Dutch labels appear in the source):
 - A blank cell → omit it entirely (no entry).
 Free-text like "tot 17:00" / "vanaf 10:30" → status "working" with the note preserved.
 
-Known staff (map to the closest name): ${STAFF_MEMBERS.join(", ")}.
-Resolve day headers to ISO dates (YYYY-MM-DD). Assume year ${year} unless a year is stated.
+Known staff: ${STAFF_MEMBERS.join(", ")}. If a name clearly refers to one of these (e.g. a spelling/case variant), use that exact spelling; otherwise keep the name exactly as written — do NOT force an unknown person onto a known name.
+Resolve day headers or stated dates to ISO dates (YYYY-MM-DD). Assume year ${year} unless a year is stated. "on 25 July" → "${year}-07-25".
 
 Return ONLY this JSON (no prose, no code fences):
 {

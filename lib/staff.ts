@@ -233,6 +233,31 @@ export function availableStaff(
   });
 }
 
+/**
+ * Prepare imported roster entries: canonicalise each staff name against the
+ * current team (case-insensitive) so variants land on the right row, and report
+ * any genuinely new names so the caller can add them to the team.
+ */
+export function planRosterImport<T extends { staff: string }>(
+  entries: T[],
+  team: string[]
+): { normalized: T[]; newNames: string[] } {
+  const canon = new Map(team.map((s) => [s.toLowerCase(), s]));
+  const newNames: string[] = [];
+  const normalized = entries.map((e) => {
+    const raw = (e.staff ?? "").trim();
+    const lc = raw.toLowerCase();
+    let name = canon.get(lc);
+    if (!name) {
+      name = raw;
+      canon.set(lc, raw);
+      if (raw) newNames.push(raw);
+    }
+    return { ...e, staff: name };
+  });
+  return { normalized, newNames };
+}
+
 /** Build working roster entries from a shift pattern, over `weeks` from a Monday. */
 export function entriesFromPattern(
   staff: string,

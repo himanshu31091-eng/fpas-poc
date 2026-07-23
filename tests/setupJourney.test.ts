@@ -3,6 +3,7 @@ import {
   statusOnDate,
   availableStaff,
   entriesFromPattern,
+  planRosterImport,
   displayName,
   dateStr,
   type RosterEntry,
@@ -59,6 +60,39 @@ describe("staff · entriesFromPattern (roster plan)", () => {
     const monday = new Date("2026-07-20T00:00:00");
     const entries = entriesFromPattern("Ann", monday, { start: "09:00", end: "17:00", days: [0] }, 2);
     expect(entries.map((e) => e.date)).toEqual(["2026-07-20", "2026-07-27"]);
+  });
+});
+
+describe("staff · planRosterImport (import → roster row)", () => {
+  const team = ["Lotte", "Himanshu pandey"];
+
+  it("canonicalises a case/spelling variant onto the existing team member", () => {
+    const { normalized, newNames } = planRosterImport(
+      [{ staff: "Himanshu Pandey", date: "2026-07-25", status: "leave" }],
+      team
+    );
+    expect(normalized[0].staff).toBe("Himanshu pandey"); // matched existing row
+    expect(newNames).toEqual([]);
+  });
+
+  it("keeps a genuinely new person and reports them as new", () => {
+    const { normalized, newNames } = planRosterImport(
+      [{ staff: "Nieuwe Persoon", date: "2026-07-25", status: "working" }],
+      team
+    );
+    expect(normalized[0].staff).toBe("Nieuwe Persoon");
+    expect(newNames).toEqual(["Nieuwe Persoon"]);
+  });
+
+  it("does not report the same new name twice", () => {
+    const { newNames } = planRosterImport(
+      [
+        { staff: "Sam", date: "2026-07-25", status: "working" },
+        { staff: "sam", date: "2026-07-26", status: "off" },
+      ],
+      team
+    );
+    expect(newNames).toEqual(["Sam"]);
   });
 });
 
