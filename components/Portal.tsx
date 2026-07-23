@@ -166,6 +166,12 @@ export function Portal() {
                         <span className={`rounded-full px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide ${STATUS_STYLE[status]}`}>
                           {t(`portal.st.${status}`)}
                         </span>
+                        {r.accepted && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-green-soft px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide text-green">
+                            <IconCheck width={10} height={10} />
+                            Accepted by ops
+                          </span>
+                        )}
                       </div>
                       <div className="mt-0.5 text-[12.5px] text-ink-soft">
                         {r.agent} · {r.commodity}
