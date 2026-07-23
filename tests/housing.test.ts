@@ -29,6 +29,7 @@ describe("housing · upsert / remove", () => {
     const n = arr.length;
     arr = upsertUnit(arr, u({ id: "NEW" }));
     expect(arr.length).toBe(n + 1);
+    expect(arr[0].id).toBe("NEW"); // new entries land at the top
     arr = upsertUnit(arr, u({ id: "NEW", occupant: "Bella" }));
     expect(arr.length).toBe(n + 1);
     expect(arr.find((x) => x.id === "NEW")?.occupant).toBe("Bella");

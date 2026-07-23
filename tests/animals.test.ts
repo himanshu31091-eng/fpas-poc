@@ -17,6 +17,7 @@ describe("animals · upsert / remove", () => {
     const n = arr.length;
     arr = upsertAnimal(arr, a({}));
     expect(arr.length).toBe(n + 1);
+    expect(arr[0].id).toBe("X1"); // new entries land at the top
     arr = upsertAnimal(arr, a({ name: "Merlin" }));
     expect(arr.length).toBe(n + 1);
     expect(arr.find((x) => x.id === "X1")?.name).toBe("Merlin");

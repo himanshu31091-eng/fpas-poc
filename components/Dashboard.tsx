@@ -6,7 +6,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useStore } from "./store";
 import { usePrefs } from "./prefs";
 import { WeatherChip, WelfareBadge, useWeather } from "./weather";
-import { StaffingChip } from "./staffStore";
+import { StaffingChip, useStaff } from "./staffStore";
+import { staffContext } from "@/lib/staff";
 import { weatherLabel, welfareFlag } from "@/lib/weather";
 import {
   JobFilters,
@@ -18,6 +19,7 @@ import { Button, Card, CountUp, FlightStatusChip, OpsStageChip, SimTag, StatusBa
 import { Markdown } from "./Markdown";
 import { JobDrawer } from "./JobDrawer";
 import { OpsToday } from "./OpsToday";
+import { SetupGuide } from "./SetupGuide";
 import {
   loadRequests,
   saveRequests,
@@ -69,6 +71,7 @@ import {
   jobStatus,
   jobsContext,
   openCount,
+  requiredCrew,
 } from "@/lib/jobs";
 import type { Job, JobStatus } from "@/lib/types";
 
@@ -286,7 +289,12 @@ export function Dashboard() {
         })}
       </div>
 
-      {view === "today" && <OpsToday />}
+      {view === "today" && (
+        <>
+          <SetupGuide />
+          <OpsToday />
+        </>
+      )}
       {view === "calendar" && <Calendar />}
       {view === "insights" && <Insights />}
       {view === "report" && <Report />}
@@ -1149,6 +1157,7 @@ function BinView({
 
 function BriefingCard({ jobs }: { jobs: Job[] }) {
   const { getDay } = useWeather();
+  const { team, roster, leave, profiles } = useStaff();
   const [text, setText] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -1184,8 +1193,20 @@ function BriefingCard({ jobs }: { jobs: Job[] }) {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           question:
-            "Give me today's operations briefing. In 4-6 short bullet points, call out shipments at risk and why (missing NVWA approval, missing arrival time, load list not sent, arriving soon with open steps, adverse arrival-day weather at AMS), most urgent first. End with one line on overall readiness.",
-          context: jobsContext(jobs, new Date()) + weatherContext(),
+            "Give me today's operations briefing. In 4-6 short bullet points, call out shipments at risk and why (missing NVWA approval, missing arrival time, load list not sent, arriving soon with open steps, adverse arrival-day weather at AMS), plus any understaffed shipment days or key staff on leave, most urgent first. End with one line on overall readiness.",
+          context:
+            jobsContext(jobs, new Date()) +
+            weatherContext() +
+            "\n\n" +
+            staffContext(
+              team,
+              roster,
+              leave,
+              new Date(),
+              (d) => requiredCrew(jobs, d),
+              7,
+              profiles
+            ),
         }),
       });
       if (!res.ok) {

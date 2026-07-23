@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { usePrefs } from "./prefs";
 import { Button, Card, Eyebrow, SimTag } from "./ui";
-import { IconArrowRight, IconCheck, IconSparkles, IconBox, IconPlus, IconTrash, IconGear, IconClose } from "./icons";
+import { IconArrowRight, IconCheck, IconSparkles, IconBox, IconPlus, IconTrash, IconGear, IconClose, IconSearch } from "./icons";
 import { QRCode, useOrigin } from "./QRCode";
 import {
   seedUnits,
@@ -16,6 +16,7 @@ import {
   type HousingUnit,
   type UnitStatus,
 } from "@/lib/housing";
+import { loadAnimals, SEED_ANIMALS, type Animal } from "@/lib/animals";
 
 const STATUS_STYLE: Record<UnitStatus, { chip: string; card: string; dot: string }> = {
   Available: { chip: "bg-bg text-ink-faint", card: "border-line bg-panel", dot: "bg-ink-faint" },
@@ -33,6 +34,12 @@ export function Housing() {
   const [units, setUnits] = useState<HousingUnit[]>(() => seedUnits());
   const [focus, setFocus] = useState<string | null>(null);
   const [editing, setEditing] = useState<HousingUnit | "new" | null>(null);
+  const [q, setQ] = useState("");
+  const matchUnit = (u: HousingUnit) =>
+    [u.id, u.zone, u.type, u.species, u.occupant, u.status]
+      .join(" ")
+      .toLowerCase()
+      .includes(q.trim().toLowerCase());
 
   useEffect(() => {
     const saved = loadUnits();
@@ -87,6 +94,22 @@ export function Housing() {
           <p className="mt-1 max-w-xl text-sm text-ink-soft">{t("house.subtitle")}</p>
         </div>
         <div className="flex items-center gap-2">
+          {units.length > 8 && (
+            <div className="flex items-center gap-2 rounded-lg border border-line-strong bg-white px-2.5 py-1.5">
+              <IconSearch width={14} height={14} className="shrink-0 text-ink-faint" />
+              <input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Search unit, zone, species, occupant…"
+                className="w-56 bg-transparent text-[13px] text-ink outline-none"
+              />
+              {q && (
+                <button onClick={() => setQ("")} title="Clear" className="text-ink-faint hover:text-ink">
+                  ×
+                </button>
+              )}
+            </div>
+          )}
           {canEdit && (
             <Button size="sm" onClick={() => setEditing("new")}>
               <IconPlus width={15} height={15} />
@@ -118,7 +141,8 @@ export function Housing() {
 
       {/* Zones */}
       {zones.map((zone) => {
-        const zoneUnits = units.filter((u) => u.zone === zone);
+        const zoneUnits = units.filter((u) => u.zone === zone && matchUnit(u));
+        if (zoneUnits.length === 0) return null;
         return (
           <Card key={zone} className="p-4">
             <div className="mb-3 flex items-center gap-2">
@@ -235,7 +259,28 @@ function UnitForm({
   const [f, setF] = useState<HousingUnit>(
     initial ?? { id: "", zone: zones[0] ?? "", type: "", species: "", status: "Available", occupant: "", since: "" }
   );
+  const [animals, setAnimals] = useState<Animal[]>([]);
+  useEffect(() => {
+    setAnimals(loadAnimals() ?? SEED_ANIMALS);
+  }, []);
   const set = (k: keyof HousingUnit, v: string) => setF((p) => ({ ...p, [k]: v } as HousingUnit));
+
+  // Assign a registered animal as the occupant (or clear back to free text).
+  function assignAnimal(id: string) {
+    if (!id) {
+      setF((p) => ({ ...p, animalId: undefined }));
+      return;
+    }
+    const a = animals.find((x) => x.id === id);
+    if (!a) return;
+    setF((p) => ({
+      ...p,
+      animalId: a.id,
+      occupant: a.name,
+      status: p.status === "Available" ? "Occupied" : p.status,
+      since: p.since || new Date().toISOString().slice(0, 10),
+    }));
+  }
   const inp =
     "w-full rounded-md border border-line-strong bg-white px-2.5 py-1.5 text-[13px] text-ink focus:outline-none focus:ring-2 focus:ring-primary/30";
   const canSave = f.id.trim() && f.zone.trim();
@@ -276,9 +321,27 @@ function UnitForm({
               {ALL_STATUSES.map((s) => <option key={s} value={s}>{t(`house.status.${s}`)}</option>)}
             </select>
           </label>
-          <label className="block">
+          <label className="block sm:col-span-2">
+            <span className="mb-1 block text-[12px] text-ink-soft">
+              Assign animal (from registry)
+            </span>
+            <select className={inp} value={f.animalId ?? ""} onChange={(e) => assignAnimal(e.target.value)}>
+              <option value="">— none / type below —</option>
+              {animals.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name} · {a.species}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block sm:col-span-2">
             <span className="mb-1 block text-[12px] text-ink-soft">{t("house.f.occupant")}</span>
-            <input className={inp} value={f.occupant} onChange={(e) => set("occupant", e.target.value)} placeholder="—" />
+            <input
+              className={inp}
+              value={f.occupant}
+              onChange={(e) => setF((p) => ({ ...p, occupant: e.target.value, animalId: undefined }))}
+              placeholder="Or type a consignment (e.g. Koi consignment)"
+            />
           </label>
         </div>
         <div className="flex shrink-0 items-center justify-end gap-2 border-t border-line px-5 py-3">

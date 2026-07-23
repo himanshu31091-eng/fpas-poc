@@ -6,7 +6,7 @@ import { useStore } from "./store";
 import { usePrefs } from "./prefs";
 import { Button, Card, Eyebrow, BrandLoader, SimTag } from "./ui";
 import { Markdown } from "./Markdown";
-import { IconSparkles, IconChevronLeft, IconDownload } from "./icons";
+import { IconSparkles, IconChevronLeft, IconDownload, IconSearch } from "./icons";
 import { downloadXlsx } from "@/lib/xlsx";
 import { requiredCrew, movementsOn } from "@/lib/jobs";
 import {
@@ -14,15 +14,20 @@ import {
   LEAVE_TYPE_LABEL,
   DOW_LABELS,
   ASSET_TYPES,
+  STAFF_ROLES,
   mondayOf,
   addDays,
   weekDates,
   dateStr,
   statusOnDate,
+  displayName,
   type RosterEntry,
   type LeaveType,
   type ShiftStatus,
   type AssetType,
+  type ShiftPattern,
+  type DayStatus,
+  type StaffProfile,
 } from "@/lib/staff";
 
 type Tab = "roster" | "timesheets" | "leave" | "resources" | "import";
@@ -92,11 +97,15 @@ export function Staffing() {
 // --- Roster board + coverage Q&A -------------------------------------------
 
 function RosterTab() {
-  const { roster, leave, team } = useStaff();
+  const { roster, leave, team, profiles, addRosterEntries } = useStaff();
+  const { canEdit, toast } = usePrefs();
   const { jobs } = useStore();
   const [mode, setMode] = useState<"week" | "month">("week");
   const [anchor, setAnchor] = useState<Date>(() => new Date());
+  const [showHelp, setShowHelp] = useState(false);
+  const [q, setQ] = useState("");
   const todayStr = dateStr(new Date());
+  const shownTeam = team.filter((s) => matchStaff(s, profiles[s], q));
 
   const days = useMemo(() => {
     if (mode === "week") return weekDates(mondayOf(anchor));
@@ -105,6 +114,29 @@ function RosterTab() {
     const n = new Date(y, m + 1, 0).getDate();
     return Array.from({ length: n }, (_, i) => new Date(y, m, i + 1));
   }, [mode, anchor]);
+
+  // Fill the CURRENTLY VISIBLE range (week or month) from each person's shift
+  // plan — blanks only, so it never overwrites existing shifts or leave.
+  function fillFromPlan() {
+    const entries: Omit<RosterEntry, "id">[] = [];
+    for (const s of team) {
+      const shift = profiles[s]?.shift;
+      if (!shift?.days.length) continue;
+      for (const d of days) {
+        const dow = (d.getDay() + 6) % 7; // 0 = Monday
+        if (!shift.days.includes(dow)) continue;
+        const ds = dateStr(d);
+        if (roster.some((r) => r.staff === s && r.date === ds)) continue; // keep existing
+        entries.push({ staff: s, date: ds, status: "working", start: shift.start, end: shift.end });
+      }
+    }
+    if (!entries.length) {
+      toast("Nothing to fill — visible days already have shifts, or no shift plans set", "default");
+      return;
+    }
+    addRosterEntries(entries);
+    toast(`Filled ${entries.length} shift${entries.length === 1 ? "" : "s"} across the visible ${mode}`, "success");
+  }
 
   const avail = useMemo(
     () =>
@@ -167,7 +199,7 @@ function RosterTab() {
           `${DOW_LABELS[(d.getDay() + 6) % 7]} ${d.getDate()}/${d.getMonth() + 1}`
       ),
     ];
-    const rows = team.map((s) => [s, ...days.map((d) => cellText(s, d))]);
+    const rows = team.map((s) => [displayName(s, profiles), ...days.map((d) => cellText(s, d))]);
     const availRow = ["Available", ...avail.map((n) => n)];
     const requiredRow = ["Required (bookings)", ...coverage.map((c) => c.required)];
     const scheduledRow = ["Scheduled", ...coverage.map((c) => c.scheduled)];
@@ -206,6 +238,52 @@ function RosterTab() {
     <div className="space-y-4">
       <CoverageCard weekStart={mondayOf(anchor)} />
 
+      {/* How the roster works — a plain-language primer for new users. */}
+      <Card className="border-primary/20 bg-primary-soft/20 p-3">
+        <button
+          onClick={() => setShowHelp((v) => !v)}
+          className="flex w-full items-center justify-between gap-2 text-left"
+        >
+          <span className="text-[13px] font-semibold text-ink">
+            How the roster works
+          </span>
+          <span className="font-mono text-[11px] text-primary">
+            {showHelp ? "Hide" : "Show"}
+          </span>
+        </button>
+        {showHelp && (
+          <ol className="mt-2 space-y-1 text-[12.5px] leading-relaxed text-ink-soft">
+            <li>
+              <strong>1. Each person has a shift plan</strong> — a default
+              start/end and the weekdays they normally work. You set it when you
+              add a resource (or edit it on the Resources tab).
+            </li>
+            <li>
+              <strong>2. Fill from the plan</strong> — the &ldquo;Fill from
+              plan&rdquo; button lays each person&apos;s default shift onto the
+              range you&apos;re viewing (this week, or the whole month in Month
+              view), skipping any day that already has a shift or leave. You can
+              then tweak any single day.
+            </li>
+            <li>
+              <strong>3. Add or change one shift</strong> — use &ldquo;Add /
+              update shift&rdquo; below to set a person to working, off, sick,
+              training, etc. on a specific date.
+            </li>
+            <li>
+              <strong>4. Leave shows automatically</strong> — approved leave
+              (Leave tab) overrides the roster; a pending request shows faded
+              until it&apos;s approved.
+            </li>
+            <li>
+              <strong>5. Coverage checks bookings</strong> — the
+              &ldquo;Req · sched&rdquo; row compares crew each shipment needs
+              against who&apos;s rostered on, flagging thin days.
+            </li>
+          </ol>
+        )}
+      </Card>
+
       {shortDays.length > 0 ? (
         <Card className="border-red/30 bg-red-soft/40 p-3">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px]">
@@ -238,6 +316,7 @@ function RosterTab() {
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-3">
             <div className="text-sm font-semibold text-ink">{label}</div>
+            <SearchBox value={q} onChange={setQ} placeholder="Search staff or role…" />
             <div className="flex items-center gap-0.5 rounded-full border border-line bg-white p-0.5">
               {(["week", "month"] as const).map((m) => (
                 <button
@@ -275,6 +354,15 @@ function RosterTab() {
             >
               <IconChevronLeft width={16} height={16} />
             </button>
+            {canEdit && (
+              <button
+                onClick={fillFromPlan}
+                className="ml-1 inline-flex items-center gap-1.5 rounded-lg border border-primary/40 bg-primary-soft px-2.5 py-1.5 text-[12px] font-medium text-primary transition-colors hover:bg-primary-soft/70"
+                title="Lay each person's default shift plan onto the next two weeks"
+              >
+                Fill from plan
+              </button>
+            )}
             <button
               onClick={exportXlsx}
               className="ml-1 inline-flex items-center gap-1.5 rounded-lg border border-line bg-white px-2.5 py-1.5 text-[12px] text-ink-soft transition-colors hover:border-primary/40 hover:text-ink"
@@ -286,6 +374,11 @@ function RosterTab() {
           </div>
         </div>
 
+        {q && (
+          <div className="mb-2 text-[11px] text-ink-faint">
+            Showing {shownTeam.length} of {team.length} staff
+          </div>
+        )}
         <div className="-mx-1 overflow-x-auto px-1">
           <table className={`w-full ${minW} border-collapse text-[12px]`}>
             <thead>
@@ -319,10 +412,13 @@ function RosterTab() {
               </tr>
             </thead>
             <tbody>
-              {team.map((s) => (
+              {shownTeam.map((s) => (
                 <tr key={s} className="border-t border-line">
-                  <td className="sticky left-0 z-10 bg-panel px-2 py-1.5 font-medium text-ink">
-                    {s}
+                  <td className="sticky left-0 z-10 bg-panel px-2 py-1.5">
+                    <div className="font-medium text-ink">{displayName(s, profiles)}</div>
+                    {profiles[s]?.role && (
+                      <div className="text-[10px] text-ink-faint">{profiles[s].role}</div>
+                    )}
                   </td>
                   {days.map((d) => (
                     <td key={dateStr(d)} className="px-0.5 py-1 text-center">
@@ -403,30 +499,32 @@ function RosterCell({
   st,
   compact,
 }: {
-  st: RosterEntry | { status: ShiftStatus } | null;
+  st: DayStatus | null;
   compact?: boolean;
 }) {
   if (!st) return <span className="text-ink-faint">·</span>;
   const meta = STATUS_META[st.status];
   const working = st.status === "working";
+  const pending = "pending" in st && st.pending;
   const start = "start" in st ? st.start : undefined;
-  const full = working
+  const base = working
     ? start
       ? `${start}–${"end" in st && st.end ? st.end : ""}`
       : "Working"
     : meta.label;
+  const full = pending ? `${base} (pending approval)` : base;
   const display = compact
     ? working
       ? start ?? "W"
-      : meta.label[0]
+      : `${meta.label[0]}${pending ? "·" : ""}`
     : working
-    ? full
-    : meta.label;
+    ? base
+    : `${meta.label}${pending ? " ·" : ""}`;
   return (
     <span
       className={`inline-block w-full truncate rounded-md px-1 py-1 font-mono ${
         compact ? "text-[10px]" : "text-[11px]"
-      } ${meta.cell}`}
+      } ${meta.cell} ${pending ? "opacity-60 ring-1 ring-dashed ring-current" : ""}`}
       title={"note" in st && st.note ? `${full} · ${st.note}` : full}
     >
       {display}
@@ -435,7 +533,7 @@ function RosterCell({
 }
 
 function AddShift() {
-  const { upsertRosterEntry, team } = useStaff();
+  const { upsertRosterEntry, team, profiles } = useStaff();
   const { canEdit, toast } = usePrefs();
   const [open, setOpen] = useState(false);
   const [f, setF] = useState({
@@ -475,15 +573,12 @@ function AddShift() {
       {open && (
         <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           <Field label="Staff">
-            <select
+            <StaffPicker
+              team={team}
+              profiles={profiles}
               value={f.staff}
-              onChange={(e) => setF({ ...f, staff: e.target.value })}
-              className={selectCls}
-            >
-              {team.map((s) => (
-                <option key={s}>{s}</option>
-              ))}
-            </select>
+              onChange={(name) => setF({ ...f, staff: name })}
+            />
           </Field>
           <Field label="Date">
             <input
@@ -677,10 +772,11 @@ const hoursBetween = (start: string, end: string) =>
   Math.max(0, (toMin(end) - toMin(start)) / 60);
 
 function TimesheetsTab() {
-  const { roster } = useStaff();
+  const { roster, profiles } = useStaff();
   const { t, toast } = usePrefs();
   const [actuals, setActuals] = useState<Record<string, { start: string; end: string }>>({});
   const [seeded, setSeeded] = useState(false);
+  const [q, setQ] = useState("");
 
   const week = useMemo(() => weekDates(mondayOf(new Date())).map((d) => dateStr(d)), []);
 
@@ -708,6 +804,8 @@ function TimesheetsTab() {
     setSeeded(true);
   }, [rows, seeded]);
 
+  const shownRows = rows.filter((r) => matchStaff(r.staff, profiles[r.staff], q));
+
   const actOf = (id: string, start: string, end: string) => actuals[id] ?? { start, end };
   const setAct = (id: string, key: "start" | "end", v: string) =>
     setActuals((p) => ({ ...p, [id]: { ...(p[id] ?? { start: "", end: "" }), [key]: v } }));
@@ -725,7 +823,7 @@ function TimesheetsTab() {
       const a = actOf(r.id, r.start!, r.end!);
       const h = hoursBetween(a.start, a.end);
       const v = h - hoursBetween(r.start!, r.end!);
-      return [r.staff, r.date, `${r.start}-${r.end}`, a.start, a.end, h.toFixed(2), v.toFixed(2)];
+      return [displayName(r.staff, profiles), r.date, `${r.start}-${r.end}`, a.start, a.end, h.toFixed(2), v.toFixed(2)];
     });
     const totals = ["", "", planned.toFixed(2), "", "", actual.toFixed(2), variance.toFixed(2)];
     downloadXlsx(`FPAS-timesheets-${week[0]}`, [
@@ -748,10 +846,13 @@ function TimesheetsTab() {
           sub={t("ts.actualMinusPlanned")}
           tint={variance > 0 ? "text-red" : "text-green"}
         />
+        <div className="ml-auto">
+          <SearchBox value={q} onChange={setQ} placeholder="Search employee…" />
+        </div>
         <button
           onClick={exportPayroll}
           disabled={rows.length === 0}
-          className="ml-auto inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2 text-[13px] font-semibold text-fpasnavy shadow-glow transition-all hover:-translate-y-0.5 disabled:opacity-50"
+          className="inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2 text-[13px] font-semibold text-fpasnavy shadow-glow transition-all hover:-translate-y-0.5 disabled:opacity-50"
         >
           <IconDownload width={15} height={15} />
           {t("ts.approveExport")}
@@ -761,6 +862,8 @@ function TimesheetsTab() {
       <Card className="overflow-hidden">
         {rows.length === 0 ? (
           <p className="px-4 py-10 text-center text-sm text-ink-soft">{t("ts.empty")}</p>
+        ) : shownRows.length === 0 ? (
+          <p className="px-4 py-10 text-center text-sm text-ink-soft">No employee matches “{q}”.</p>
         ) : (
           <div className="-mx-1 overflow-x-auto px-1">
             <table className="w-full min-w-[720px] border-collapse text-[12.5px]">
@@ -776,13 +879,13 @@ function TimesheetsTab() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-line">
-                {rows.map((r) => {
+                {shownRows.map((r) => {
                   const a = actOf(r.id, r.start!, r.end!);
                   const h = hoursBetween(a.start, a.end);
                   const v = h - hoursBetween(r.start!, r.end!);
                   return (
                     <tr key={r.id}>
-                      <td className="px-3 py-2 font-medium text-ink">{r.staff}</td>
+                      <td className="px-3 py-2 font-medium text-ink">{displayName(r.staff, profiles)}</td>
                       <td className="px-3 py-2 font-mono text-ink-soft">{r.date.slice(5)}</td>
                       <td className="px-3 py-2 font-mono text-ink-faint">
                         {r.start}–{r.end}
@@ -842,8 +945,41 @@ const STATUS_BADGE: Record<string, string> = {
 };
 
 function LeaveTab() {
-  const { leave, requestLeave, decideLeave, team } = useStaff();
+  const { leave, roster, requestLeave, decideLeave, removeLeave, removeRosterEntries, team, profiles } =
+    useStaff();
   const { canEdit, user, toast } = usePrefs();
+
+  // Absences entered directly on the roster (Import tab / Add shift with status
+  // leave|sick) — not leave *requests*. Surface them here too, grouped into
+  // contiguous date ranges, so this screen shows every absence in the system.
+  const rosterAbsences = useMemo(() => {
+    const nextDayStr = (d: string) => {
+      const [y, m, dd] = d.split("-").map(Number);
+      return dateStr(addDays(new Date(y, m - 1, dd), 1));
+    };
+    const covered = (staff: string, date: string) =>
+      leave.some((l) => l.staff === staff && date >= l.startDate && date <= l.endDate);
+    const rows = roster
+      .filter((r) => (r.status === "leave" || r.status === "sick") && !covered(r.staff, r.date))
+      .sort((a, b) => a.staff.localeCompare(b.staff) || a.date.localeCompare(b.date));
+    const groups: {
+      staff: string;
+      status: ShiftStatus;
+      startDate: string;
+      endDate: string;
+      ids: string[];
+    }[] = [];
+    for (const r of rows) {
+      const last = groups[groups.length - 1];
+      if (last && last.staff === r.staff && last.status === r.status && nextDayStr(last.endDate) === r.date) {
+        last.endDate = r.date;
+        last.ids.push(r.id);
+      } else {
+        groups.push({ staff: r.staff, status: r.status, startDate: r.date, endDate: r.date, ids: [r.id] });
+      }
+    }
+    return groups;
+  }, [roster, leave]);
 
   const today = dateStr(new Date());
   const [form, setForm] = useState({
@@ -882,15 +1018,12 @@ function LeaveTab() {
         <div className="text-sm font-semibold text-ink">Request leave</div>
         <div className="mt-3 space-y-3">
           <Field label="Staff">
-            <select
+            <StaffPicker
+              team={team}
+              profiles={profiles}
               value={form.staff}
-              onChange={(e) => setForm({ ...form, staff: e.target.value })}
-              className={selectCls}
-            >
-              {team.map((s) => (
-                <option key={s}>{s}</option>
-              ))}
-            </select>
+              onChange={(name) => setForm({ ...form, staff: name })}
+            />
           </Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="From">
@@ -934,16 +1067,21 @@ function LeaveTab() {
           <Button onClick={submit} disabled={!canSubmit}>
             Submit request
           </Button>
+          <p className="text-[11px] text-ink-faint">
+            Submitted requests show on the roster straight away as
+            &ldquo;pending&rdquo; (faded), and become solid once approved on the
+            right.
+          </p>
         </div>
       </Card>
 
       {/* Requests list */}
       <Card className="p-4">
         <div className="mb-3 text-sm font-semibold text-ink">
-          Leave requests ({leave.length})
+          Leave &amp; absences ({leave.length + rosterAbsences.length})
         </div>
-        {sorted.length === 0 ? (
-          <p className="text-[13px] text-ink-soft">No leave requests yet.</p>
+        {sorted.length === 0 && rosterAbsences.length === 0 ? (
+          <p className="text-[13px] text-ink-soft">No leave or absences yet.</p>
         ) : (
           <div className="space-y-2">
             {sorted.map((l) => (
@@ -954,7 +1092,7 @@ function LeaveTab() {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="text-[13px] font-semibold text-ink">
-                      {l.staff}
+                      {displayName(l.staff, profiles)}
                     </span>
                     <span
                       className={`rounded-full px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wide ${
@@ -970,28 +1108,76 @@ function LeaveTab() {
                     {l.note ? ` · ${l.note}` : ""}
                   </div>
                 </div>
-                {canEdit && l.status === "requested" && (
+                {canEdit && (
                   <div className="flex shrink-0 items-center gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        decideLeave(l.id, "approved", user);
-                        toast("Leave approved", "success");
-                      }}
-                    >
-                      Approve
-                    </Button>
+                    {l.status === "requested" && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            decideLeave(l.id, "approved", user);
+                            toast("Leave approved", "success");
+                          }}
+                        >
+                          Approve
+                        </Button>
+                        <button
+                          onClick={() => {
+                            decideLeave(l.id, "declined", user);
+                            toast("Leave declined");
+                          }}
+                          className="rounded-xl px-2.5 py-1.5 text-[12px] text-ink-faint transition-colors hover:text-red"
+                        >
+                          Decline
+                        </button>
+                      </>
+                    )}
                     <button
                       onClick={() => {
-                        decideLeave(l.id, "declined", user);
-                        toast("Leave declined");
+                        removeLeave(l.id);
+                        toast(`Leave removed · ${displayName(l.staff, profiles)}`);
                       }}
+                      title="Remove this leave and revert the roster"
                       className="rounded-xl px-2.5 py-1.5 text-[12px] text-ink-faint transition-colors hover:text-red"
                     >
-                      Decline
+                      Remove
                     </button>
                   </div>
+                )}
+              </div>
+            ))}
+
+            {rosterAbsences.map((g) => (
+              <div
+                key={g.ids[0]}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-card border border-line bg-panel px-3 py-2.5"
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[13px] font-semibold text-ink">
+                      {displayName(g.staff, profiles)}
+                    </span>
+                    <span className="rounded-full bg-primary-soft px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wide text-primary">
+                      On roster
+                    </span>
+                  </div>
+                  <div className="mt-0.5 font-mono text-[11px] text-ink-soft">
+                    {g.status === "sick" ? "Sick" : "Leave"} · {g.startDate}
+                    {g.endDate !== g.startDate ? ` → ${g.endDate}` : ""}
+                  </div>
+                </div>
+                {canEdit && (
+                  <button
+                    onClick={() => {
+                      removeRosterEntries(g.ids);
+                      toast(`Leave removed · ${displayName(g.staff, profiles)}`);
+                    }}
+                    title="Remove this absence and revert the roster"
+                    className="rounded-xl px-2.5 py-1.5 text-[12px] text-ink-faint transition-colors hover:text-red"
+                  >
+                    Remove
+                  </button>
                 )}
               </div>
             ))}
@@ -1005,72 +1191,216 @@ function LeaveTab() {
 // --- Resources: team + equipment/assets ------------------------------------
 
 function ResourcesTab() {
-  const { team, assets, addStaff, removeStaff, addAsset, removeAsset } =
-    useStaff();
+  const {
+    team,
+    assets,
+    profiles,
+    addStaff,
+    removeStaff,
+    restoreTeam,
+    applyShiftPattern,
+    addAsset,
+    removeAsset,
+  } = useStaff();
   const { canEdit, toast } = usePrefs();
-  const [name, setName] = useState("");
+  const [person, setPerson] = useState({
+    fullName: "",
+    role: STAFF_ROLES[1],
+    start: "09:00",
+    end: "17:00",
+    days: [0, 1, 2, 3, 4] as number[],
+  });
   const [asset, setAsset] = useState({
     name: "",
     type: ASSET_TYPES[0],
     quantity: 1,
   });
+  const [q, setQ] = useState("");
+  const shownTeam = team.filter((s) => matchStaff(s, profiles[s], q));
+
+  function addPerson() {
+    const fullName = person.fullName.trim();
+    if (!fullName) return;
+    addStaff({
+      name: fullName,
+      fullName,
+      role: person.role,
+      shift: { start: person.start, end: person.end, days: person.days },
+    });
+    setPerson({
+      fullName: "",
+      role: STAFF_ROLES[1],
+      start: "09:00",
+      end: "17:00",
+      days: [0, 1, 2, 3, 4],
+    });
+    toast("Resource added — shift plan applied to the roster", "success");
+  }
+
+  function toggleDay(i: number) {
+    setPerson((p) => ({
+      ...p,
+      days: p.days.includes(i)
+        ? p.days.filter((d) => d !== i)
+        : [...p.days, i].sort((a, b) => a - b),
+    }));
+  }
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       {/* Team / people */}
       <Card className="p-5">
-        <div className="text-sm font-semibold text-ink">Team ({team.length})</div>
-        <p className="mt-1 text-[12px] text-ink-soft">
-          People who appear on the roster and can be assigned to shipments.
-        </p>
-        {canEdit && (
-          <div className="mt-3 flex gap-2">
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && name.trim()) {
-                  addStaff(name);
-                  setName("");
-                  toast("Staff added", "success");
-                }
-              }}
-              placeholder="Add a staff member…"
-              className={selectCls}
-            />
-            <Button
+        <div className="flex items-center justify-between gap-2">
+          <div className="text-sm font-semibold text-ink">Team ({team.length})</div>
+          {canEdit && (
+            <button
               onClick={() => {
-                if (!name.trim()) return;
-                addStaff(name);
-                setName("");
-                toast("Staff added", "success");
+                restoreTeam();
+                toast("Default team restored", "success");
               }}
+              title="Re-add the default employees without touching the roster or leave"
+              className="rounded-lg border border-line px-2.5 py-1 text-[11px] text-ink-soft transition-colors hover:border-primary/40 hover:text-ink"
             >
-              Add
-            </Button>
+              ↺ Restore default team
+            </button>
+          )}
+        </div>
+        <p className="mt-1 text-[12px] text-ink-soft">
+          People who appear on the roster and can be assigned to shipments. A new
+          resource gets a name, a role and a default shift plan — the plan fills
+          straight onto the roster.
+        </p>
+
+        {canEdit && (
+          <div className="mt-3 space-y-2.5 rounded-card border border-line bg-bg/40 p-3">
+            <Field label="Full name">
+              <input
+                value={person.fullName}
+                onChange={(e) =>
+                  setPerson({ ...person, fullName: e.target.value })
+                }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") addPerson();
+                }}
+                placeholder="e.g. Sanne de Boer"
+                className={selectCls}
+              />
+            </Field>
+            <div className="grid grid-cols-3 gap-2">
+              <Field label="Role">
+                <select
+                  value={person.role}
+                  onChange={(e) => setPerson({ ...person, role: e.target.value })}
+                  className={selectCls}
+                >
+                  {STAFF_ROLES.map((r) => (
+                    <option key={r}>{r}</option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Shift start">
+                <input
+                  type="time"
+                  value={person.start}
+                  onChange={(e) =>
+                    setPerson({ ...person, start: e.target.value })
+                  }
+                  className={selectCls}
+                />
+              </Field>
+              <Field label="Shift end">
+                <input
+                  type="time"
+                  value={person.end}
+                  onChange={(e) => setPerson({ ...person, end: e.target.value })}
+                  className={selectCls}
+                />
+              </Field>
+            </div>
+            <Field label="Works on">
+              <div className="flex flex-wrap gap-1">
+                {DOW_LABELS.map((d, i) => (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => toggleDay(i)}
+                    className={`rounded-md px-2 py-1 text-[11px] font-medium transition-colors ${
+                      person.days.includes(i)
+                        ? "bg-brand text-white"
+                        : "border border-line bg-white text-ink-soft hover:border-primary/40"
+                    }`}
+                  >
+                    {d}
+                  </button>
+                ))}
+              </div>
+            </Field>
+            <Button onClick={addPerson}>Add resource</Button>
           </div>
         )}
-        <div className="mt-3 flex flex-wrap gap-2">
-          {team.map((s) => (
-            <span
-              key={s}
-              className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-2.5 py-1 text-[12px] text-ink-soft"
-            >
-              {s}
-              {canEdit && (
-                <button
-                  onClick={() => {
-                    removeStaff(s);
-                    toast("Staff removed");
-                  }}
-                  title="Remove"
-                  className="text-ink-faint transition-colors hover:text-red"
-                >
-                  ×
-                </button>
-              )}
-            </span>
-          ))}
+
+        {team.length > 6 && (
+          <div className="mt-3">
+            <SearchBox value={q} onChange={setQ} placeholder="Search staff or role…" />
+          </div>
+        )}
+        <div className="mt-3 space-y-2">
+          {shownTeam.map((s) => {
+            const p = profiles[s];
+            const shift = p?.shift;
+            return (
+              <div
+                key={s}
+                className="flex items-center justify-between gap-2 rounded-card border border-line bg-panel px-3 py-2"
+              >
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-[13px] font-medium text-ink">
+                      {displayName(s, profiles)}
+                    </span>
+                    {p?.role && (
+                      <span className="rounded-full bg-bg px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-ink-faint">
+                        {p.role}
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-0.5 font-mono text-[11px] text-ink-faint">
+                    {shift?.days.length
+                      ? `${shift.start}–${shift.end} · ${shift.days
+                          .map((d) => DOW_LABELS[d])
+                          .join(" ")}`
+                      : "No shift plan"}
+                  </div>
+                </div>
+                {canEdit && (
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    {shift?.days.length ? (
+                      <button
+                        onClick={() => {
+                          applyShiftPattern(s, 2);
+                          toast(`Applied ${displayName(s, profiles)}'s plan`, "success");
+                        }}
+                        title="Lay this person's shift plan onto the next two weeks"
+                        className="rounded-lg border border-line px-2 py-1 text-[11px] text-ink-soft transition-colors hover:border-primary/40 hover:text-ink"
+                      >
+                        Apply plan
+                      </button>
+                    ) : null}
+                    <button
+                      onClick={() => {
+                        removeStaff(s);
+                        toast("Staff removed");
+                      }}
+                      title="Remove"
+                      className="text-ink-faint transition-colors hover:text-red"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </Card>
 
@@ -1267,6 +1597,111 @@ function ImportTab() {
 
 const selectCls =
   "w-full rounded-md border border-line-strong bg-white px-2.5 py-1.5 text-[13px] text-ink focus:outline-none focus:ring-2 focus:ring-primary/30";
+
+/** Does a staff key match a search query (by name, full name or role)? */
+function matchStaff(
+  name: string,
+  profile: { fullName?: string; role?: string } | undefined,
+  q: string
+): boolean {
+  const s = q.trim().toLowerCase();
+  if (!s) return true;
+  return (
+    name.toLowerCase().includes(s) ||
+    (profile?.fullName ?? "").toLowerCase().includes(s) ||
+    (profile?.role ?? "").toLowerCase().includes(s)
+  );
+}
+
+/** Compact search box used across the staffing tabs. */
+function SearchBox({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+}) {
+  return (
+    <div className="flex max-w-xs items-center gap-2 rounded-lg border border-line-strong bg-white px-2.5 py-1.5">
+      <IconSearch width={14} height={14} className="shrink-0 text-ink-faint" />
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="w-full bg-transparent text-[13px] text-ink outline-none"
+      />
+      {value && (
+        <button
+          onClick={() => onChange("")}
+          className="text-ink-faint transition-colors hover:text-ink"
+          title="Clear"
+        >
+          ×
+        </button>
+      )}
+    </div>
+  );
+}
+
+/** Searchable staff picker (type-ahead) — works with a large team. Stores the key. */
+function StaffPicker({
+  team,
+  profiles,
+  value,
+  onChange,
+}: {
+  team: string[];
+  profiles: Record<string, StaffProfile>;
+  value: string;
+  onChange: (name: string) => void;
+}) {
+  const [q, setQ] = useState("");
+  const [open, setOpen] = useState(false);
+  const matches = team.filter((s) => matchStaff(s, profiles[s], q)).slice(0, 50);
+  return (
+    <div className="relative">
+      <input
+        value={open ? q : displayName(value, profiles)}
+        onFocus={() => {
+          setOpen(true);
+          setQ("");
+        }}
+        onBlur={() => setTimeout(() => setOpen(false), 120)}
+        onChange={(e) => setQ(e.target.value)}
+        placeholder="Search staff…"
+        className={selectCls}
+      />
+      {open && (
+        <div className="absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-md border border-line bg-panel shadow-lift">
+          {matches.length === 0 ? (
+            <div className="px-3 py-2 text-[12px] text-ink-faint">No match</div>
+          ) : (
+            matches.map((s) => (
+              <button
+                key={s}
+                type="button"
+                onMouseDown={() => {
+                  onChange(s);
+                  setOpen(false);
+                }}
+                className="flex w-full items-center justify-between gap-2 px-3 py-1.5 text-left text-[13px] text-ink hover:bg-bg"
+              >
+                <span>{displayName(s, profiles)}</span>
+                {profiles[s]?.role && (
+                  <span className="font-mono text-[10px] uppercase tracking-wide text-ink-faint">
+                    {profiles[s]!.role}
+                  </span>
+                )}
+              </button>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function Field({
   label,

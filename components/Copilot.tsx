@@ -2,16 +2,18 @@
 
 import { useState } from "react";
 import { useStore } from "./store";
+import { useStaff } from "./staffStore";
 import { usePrefs } from "./prefs";
 import { Button, Card, Eyebrow, Spinner } from "./ui";
 import { Markdown } from "./Markdown";
 import { IconSparkles, IconArrowRight } from "./icons";
-import { jobsContext } from "@/lib/jobs";
+import { jobsContext, requiredCrew } from "@/lib/jobs";
+import { staffContext } from "@/lib/staff";
 
 const SUGGESTIONS = [
   "What's arriving in the next 48 hours?",
-  "Which shipments have open critical steps?",
-  "Summarise the horse shipments and their status.",
+  "Who's on leave this week?",
+  "Are we short-staffed on any shipment day?",
   "What's blocking the EQUITRANS job?",
 ];
 
@@ -22,6 +24,7 @@ interface Msg {
 
 export function Copilot() {
   const { jobs } = useStore();
+  const { team, roster, leave, profiles } = useStaff();
   const { t } = usePrefs();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
@@ -41,7 +44,18 @@ export function Copilot() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           question: q,
-          context: jobsContext(jobs.filter((j) => !j.deletedAt), new Date()),
+          context:
+            jobsContext(jobs.filter((j) => !j.deletedAt), new Date()) +
+            "\n\n" +
+            staffContext(
+              team,
+              roster,
+              leave,
+              new Date(),
+              (d) => requiredCrew(jobs, d),
+              7,
+              profiles
+            ),
         }),
       });
       if (!res.ok) {

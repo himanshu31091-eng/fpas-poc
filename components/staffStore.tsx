@@ -20,10 +20,16 @@ import {
   seedLeave,
   seedStaffing,
   seedAssets,
+  seedProfiles,
   loadTeam,
   saveTeam,
   loadAssets,
   saveAssets,
+  loadProfiles,
+  saveProfiles,
+  entriesFromPattern,
+  planRosterImport,
+  mondayOf,
   STAFF_MEMBERS,
   type RosterEntry,
   type LeaveRequest,
@@ -32,6 +38,8 @@ import {
   type StaffingAssignment,
   type Asset,
   type AssetType,
+  type StaffProfile,
+  type ShiftPattern,
 } from "@/lib/staff";
 
 // ---------------------------------------------------------------------------
@@ -46,9 +54,20 @@ interface StaffState {
   staffing: StaffingAssignment[];
   team: string[];
   assets: Asset[];
+  profiles: Record<string, StaffProfile>;
 
-  addStaff: (name: string) => void;
+  addStaff: (input: {
+    name: string;
+    fullName?: string;
+    role?: string;
+    shift?: ShiftPattern;
+  }) => void;
   removeStaff: (name: string) => void;
+  /** Re-add the default seed employees (and their profiles) without touching roster/leave. */
+  restoreTeam: () => void;
+  setProfile: (name: string, patch: Partial<StaffProfile>) => void;
+  /** (Re)apply a person's saved shift pattern to the roster from this week. */
+  applyShiftPattern: (name: string, weeks?: number) => void;
   addAsset: (a: { name: string; type: AssetType; quantity: number }) => void;
   removeAsset: (id: string) => void;
 
@@ -60,8 +79,14 @@ interface StaffState {
     note?: string;
   }) => void;
   decideLeave: (id: string, status: LeaveStatus, by: string) => void;
+  /** Remove a leave entirely (cancels it and reverts the roster). */
+  removeLeave: (id: string) => void;
   importRoster: (entries: RosterEntry[]) => number;
   upsertRosterEntry: (entry: Omit<RosterEntry, "id">) => void;
+  /** Add entries for staff|date keys that don't already exist (never overwrites). */
+  addRosterEntries: (entries: Omit<RosterEntry, "id">[]) => void;
+  /** Remove roster entries by id (used to cancel roster-entered leave). */
+  removeRosterEntries: (ids: string[]) => void;
   resetRoster: () => void;
 
   getStaffing: (jobId: string) => StaffingAssignment | undefined;
@@ -83,6 +108,7 @@ export function StaffProvider({ children }: { children: ReactNode }) {
   const [staffing, setStaffing] = useState<StaffingAssignment[]>([]);
   const [team, setTeam] = useState<string[]>(STAFF_MEMBERS);
   const [assets, setAssets] = useState<Asset[]>([]);
+  const [profiles, setProfiles] = useState<Record<string, StaffProfile>>({});
   const rosterRef = useRef(roster);
   rosterRef.current = roster;
 
@@ -93,6 +119,7 @@ export function StaffProvider({ children }: { children: ReactNode }) {
     setStaffing(loadStaffing() ?? seedStaffing());
     setTeam(loadTeam() ?? STAFF_MEMBERS);
     setAssets(loadAssets() ?? seedAssets());
+    setProfiles(loadProfiles() ?? seedProfiles());
     setHydrated(true);
   }, []);
 
@@ -111,6 +138,9 @@ export function StaffProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (hydrated) saveAssets(assets);
   }, [assets, hydrated]);
+  useEffect(() => {
+    if (hydrated) saveProfiles(profiles);
+  }, [profiles, hydrated]);
 
   const value = useMemo<StaffState>(
     () => ({
@@ -120,19 +150,84 @@ export function StaffProvider({ children }: { children: ReactNode }) {
       staffing,
       team,
       assets,
+      profiles,
 
-      addStaff: (name) => {
-        const n = name.trim();
+      addStaff: (input) => {
+        const n = input.name.trim();
         if (!n) return;
-        setTeam((prev) => (prev.includes(n) ? prev : [...prev, n]));
+        setTeam((prev) => (prev.includes(n) ? prev : [n, ...prev]));
+        setProfiles((prev) => ({
+          ...prev,
+          [n]: {
+            name: n,
+            fullName: input.fullName?.trim() || n,
+            role: input.role,
+            shift: input.shift,
+          },
+        }));
+        // If a default shift was given, lay it onto the roster from this week.
+        if (input.shift && input.shift.days.length) {
+          const monday = mondayOf(new Date());
+          const entries = entriesFromPattern(n, monday, input.shift, 2);
+          setRoster((prev) => {
+            const map = new Map(prev.map((r) => [`${r.staff}|${r.date}`, r]));
+            for (const e of entries) {
+              const key = `${e.staff}|${e.date}`;
+              map.set(key, { ...e, id: map.get(key)?.id ?? uid("r") });
+            }
+            return Array.from(map.values());
+          });
+        }
       },
-      removeStaff: (name) => setTeam((prev) => prev.filter((s) => s !== name)),
+      removeStaff: (name) => {
+        setTeam((prev) => prev.filter((s) => s !== name));
+        setProfiles((prev) => {
+          const next = { ...prev };
+          delete next[name];
+          return next;
+        });
+        // Clean up so the person doesn't linger in timesheets/leave after removal.
+        setRoster((prev) => prev.filter((r) => r.staff !== name));
+        setLeave((prev) => prev.filter((l) => l.staff !== name));
+      },
+      restoreTeam: () => {
+        const seeded = seedProfiles();
+        setTeam((prev) => {
+          const have = new Set(prev.map((s) => s.toLowerCase()));
+          const additions = STAFF_MEMBERS.filter((s) => !have.has(s.toLowerCase()));
+          return additions.length ? [...prev, ...additions] : prev;
+        });
+        setProfiles((prev) => {
+          const next = { ...prev };
+          for (const [k, v] of Object.entries(seeded)) if (!next[k]) next[k] = v;
+          return next;
+        });
+      },
+      setProfile: (name, patch) =>
+        setProfiles((prev) => ({
+          ...prev,
+          [name]: { ...prev[name], name, ...patch },
+        })),
+      applyShiftPattern: (name, weeks = 2) => {
+        const pattern = profiles[name]?.shift;
+        if (!pattern || !pattern.days.length) return;
+        const monday = mondayOf(new Date());
+        const entries = entriesFromPattern(name, monday, pattern, weeks);
+        setRoster((prev) => {
+          const map = new Map(prev.map((r) => [`${r.staff}|${r.date}`, r]));
+          for (const e of entries) {
+            const key = `${e.staff}|${e.date}`;
+            map.set(key, { ...e, id: map.get(key)?.id ?? uid("r") });
+          }
+          return Array.from(map.values());
+        });
+      },
       addAsset: (a) => {
         const n = a.name.trim();
         if (!n) return;
         setAssets((prev) => [
-          ...prev,
           { id: uid("as"), name: n, type: a.type, quantity: a.quantity },
+          ...prev,
         ]);
       },
       removeAsset: (id) => setAssets((prev) => prev.filter((x) => x.id !== id)),
@@ -163,17 +258,36 @@ export function StaffProvider({ children }: { children: ReactNode }) {
         );
       },
 
+      removeLeave: (id) => setLeave((prev) => prev.filter((l) => l.id !== id)),
+
       importRoster: (entries) => {
         if (!entries.length) return 0;
+        // Canonicalise each entry's staff name against the current team
+        // (case-insensitive), so "Himanshu Pandey" lands on the existing
+        // "Himanshu pandey" row. Any genuinely new name is added to the team
+        // (and given a profile) so it gets a row — otherwise the entry would be
+        // stored but invisible, since the grid only renders team members.
+        const { normalized, newNames } = planRosterImport(entries, team);
+        if (newNames.length) {
+          setTeam((prev) => [
+            ...prev,
+            ...newNames.filter((n) => !prev.some((p) => p.toLowerCase() === n.toLowerCase())),
+          ]);
+          setProfiles((prev) => {
+            const next = { ...prev };
+            for (const n of newNames) if (!next[n]) next[n] = { name: n, fullName: n };
+            return next;
+          });
+        }
         setRoster((prev) => {
           const map = new Map(prev.map((r) => [`${r.staff}|${r.date}`, r]));
-          for (const e of entries) {
+          for (const e of normalized) {
             const key = `${e.staff}|${e.date}`;
             map.set(key, { ...e, id: map.get(key)?.id ?? uid("r") });
           }
           return Array.from(map.values());
         });
-        return entries.length;
+        return normalized.length;
       },
 
       upsertRosterEntry: (entry) => {
@@ -185,6 +299,22 @@ export function StaffProvider({ children }: { children: ReactNode }) {
         });
       },
 
+      addRosterEntries: (entries) => {
+        if (!entries.length) return;
+        setRoster((prev) => {
+          const have = new Set(prev.map((r) => `${r.staff}|${r.date}`));
+          const additions = entries
+            .filter((e) => !have.has(`${e.staff}|${e.date}`))
+            .map((e) => ({ ...e, id: uid("r") }));
+          return additions.length ? [...prev, ...additions] : prev;
+        });
+      },
+
+      removeRosterEntries: (ids) => {
+        const set = new Set(ids);
+        setRoster((prev) => prev.filter((r) => !set.has(r.id)));
+      },
+
       resetRoster: () => {
         const now = new Date();
         setRoster(seedRoster(now));
@@ -192,6 +322,7 @@ export function StaffProvider({ children }: { children: ReactNode }) {
         setStaffing(seedStaffing());
         setTeam(STAFF_MEMBERS);
         setAssets(seedAssets());
+        setProfiles(seedProfiles());
       },
 
       getStaffing: (jobId) => staffing.find((s) => s.jobId === jobId),
@@ -201,7 +332,7 @@ export function StaffProvider({ children }: { children: ReactNode }) {
           return [...others, a];
         }),
     }),
-    [hydrated, roster, leave, staffing, team, assets]
+    [hydrated, roster, leave, staffing, team, assets, profiles]
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

@@ -14,8 +14,29 @@ export interface HousingUnit {
   status: UnitStatus;
   /** Current occupant animal/consignment, if Occupied. */
   occupant: string;
+  /** Linked animal-registry id, when the occupant is a registered animal. */
+  animalId?: string;
   /** ISO date occupancy began. */
   since: string;
+}
+
+/** Place a registered animal into a unit (Occupied). Clears any other unit it held. */
+export function placeAnimal(
+  units: HousingUnit[],
+  unitId: string,
+  animal: { id: string; name: string },
+  since: string
+): HousingUnit[] {
+  return units.map((u) => {
+    if (u.id === unitId) {
+      return { ...u, occupant: animal.name, animalId: animal.id, status: "Occupied", since };
+    }
+    // An animal lives in one place — vacate any prior unit it occupied.
+    if (u.animalId === animal.id) {
+      return { ...u, occupant: "", animalId: undefined, status: "Dirty", since: "" };
+    }
+    return u;
+  });
 }
 
 /** Lifecycle transition + the i18n key for its action button. */
@@ -74,14 +95,21 @@ export function advanceUnit(units: HousingUnit[], id: string): HousingUnit[] {
     if (u.id !== id) return u;
     const next = UNIT_FLOW[u.status].next;
     if (!next) return u;
-    return { ...u, status: next, occupant: next === "Dirty" ? "" : u.occupant, since: next === "Dirty" ? "" : u.since };
+    const checkingOut = next === "Dirty";
+    return {
+      ...u,
+      status: next,
+      occupant: checkingOut ? "" : u.occupant,
+      animalId: checkingOut ? undefined : u.animalId,
+      since: checkingOut ? "" : u.since,
+    };
   });
 }
 
 /** Insert a new unit or replace an existing one (matched by id). */
 export function upsertUnit(units: HousingUnit[], unit: HousingUnit): HousingUnit[] {
   const i = units.findIndex((u) => u.id === unit.id);
-  if (i === -1) return [...units, unit];
+  if (i === -1) return [unit, ...units]; // new entries appear at the top
   const next = units.slice();
   next[i] = unit;
   return next;

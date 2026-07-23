@@ -17,7 +17,7 @@ import { Timeline } from "./Timeline";
 import { CommodityArt } from "./CommodityArt";
 import { WeatherPanel } from "./weather";
 import { useStaff, StaffingChip } from "./staffStore";
-import { availableStaff, statusOnDate, STATUS_META } from "@/lib/staff";
+import { availableStaff, statusOnDate, displayName, STATUS_META } from "@/lib/staff";
 import {
   IconBox,
   IconChevronLeft,
@@ -134,6 +134,10 @@ export function JobWorkspace({ jobId }: { jobId: string }) {
     deleteJob(jobId);
     toast("Moved to bin");
     router.push("/");
+  }
+
+  function goStaffing() {
+    setTab("staffing");
   }
 
   function goDraft() {
@@ -297,10 +301,10 @@ export function JobWorkspace({ jobId }: { jobId: string }) {
           </Card>
         ))}
       {tab === "readiness" && (
-        <ComplianceReadiness jobId={jobId} onDraft={goDraft} />
+        <ComplianceReadiness jobId={jobId} onAssign={goStaffing} />
       )}
       {tab === "loadplan" && <LoadPlan jobId={jobId} />}
-      {tab === "staffing" && <JobStaffing job={job} />}
+      {tab === "staffing" && <JobStaffing job={job} onDraft={goDraft} />}
       {tab === "submissions" && <Submissions jobId={jobId} />}
       {tab === "update" && <CustomerUpdate jobId={jobId} />}
       {tab === "artifacts" && <Artifacts jobId={jobId} />}
@@ -310,8 +314,8 @@ export function JobWorkspace({ jobId }: { jobId: string }) {
   );
 }
 
-function JobStaffing({ job }: { job: Job }) {
-  const { roster, leave, team, assets, staffing, getStaffing, setStaffing } =
+function JobStaffing({ job, onDraft }: { job: Job; onDraft?: () => void }) {
+  const { roster, leave, team, assets, staffing, profiles, getStaffing, setStaffing } =
     useStaff();
   const { jobs } = useStore();
   const { canEdit, toast } = usePrefs();
@@ -451,7 +455,7 @@ function JobStaffing({ job }: { job: Job }) {
                     }`}
                   >
                     {clash ? "⚠ " : ""}
-                    {s}
+                    {displayName(s, profiles)}
                   </button>
                 );
               })}
@@ -472,7 +476,7 @@ function JobStaffing({ job }: { job: Job }) {
                     STATUS_META[st!.status].cell
                   }`}
                 >
-                  {s} · {STATUS_META[st!.status].label}
+                  {displayName(s, profiles)} · {STATUS_META[st!.status].label}
                 </span>
               ))}
             </div>
@@ -515,11 +519,23 @@ function JobStaffing({ job }: { job: Job }) {
           </div>
         )}
 
-        {canEdit && (
-          <div className="mt-5 flex justify-end">
-            <Button onClick={saveStaffing}>Save staffing</Button>
-          </div>
-        )}
+        <div className="mt-5 flex flex-wrap items-center justify-end gap-2">
+          {canEdit && (
+            <Button variant="ghost" onClick={saveStaffing}>
+              Save staffing
+            </Button>
+          )}
+          {onDraft && (
+            <Button
+              onClick={() => {
+                if (canEdit) saveStaffing();
+                onDraft();
+              }}
+            >
+              Draft operational documents →
+            </Button>
+          )}
+        </div>
       </Card>
     </div>
   );

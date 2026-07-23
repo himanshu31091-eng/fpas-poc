@@ -23,6 +23,38 @@ export const STAFF_MEMBERS = [
   "Jobair",
 ];
 
+/** Roles a resource can hold (lightweight — for display/filtering). */
+export const STAFF_ROLES = [
+  "Coordinator",
+  "Groom",
+  "Loadmaster",
+  "Driver",
+  "Vet liaison",
+  "Warehouse",
+  "Admin",
+];
+
+/** A recurring weekly shift pattern — the "roster plan" for a person. */
+export interface ShiftPattern {
+  start: string; // HH:MM
+  end: string; // HH:MM
+  /** Weekday indices worked, 0 = Monday … 6 = Sunday. */
+  days: number[];
+}
+
+/**
+ * Lightweight person profile, keyed by the staff name (the join key used across
+ * roster/leave/staffing). Additive: the name string remains the identity, so
+ * existing data keeps working; this just carries a display name, role and the
+ * default shift pattern.
+ */
+export interface StaffProfile {
+  name: string;
+  fullName?: string;
+  role?: string;
+  shift?: ShiftPattern;
+}
+
 export type ShiftStatus =
   | "working"
   | "off"
@@ -138,26 +170,53 @@ export function weekDates(monday: Date): Date[] {
 
 export const DOW_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-function leaveCovers(req: LeaveRequest, date: string): boolean {
-  return (
-    req.status === "approved" && date >= req.startDate && date <= req.endDate
-  );
+function withinLeave(req: LeaveRequest, date: string): boolean {
+  return date >= req.startDate && date <= req.endDate;
+}
+function approvedLeaveCovers(req: LeaveRequest, date: string): boolean {
+  return req.status === "approved" && withinLeave(req, date);
 }
 
-/** Effective status for a staff member on a date (approved leave wins). */
+/** A resolved day cell: a roster entry, a synthesised status, or nothing. */
+export type DayStatus =
+  | (RosterEntry & { pending?: boolean })
+  | { status: ShiftStatus; pending?: boolean };
+
+/**
+ * Effective status for a staff member on a date. Approved leave wins outright;
+ * a still-*requested* leave shows as a pending marker over a working/off day so
+ * the roster chart reflects it the moment it's submitted (before approval).
+ */
 export function statusOnDate(
   staff: string,
   date: string,
   roster: RosterEntry[],
   leave: LeaveRequest[]
-): RosterEntry | { status: ShiftStatus } | null {
-  const lv = leave.find((l) => l.staff === staff && leaveCovers(l, date));
-  if (lv) return { status: lv.type === "sick" ? "sick" : "leave" };
+): DayStatus | null {
+  const approved = leave.find(
+    (l) => l.staff === staff && approvedLeaveCovers(l, date)
+  );
+  if (approved) return { status: approved.type === "sick" ? "sick" : "leave" };
+
   const entry = roster.find((r) => r.staff === staff && r.date === date);
+
+  const requested = leave.find(
+    (l) => l.staff === staff && l.status === "requested" && withinLeave(l, date)
+  );
+  if (requested && (!entry || entry.status === "working" || entry.status === "off")) {
+    return {
+      status: requested.type === "sick" ? "sick" : "leave",
+      pending: true,
+    };
+  }
   return entry ?? null;
 }
 
-/** Staff available on a date — not on leave / sick / off / holiday. */
+/**
+ * Staff available on a date — not on approved leave, and either free or
+ * rostered working/training. Pending (unapproved) leave does NOT remove them
+ * from availability; it only shows on the chart until it's approved.
+ */
 export function availableStaff(
   members: string[],
   date: string,
@@ -165,17 +224,149 @@ export function availableStaff(
   leave: LeaveRequest[]
 ): string[] {
   return members.filter((s) => {
-    const st = statusOnDate(s, date, roster, leave);
-    if (!st) return true; // no entry → free to be rostered
-    return st.status === "working" || st.status === "training";
+    if (leave.some((l) => l.staff === s && approvedLeaveCovers(l, date))) {
+      return false;
+    }
+    const entry = roster.find((r) => r.staff === s && r.date === date);
+    if (!entry) return true; // no entry → free to be rostered
+    return entry.status === "working" || entry.status === "training";
   });
+}
+
+/**
+ * Prepare imported roster entries: canonicalise each staff name against the
+ * current team (case-insensitive) so variants land on the right row, and report
+ * any genuinely new names so the caller can add them to the team.
+ */
+export function planRosterImport<T extends { staff: string }>(
+  entries: T[],
+  team: string[]
+): { normalized: T[]; newNames: string[] } {
+  const canon = new Map(team.map((s) => [s.toLowerCase(), s]));
+  const newNames: string[] = [];
+  const normalized = entries.map((e) => {
+    const raw = (e.staff ?? "").trim();
+    const lc = raw.toLowerCase();
+    let name = canon.get(lc);
+    if (!name) {
+      name = raw;
+      canon.set(lc, raw);
+      if (raw) newNames.push(raw);
+    }
+    return { ...e, staff: name };
+  });
+  return { normalized, newNames };
+}
+
+function summariseDateRanges(dates: string[]): string {
+  const sorted = [...dates].sort();
+  const nextDay = (d: string) => {
+    const [y, m, dd] = d.split("-").map(Number);
+    return dateStr(addDays(new Date(y, m - 1, dd), 1));
+  };
+  const ranges: [string, string][] = [];
+  for (const d of sorted) {
+    const last = ranges[ranges.length - 1];
+    if (last && nextDay(last[1]) === d) last[1] = d;
+    else ranges.push([d, d]);
+  }
+  return ranges.map(([a, b]) => (a === b ? a : `${a}→${b}`)).join(", ");
+}
+
+/**
+ * Plain-text staff/coverage summary for the AI copilot and daily briefing, so
+ * they can answer leave and coverage questions. Reads the same live data as
+ * every screen; `requiredForDate` (optional) supplies booking-derived crew
+ * demand per day without coupling this module to lib/jobs.
+ */
+export function staffContext(
+  team: string[],
+  roster: RosterEntry[],
+  leave: LeaveRequest[],
+  now: Date,
+  requiredForDate?: (date: string) => number,
+  days = 7,
+  profiles?: Record<string, StaffProfile> | null
+): string {
+  const dates = Array.from({ length: days }, (_, i) => dateStr(addDays(now, i)));
+  const absence = new Map<string, { dates: string[]; sick: boolean; pending: boolean }>();
+  for (const d of dates) {
+    for (const s of team) {
+      const st = statusOnDate(s, d, roster, leave);
+      if (st && (st.status === "leave" || st.status === "sick")) {
+        const rec = absence.get(s) ?? { dates: [], sick: false, pending: false };
+        rec.dates.push(d);
+        if (st.status === "sick") rec.sick = true;
+        if ("pending" in st && st.pending) rec.pending = true;
+        absence.set(s, rec);
+      }
+    }
+  }
+
+  const lines: string[] = [];
+  lines.push(`STAFF & COVERAGE — ${days} days from ${dates[0]} (team of ${team.length}):`);
+  if (absence.size === 0) {
+    lines.push("On leave/absent: none in this window.");
+  } else {
+    lines.push("On leave/absent:");
+    for (const [s, rec] of Array.from(absence.entries())) {
+      lines.push(
+        `- ${displayName(s, profiles)}: ${rec.sick ? "sick" : "leave"}${
+          rec.pending ? " (pending approval)" : ""
+        } on ${summariseDateRanges(rec.dates)}`
+      );
+    }
+  }
+  if (requiredForDate) {
+    const short: string[] = [];
+    for (const d of dates) {
+      const required = requiredForDate(d);
+      if (required <= 0) continue;
+      const scheduled = team.filter((s) => {
+        const st = statusOnDate(s, d, roster, leave);
+        return st && (st.status === "working" || st.status === "training");
+      }).length;
+      if (scheduled < required) {
+        short.push(`${d}: need ${required}, ${scheduled} rostered (short ${required - scheduled})`);
+      }
+    }
+    lines.push(
+      short.length
+        ? `Understaffed shipment days: ${short.join("; ")}`
+        : "Understaffed shipment days: none"
+    );
+  }
+  return lines.join("\n");
+}
+
+/** Build working roster entries from a shift pattern, over `weeks` from a Monday. */
+export function entriesFromPattern(
+  staff: string,
+  monday: Date,
+  pattern: ShiftPattern,
+  weeks = 1
+): Omit<RosterEntry, "id">[] {
+  const out: Omit<RosterEntry, "id">[] = [];
+  for (let d = 0; d < 7 * weeks; d++) {
+    if (!pattern.days.includes(d % 7)) continue;
+    out.push({
+      staff,
+      date: dateStr(addDays(monday, d)),
+      status: "working",
+      start: pattern.start,
+      end: pattern.end,
+    });
+  }
+  return out;
 }
 
 // --- Persistence ------------------------------------------------------------
 
-const ROSTER_KEY = "fpas.roster.v2";
-const LEAVE_KEY = "fpas.leave.v2";
-const STAFFING_KEY = "fpas.staffing.v3";
+// v3/v4: bumped so any inconsistent local state (e.g. a partially-deleted
+// team) is discarded and everyone reloads the clean, consistent seed.
+const ROSTER_KEY = "fpas.roster.v3";
+const LEAVE_KEY = "fpas.leave.v3";
+const STAFFING_KEY = "fpas.staffing.v4";
 
 function load<T>(key: string): T | null {
   if (typeof window === "undefined") return null;
@@ -202,12 +393,46 @@ export const saveLeave = (v: LeaveRequest[]) => save(LEAVE_KEY, v);
 export const loadStaffing = () => load<StaffingAssignment[]>(STAFFING_KEY);
 export const saveStaffing = (v: StaffingAssignment[]) => save(STAFFING_KEY, v);
 
-const TEAM_KEY = "fpas.team.v1";
+const TEAM_KEY = "fpas.team.v2";
 const ASSETS_KEY = "fpas.assets.v1";
+const PROFILES_KEY = "fpas.profiles.v2";
 export const loadTeam = () => load<string[]>(TEAM_KEY);
 export const saveTeam = (v: string[]) => save(TEAM_KEY, v);
 export const loadAssets = () => load<Asset[]>(ASSETS_KEY);
 export const saveAssets = (v: Asset[]) => save(ASSETS_KEY, v);
+export const loadProfiles = () => load<Record<string, StaffProfile>>(PROFILES_KEY);
+export const saveProfiles = (v: Record<string, StaffProfile>) => save(PROFILES_KEY, v);
+
+/** Display name for a staff key — the full name if we have one, else the key. */
+export function displayName(
+  name: string,
+  profiles?: Record<string, StaffProfile> | null
+): string {
+  return profiles?.[name]?.fullName?.trim() || name;
+}
+
+/** Seed profiles (full names + roles + a Mon–Fri default shift) for the team. */
+export function seedProfiles(): Record<string, StaffProfile> {
+  const defs: [string, string, string][] = [
+    ["Lotte", "Lotte van Dijk", "Coordinator"],
+    ["Dominique", "Dominique Bakker", "Loadmaster"],
+    ["Maud", "Maud de Vries", "Groom"],
+    ["Esther", "Esther Jansen", "Vet liaison"],
+    ["Maya", "Maya Visser", "Groom"],
+    ["Bart", "Bart Willems", "Driver"],
+    ["Chiara", "Chiara Rossi", "Groom"],
+    ["Kelly", "Kelly Smit", "Warehouse"],
+    ["Juliette", "Juliette Dubois", "Groom"],
+    ["Jamie", "Jamie O'Connor", "Driver"],
+    ["Jobair", "Jobair Rahman", "Warehouse"],
+  ];
+  const out: Record<string, StaffProfile> = {};
+  defs.forEach(([name, fullName, role], i) => {
+    const [start, end] = SHIFTS[i % SHIFTS.length];
+    out[name] = { name, fullName, role, shift: { start, end, days: [0, 1, 2, 3, 4] } };
+  });
+  return out;
+}
 
 export function seedAssets(): Asset[] {
   return [

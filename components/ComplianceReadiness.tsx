@@ -31,12 +31,12 @@ const ORDER: (keyof ComplianceFacts)[] = [
 
 export function ComplianceReadiness({
   jobId,
-  onDraft,
+  onAssign,
 }: {
   jobId: string;
-  onDraft?: () => void;
+  onAssign?: () => void;
 }) {
-  const { getJob, ui, resolveItem, runReadiness } = useStore();
+  const { getJob, ui, resolveItem, resolveAllSteps, resetSteps, runReadiness } = useStore();
   const { canEdit } = usePrefs();
   const job = getJob(jobId);
   const state = ui[jobId] ?? {};
@@ -120,6 +120,21 @@ export function ComplianceReadiness({
         )}
       </div>
 
+      {/* Demo shortcuts — clear or reset the whole rail in one click. */}
+      {canEdit && (
+        <div className="mb-5 flex flex-wrap items-center gap-2">
+          <Button size="sm" onClick={() => resolveAllSteps(jobId)} disabled={cleared}>
+            ✓ Mark all steps done
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => resetSteps(jobId)}>
+            ↺ Reset steps
+          </Button>
+          <span className="font-mono text-[10px] uppercase tracking-wide text-ink-faint">
+            demo shortcut
+          </span>
+        </div>
+      )}
+
       {/* AI briefing controls / error */}
       {state.readinessError ? (
         <div className="mb-5">
@@ -161,11 +176,11 @@ export function ComplianceReadiness({
       <div className="mt-6 flex items-center justify-end gap-3">
         <span className="text-[12px] text-ink-faint">
           {cleared
-            ? "All steps satisfied — you can draft the operational documents."
+            ? "All steps satisfied — assign the staff & equipment for the shipment."
             : "Resolve outstanding steps to clear the gate."}
         </span>
-        <Button onClick={() => onDraft?.()} disabled={!cleared}>
-          Draft operational documents →
+        <Button onClick={() => onAssign?.()} disabled={!cleared}>
+          Assign staff &amp; equipment →
         </Button>
       </div>
 
