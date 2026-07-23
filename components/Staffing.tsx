@@ -96,24 +96,13 @@ export function Staffing() {
 // --- Roster board + coverage Q&A -------------------------------------------
 
 function RosterTab() {
-  const { roster, leave, team, profiles, applyShiftPattern } = useStaff();
+  const { roster, leave, team, profiles, addRosterEntries } = useStaff();
   const { canEdit, toast } = usePrefs();
   const { jobs } = useStore();
   const [mode, setMode] = useState<"week" | "month">("week");
   const [anchor, setAnchor] = useState<Date>(() => new Date());
   const [showHelp, setShowHelp] = useState(false);
   const todayStr = dateStr(new Date());
-
-  function fillFromPlan() {
-    const withPlan = team.filter((s) => profiles[s]?.shift?.days.length);
-    withPlan.forEach((s) => applyShiftPattern(s, 2));
-    toast(
-      withPlan.length
-        ? `Filled ${withPlan.length} shift plan${withPlan.length === 1 ? "" : "s"} for the next 2 weeks`
-        : "No shift plans set yet — add a default shift on a resource",
-      withPlan.length ? "success" : "default"
-    );
-  }
 
   const days = useMemo(() => {
     if (mode === "week") return weekDates(mondayOf(anchor));
@@ -122,6 +111,29 @@ function RosterTab() {
     const n = new Date(y, m + 1, 0).getDate();
     return Array.from({ length: n }, (_, i) => new Date(y, m, i + 1));
   }, [mode, anchor]);
+
+  // Fill the CURRENTLY VISIBLE range (week or month) from each person's shift
+  // plan — blanks only, so it never overwrites existing shifts or leave.
+  function fillFromPlan() {
+    const entries: Omit<RosterEntry, "id">[] = [];
+    for (const s of team) {
+      const shift = profiles[s]?.shift;
+      if (!shift?.days.length) continue;
+      for (const d of days) {
+        const dow = (d.getDay() + 6) % 7; // 0 = Monday
+        if (!shift.days.includes(dow)) continue;
+        const ds = dateStr(d);
+        if (roster.some((r) => r.staff === s && r.date === ds)) continue; // keep existing
+        entries.push({ staff: s, date: ds, status: "working", start: shift.start, end: shift.end });
+      }
+    }
+    if (!entries.length) {
+      toast("Nothing to fill — visible days already have shifts, or no shift plans set", "default");
+      return;
+    }
+    addRosterEntries(entries);
+    toast(`Filled ${entries.length} shift${entries.length === 1 ? "" : "s"} across the visible ${mode}`, "success");
+  }
 
   const avail = useMemo(
     () =>
@@ -244,9 +256,11 @@ function RosterTab() {
               add a resource (or edit it on the Resources tab).
             </li>
             <li>
-              <strong>2. Fill the week from the plan</strong> — the
-              &ldquo;Fill from plan&rdquo; button lays each person&apos;s default
-              shift onto the next two weeks. You can then tweak any single day.
+              <strong>2. Fill from the plan</strong> — the &ldquo;Fill from
+              plan&rdquo; button lays each person&apos;s default shift onto the
+              range you&apos;re viewing (this week, or the whole month in Month
+              view), skipping any day that already has a shift or leave. You can
+              then tweak any single day.
             </li>
             <li>
               <strong>3. Add or change one shift</strong> — use &ldquo;Add /

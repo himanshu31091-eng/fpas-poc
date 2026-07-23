@@ -83,6 +83,8 @@ interface StaffState {
   removeLeave: (id: string) => void;
   importRoster: (entries: RosterEntry[]) => number;
   upsertRosterEntry: (entry: Omit<RosterEntry, "id">) => void;
+  /** Add entries for staff|date keys that don't already exist (never overwrites). */
+  addRosterEntries: (entries: Omit<RosterEntry, "id">[]) => void;
   /** Remove roster entries by id (used to cancel roster-entered leave). */
   removeRosterEntries: (ids: string[]) => void;
   resetRoster: () => void;
@@ -294,6 +296,17 @@ export function StaffProvider({ children }: { children: ReactNode }) {
           const existing = prev.find((r) => `${r.staff}|${r.date}` === key);
           const next: RosterEntry = { ...entry, id: existing?.id ?? uid("r") };
           return [...prev.filter((r) => `${r.staff}|${r.date}` !== key), next];
+        });
+      },
+
+      addRosterEntries: (entries) => {
+        if (!entries.length) return;
+        setRoster((prev) => {
+          const have = new Set(prev.map((r) => `${r.staff}|${r.date}`));
+          const additions = entries
+            .filter((e) => !have.has(`${e.staff}|${e.date}`))
+            .map((e) => ({ ...e, id: uid("r") }));
+          return additions.length ? [...prev, ...additions] : prev;
         });
       },
 
