@@ -215,7 +215,7 @@ export function Guide() {
           <Step
             icon={IconArrowRight}
             title="Agent portal"
-            body="A demo of the external surface agents and airlines use: submit a booking request, upload documents to a checklist, confirm the AWB, and track status. In production this is a separate authenticated portal."
+            body="A demo of the external surface agents and airlines use: submit a booking request, upload documents to a checklist, confirm the AWB, and track status. Every submitted request lands in the ops Dashboard's “From the agent portal” queue — staff Accept it to spin up a pre-filled job (or Dismiss it), and the agent sees an “Accepted by ops” badge. In production this is a separate authenticated portal."
           />
           <Step
             icon={IconClipboard}
@@ -237,7 +237,7 @@ export function Guide() {
             </h3>
           </div>
           <ol className="mt-3 space-y-2 text-[13.5px] leading-relaxed text-ink-soft">
-            <li>1. New booking → pick a sample email → <em>Create &amp; extract</em>.</li>
+            <li>1. New booking → pick a sample email → <em>Create &amp; extract</em>. (Or, if an agent submitted via the portal, <em>Accept &amp; create job</em> from the Dashboard&apos;s “From the agent portal” queue.)</li>
             <li>2. On Extraction, correct any flagged field → <em>Confirm &amp; create booking</em>.</li>
             <li>3. Open Readiness. <em>Mark done</em> on a step, add the reference (e.g. NVWA approval no.).</li>
             <li>4. When all steps clear, <em>Draft operational documents</em>.</li>
