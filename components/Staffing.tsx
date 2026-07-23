@@ -919,7 +919,7 @@ const STATUS_BADGE: Record<string, string> = {
 };
 
 function LeaveTab() {
-  const { leave, requestLeave, decideLeave, team, profiles } = useStaff();
+  const { leave, requestLeave, decideLeave, removeLeave, team, profiles } = useStaff();
   const { canEdit, user, toast } = usePrefs();
 
   const today = dateStr(new Date());
@@ -1054,26 +1054,40 @@ function LeaveTab() {
                     {l.note ? ` · ${l.note}` : ""}
                   </div>
                 </div>
-                {canEdit && l.status === "requested" && (
+                {canEdit && (
                   <div className="flex shrink-0 items-center gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        decideLeave(l.id, "approved", user);
-                        toast("Leave approved", "success");
-                      }}
-                    >
-                      Approve
-                    </Button>
+                    {l.status === "requested" && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            decideLeave(l.id, "approved", user);
+                            toast("Leave approved", "success");
+                          }}
+                        >
+                          Approve
+                        </Button>
+                        <button
+                          onClick={() => {
+                            decideLeave(l.id, "declined", user);
+                            toast("Leave declined");
+                          }}
+                          className="rounded-xl px-2.5 py-1.5 text-[12px] text-ink-faint transition-colors hover:text-red"
+                        >
+                          Decline
+                        </button>
+                      </>
+                    )}
                     <button
                       onClick={() => {
-                        decideLeave(l.id, "declined", user);
-                        toast("Leave declined");
+                        removeLeave(l.id);
+                        toast(`Leave removed · ${displayName(l.staff, profiles)}`);
                       }}
+                      title="Remove this leave and revert the roster"
                       className="rounded-xl px-2.5 py-1.5 text-[12px] text-ink-faint transition-colors hover:text-red"
                     >
-                      Decline
+                      Remove
                     </button>
                   </div>
                 )}

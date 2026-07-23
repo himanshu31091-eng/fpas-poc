@@ -77,6 +77,8 @@ interface StaffState {
     note?: string;
   }) => void;
   decideLeave: (id: string, status: LeaveStatus, by: string) => void;
+  /** Remove a leave entirely (cancels it and reverts the roster). */
+  removeLeave: (id: string) => void;
   importRoster: (entries: RosterEntry[]) => number;
   upsertRosterEntry: (entry: Omit<RosterEntry, "id">) => void;
   resetRoster: () => void;
@@ -233,6 +235,8 @@ export function StaffProvider({ children }: { children: ReactNode }) {
           )
         );
       },
+
+      removeLeave: (id) => setLeave((prev) => prev.filter((l) => l.id !== id)),
 
       importRoster: (entries) => {
         if (!entries.length) return 0;
