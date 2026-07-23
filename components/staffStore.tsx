@@ -81,6 +81,8 @@ interface StaffState {
   removeLeave: (id: string) => void;
   importRoster: (entries: RosterEntry[]) => number;
   upsertRosterEntry: (entry: Omit<RosterEntry, "id">) => void;
+  /** Remove roster entries by id (used to cancel roster-entered leave). */
+  removeRosterEntries: (ids: string[]) => void;
   resetRoster: () => void;
 
   getStaffing: (jobId: string) => StaffingAssignment | undefined;
@@ -275,6 +277,11 @@ export function StaffProvider({ children }: { children: ReactNode }) {
           const next: RosterEntry = { ...entry, id: existing?.id ?? uid("r") };
           return [...prev.filter((r) => `${r.staff}|${r.date}` !== key), next];
         });
+      },
+
+      removeRosterEntries: (ids) => {
+        const set = new Set(ids);
+        setRoster((prev) => prev.filter((r) => !set.has(r.id)));
       },
 
       resetRoster: () => {

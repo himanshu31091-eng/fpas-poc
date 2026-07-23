@@ -919,8 +919,41 @@ const STATUS_BADGE: Record<string, string> = {
 };
 
 function LeaveTab() {
-  const { leave, requestLeave, decideLeave, removeLeave, team, profiles } = useStaff();
+  const { leave, roster, requestLeave, decideLeave, removeLeave, removeRosterEntries, team, profiles } =
+    useStaff();
   const { canEdit, user, toast } = usePrefs();
+
+  // Absences entered directly on the roster (Import tab / Add shift with status
+  // leave|sick) — not leave *requests*. Surface them here too, grouped into
+  // contiguous date ranges, so this screen shows every absence in the system.
+  const rosterAbsences = useMemo(() => {
+    const nextDayStr = (d: string) => {
+      const [y, m, dd] = d.split("-").map(Number);
+      return dateStr(addDays(new Date(y, m - 1, dd), 1));
+    };
+    const covered = (staff: string, date: string) =>
+      leave.some((l) => l.staff === staff && date >= l.startDate && date <= l.endDate);
+    const rows = roster
+      .filter((r) => (r.status === "leave" || r.status === "sick") && !covered(r.staff, r.date))
+      .sort((a, b) => a.staff.localeCompare(b.staff) || a.date.localeCompare(b.date));
+    const groups: {
+      staff: string;
+      status: ShiftStatus;
+      startDate: string;
+      endDate: string;
+      ids: string[];
+    }[] = [];
+    for (const r of rows) {
+      const last = groups[groups.length - 1];
+      if (last && last.staff === r.staff && last.status === r.status && nextDayStr(last.endDate) === r.date) {
+        last.endDate = r.date;
+        last.ids.push(r.id);
+      } else {
+        groups.push({ staff: r.staff, status: r.status, startDate: r.date, endDate: r.date, ids: [r.id] });
+      }
+    }
+    return groups;
+  }, [roster, leave]);
 
   const today = dateStr(new Date());
   const [form, setForm] = useState({
@@ -1024,10 +1057,10 @@ function LeaveTab() {
       {/* Requests list */}
       <Card className="p-4">
         <div className="mb-3 text-sm font-semibold text-ink">
-          Leave requests ({leave.length})
+          Leave &amp; absences ({leave.length + rosterAbsences.length})
         </div>
-        {sorted.length === 0 ? (
-          <p className="text-[13px] text-ink-soft">No leave requests yet.</p>
+        {sorted.length === 0 && rosterAbsences.length === 0 ? (
+          <p className="text-[13px] text-ink-soft">No leave or absences yet.</p>
         ) : (
           <div className="space-y-2">
             {sorted.map((l) => (
@@ -1090,6 +1123,40 @@ function LeaveTab() {
                       Remove
                     </button>
                   </div>
+                )}
+              </div>
+            ))}
+
+            {rosterAbsences.map((g) => (
+              <div
+                key={g.ids[0]}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-card border border-line bg-panel px-3 py-2.5"
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[13px] font-semibold text-ink">
+                      {displayName(g.staff, profiles)}
+                    </span>
+                    <span className="rounded-full bg-primary-soft px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wide text-primary">
+                      On roster
+                    </span>
+                  </div>
+                  <div className="mt-0.5 font-mono text-[11px] text-ink-soft">
+                    {g.status === "sick" ? "Sick" : "Leave"} · {g.startDate}
+                    {g.endDate !== g.startDate ? ` → ${g.endDate}` : ""}
+                  </div>
+                </div>
+                {canEdit && (
+                  <button
+                    onClick={() => {
+                      removeRosterEntries(g.ids);
+                      toast(`Leave removed · ${displayName(g.staff, profiles)}`);
+                    }}
+                    title="Remove this absence and revert the roster"
+                    className="rounded-xl px-2.5 py-1.5 text-[12px] text-ink-faint transition-colors hover:text-red"
+                  >
+                    Remove
+                  </button>
                 )}
               </div>
             ))}
