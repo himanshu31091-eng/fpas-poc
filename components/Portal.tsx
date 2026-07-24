@@ -25,7 +25,7 @@ const STATUS_STYLE: Record<PortalStatus, string> = {
 const EMPTY = { agent: "", commodity: "Live horses", origin: "", flight: "", date: "", animalCount: "", notes: "" };
 
 export function Portal() {
-  const { t, toast } = usePrefs();
+  const { t, toast, canEdit } = usePrefs();
   const [reqs, setReqs] = useState<PortalRequest[]>(() => seedRequests());
   const [form, setForm] = useState({ ...EMPTY });
 
@@ -137,7 +137,7 @@ export function Portal() {
           <textarea rows={2} className={inp} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
         </label>
         <div className="mt-3 flex justify-end">
-          <Button onClick={submit} disabled={!form.agent.trim()}>
+          <Button onClick={submit} disabled={!form.agent.trim() || !canEdit}>
             {t("portal.submit")}
           </Button>
         </div>
@@ -179,13 +179,15 @@ export function Portal() {
                         {r.animalCount ? ` · ${r.animalCount}` : ""}
                       </div>
                     </div>
-                    <button
-                      onClick={() => remove(r.id)}
-                      className="text-ink-faint transition-colors hover:text-red"
-                      title="Remove"
-                    >
-                      <IconClose width={15} height={15} />
-                    </button>
+                    {canEdit && (
+                      <button
+                        onClick={() => remove(r.id)}
+                        className="text-ink-faint transition-colors hover:text-red"
+                        title="Remove"
+                      >
+                        <IconClose width={15} height={15} />
+                      </button>
+                    )}
                   </div>
 
                   {r.notes && <div className="mt-2 text-[12.5px] italic text-ink-soft">{r.notes}</div>}
@@ -212,27 +214,31 @@ export function Portal() {
                           {d.uploaded ? (
                             <span className="ml-auto flex items-center gap-2">
                               <span className="font-mono text-[11px] text-ink-faint">{d.filename}</span>
-                              <button
-                                onClick={() => setDoc(r.id, d.name, null)}
-                                className="text-ink-faint hover:text-red"
-                                title="Remove"
-                              >
-                                <IconClose width={13} height={13} />
-                              </button>
+                              {canEdit && (
+                                <button
+                                  onClick={() => setDoc(r.id, d.name, null)}
+                                  className="text-ink-faint hover:text-red"
+                                  title="Remove"
+                                >
+                                  <IconClose width={13} height={13} />
+                                </button>
+                              )}
                             </span>
                           ) : (
-                            <label className="ml-auto cursor-pointer rounded-lg border border-line-strong bg-white px-2.5 py-1 font-mono text-[11px] text-ink-soft transition-colors hover:border-primary/40 hover:text-ink">
-                              {t("portal.upload")}
-                              <input
-                                type="file"
-                                className="hidden"
-                                onChange={(e) => {
-                                  const f = e.target.files?.[0];
-                                  e.target.value = "";
-                                  if (f) setDoc(r.id, d.name, f.name);
-                                }}
-                              />
-                            </label>
+                            canEdit && (
+                              <label className="ml-auto cursor-pointer rounded-lg border border-line-strong bg-white px-2.5 py-1 font-mono text-[11px] text-ink-soft transition-colors hover:border-primary/40 hover:text-ink">
+                                {t("portal.upload")}
+                                <input
+                                  type="file"
+                                  className="hidden"
+                                  onChange={(e) => {
+                                    const f = e.target.files?.[0];
+                                    e.target.value = "";
+                                    if (f) setDoc(r.id, d.name, f.name);
+                                  }}
+                                />
+                              </label>
+                            )
                           )}
                         </div>
                       ))}
@@ -246,8 +252,9 @@ export function Portal() {
                       <input
                         value={r.awb}
                         onChange={(e) => setAwb(r.id, e.target.value)}
+                        disabled={!canEdit}
                         placeholder="176-…"
-                        className="flex-1 rounded-md border border-line-strong bg-white px-2.5 py-1 font-mono text-[12.5px] text-ink focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        className="flex-1 rounded-md border border-line-strong bg-white px-2.5 py-1 font-mono text-[12.5px] text-ink focus:outline-none focus:ring-2 focus:ring-primary/30 disabled:opacity-60"
                       />
                       {status === "ready" && <IconArrowRight width={15} height={15} className="text-green" />}
                     </label>

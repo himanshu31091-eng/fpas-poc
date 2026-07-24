@@ -747,7 +747,7 @@ const hoursBetween = (start: string, end: string) =>
 
 function TimesheetsTab() {
   const { roster, profiles } = useStaff();
-  const { t, toast } = usePrefs();
+  const { t, toast, canEdit } = usePrefs();
   const [actuals, setActuals] = useState<Record<string, { start: string; end: string }>>({});
   const [seeded, setSeeded] = useState(false);
   const [q, setQ] = useState("");
@@ -825,7 +825,7 @@ function TimesheetsTab() {
         </div>
         <button
           onClick={exportPayroll}
-          disabled={rows.length === 0}
+          disabled={rows.length === 0 || !canEdit}
           className="inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-2 text-[13px] font-semibold text-fpasnavy shadow-glow transition-all hover:-translate-y-0.5 disabled:opacity-50"
         >
           <IconDownload width={15} height={15} />
@@ -865,10 +865,10 @@ function TimesheetsTab() {
                         {r.start}–{r.end}
                       </td>
                       <td className="px-2 py-2 text-center">
-                        <input className={inp} value={a.start} onChange={(e) => setAct(r.id, "start", e.target.value)} />
+                        <input className={inp} value={a.start} disabled={!canEdit} onChange={(e) => setAct(r.id, "start", e.target.value)} />
                       </td>
                       <td className="px-2 py-2 text-center">
-                        <input className={inp} value={a.end} onChange={(e) => setAct(r.id, "end", e.target.value)} />
+                        <input className={inp} value={a.end} disabled={!canEdit} onChange={(e) => setAct(r.id, "end", e.target.value)} />
                       </td>
                       <td className="px-3 py-2 text-right font-mono font-semibold text-ink">{h.toFixed(1)}h</td>
                       <td className="px-3 py-2 text-right">
@@ -1038,7 +1038,7 @@ function LeaveTab() {
               className={selectCls}
             />
           </Field>
-          <Button onClick={submit} disabled={!canSubmit}>
+          <Button onClick={submit} disabled={!canSubmit || !canEdit}>
             Submit request
           </Button>
           <p className="text-[11px] text-ink-faint">
@@ -1469,10 +1469,19 @@ function ResourcesTab() {
 
 function ImportTab() {
   const { importRoster, resetRoster } = useStaff();
-  const { toast } = usePrefs();
+  const { toast, canEdit } = usePrefs();
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  if (!canEdit) {
+    return (
+      <Card className="p-10 text-center text-sm text-ink-soft">
+        Importing the roster requires the Operations or Admin role. You&apos;re in
+        the read-only Viewer role.
+      </Card>
+    );
+  }
 
   function onCsvFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];

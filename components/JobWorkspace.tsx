@@ -525,10 +525,10 @@ function JobStaffing({ job, onDraft }: { job: Job; onDraft?: () => void }) {
               {t("ui.js.saveStaffing")}
             </Button>
           )}
-          {onDraft && (
+          {onDraft && canEdit && (
             <Button
               onClick={() => {
-                if (canEdit) saveStaffing();
+                saveStaffing();
                 onDraft();
               }}
             >

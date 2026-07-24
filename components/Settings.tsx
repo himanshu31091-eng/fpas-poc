@@ -10,7 +10,7 @@ const LOCATIONS = ["Amsterdam (Schiphol BIP)", "Melbourne", "New Zealand (PAQ)",
 
 export function Settings() {
   const { jobs, resetDemo } = useStore();
-  const { role, user, dark, toggleDark, theme, setTheme, logo, setLogo, toast, t } =
+  const { role, user, isAdmin, dark, toggleDark, theme, setTheme, logo, setLogo, toast, t } =
     usePrefs();
 
   function onLogoFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -61,6 +61,24 @@ export function Settings() {
     a.click();
     URL.revokeObjectURL(url);
     toast("Exported jobs as JSON", "success");
+  }
+
+  // Settings is Admin-only. Operations/Viewer reaching it by URL get a notice.
+  if (!isAdmin) {
+    return (
+      <div className="mx-auto max-w-3xl">
+        <Card className="border-amber/30 bg-amber-soft/40 p-8 text-center">
+          <div className="font-display text-lg font-bold text-ink">
+            Settings are admin-only
+          </div>
+          <p className="mt-2 text-[13.5px] text-ink-soft">
+            Your role ({role}) can view and operate the console, but workspace
+            settings — organisation, appearance, AI and data — are managed by an
+            Admin. Sign in as Admin to change them.
+          </p>
+        </Card>
+      </div>
+    );
   }
 
   return (

@@ -36,6 +36,7 @@ type NavItem = {
   icon: (p: { width?: number; height?: number }) => JSX.Element;
   tour?: string;
   editOnly?: boolean;
+  adminOnly?: boolean;
 };
 
 // Grouped navigation — sidebar sections, an ops-console convention.
@@ -68,7 +69,7 @@ const NAV_GROUPS: { section: string; items: NavItem[] }[] = [
     section: "nav.section.manage",
     items: [
       { href: "/portal", key: "nav.portal", icon: IconArrowRight, tour: "nav-portal" },
-      { href: "/settings", key: "nav.settings", icon: IconGear },
+      { href: "/settings", key: "nav.settings", icon: IconGear, adminOnly: true },
     ],
   },
 ];
@@ -78,7 +79,7 @@ const SIDEBAR_BG =
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { hydrated: jobsHydrated } = useStore();
-  const { hydrated: prefsHydrated, signedIn, canEdit, logo, t } = usePrefs();
+  const { hydrated: prefsHydrated, signedIn, canEdit, isAdmin, logo, t } = usePrefs();
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -132,23 +133,32 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           )}
         </Link>
 
-        {/* Station switcher */}
-        <Link
-          href="/settings"
-          className="mt-4 flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.06] px-3 py-2 font-mono text-[11px] text-white/80 transition-colors hover:bg-white/10"
-        >
-          <span className="flex items-center gap-2">
+        {/* Station indicator — links to Settings for admins only. */}
+        {isAdmin ? (
+          <Link
+            href="/settings"
+            className="mt-4 flex items-center justify-between rounded-lg border border-white/10 bg-white/[0.06] px-3 py-2 font-mono text-[11px] text-white/80 transition-colors hover:bg-white/10"
+          >
+            <span className="flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+              {t("nav.station")}
+            </span>
+            <IconChevronLeft width={13} height={13} className="rotate-180 opacity-60" />
+          </Link>
+        ) : (
+          <div className="mt-4 flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.06] px-3 py-2 font-mono text-[11px] text-white/80">
             <span className="h-1.5 w-1.5 rounded-full bg-accent" />
             {t("nav.station")}
-          </span>
-          <IconChevronLeft width={13} height={13} className="rotate-180 opacity-60" />
-        </Link>
+          </div>
+        )}
       </div>
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto px-2.5 pb-4">
         {NAV_GROUPS.map((group) => {
-          const items = group.items.filter((i) => !i.editOnly || canEdit);
+          const items = group.items.filter(
+            (i) => (!i.editOnly || canEdit) && (!i.adminOnly || isAdmin)
+          );
           if (items.length === 0) return null;
           return (
             <div key={group.section} className="mb-1.5">

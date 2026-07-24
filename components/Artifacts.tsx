@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useStore } from "./store";
+import { usePrefs } from "./prefs";
 import { BrandLoader, Button, Card, ErrorRetry } from "./ui";
 import { IconDoc, IconFMark, IconDownload } from "./icons";
 import { downloadPdf } from "@/lib/pdf";
@@ -9,6 +10,7 @@ import type { DraftArtifact } from "@/lib/types";
 
 export function Artifacts({ jobId }: { jobId: string }) {
   const { getJob, ui, regenerateArtifacts } = useStore();
+  const { canEdit } = usePrefs();
   const job = getJob(jobId);
   const state = ui[jobId] ?? {};
   const artifacts = job?.artifacts ?? null;
@@ -43,14 +45,16 @@ export function Artifacts({ jobId }: { jobId: string }) {
     return (
       <Card className="p-10 text-center">
         <p className="text-sm text-ink-soft">
-          No documents drafted yet. Generate the offloading list and delivery
-          note from the confirmed booking.
+          No documents drafted yet.
+          {canEdit ? " Generate the offloading list and delivery note from the confirmed booking." : ""}
         </p>
-        <div className="mt-4">
-          <Button onClick={() => regenerateArtifacts(jobId)}>
-            Draft operational documents →
-          </Button>
-        </div>
+        {canEdit && (
+          <div className="mt-4">
+            <Button onClick={() => regenerateArtifacts(jobId)}>
+              Draft operational documents →
+            </Button>
+          </div>
+        )}
       </Card>
     );
   }
@@ -73,14 +77,16 @@ export function Artifacts({ jobId }: { jobId: string }) {
               <IconDoc width={15} height={15} />
               Print all
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => regenerateArtifacts(jobId)}
-              disabled={state.loadingArtifacts}
-            >
-              {state.loadingArtifacts ? "Regenerating…" : "Regenerate"}
-            </Button>
+            {canEdit && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => regenerateArtifacts(jobId)}
+                disabled={state.loadingArtifacts}
+              >
+                {state.loadingArtifacts ? "Regenerating…" : "Regenerate"}
+              </Button>
+            )}
           </div>
         </div>
 

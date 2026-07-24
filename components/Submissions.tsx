@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useStore } from "./store";
+import { usePrefs } from "./prefs";
 import { Button, Card, SimTag } from "./ui";
 import { IconSparkles } from "./icons";
 import type { JobType, SubmissionStatus } from "@/lib/types";
@@ -92,6 +93,7 @@ export function Submissions({ jobId }: { jobId: string }) {
 
 function SubmissionRow({ jobId, step }: { jobId: string; step: Step }) {
   const { getJob, draftNotice, markSubmitted } = useStore();
+  const { canEdit } = usePrefs();
   const job = getJob(jobId);
   const sub = job?.booking?.submissions?.[step.key];
   const status: SubmissionStatus = sub?.status ?? "outstanding";
@@ -128,7 +130,7 @@ function SubmissionRow({ jobId, step }: { jobId: string; step: Step }) {
             {step.regulator}
           </div>
         </div>
-        {status !== "submitted" && (
+        {status !== "submitted" && canEdit && (
           <Button variant="ghost" size="sm" onClick={draft} disabled={busy}>
             <IconSparkles width={15} height={15} />
             {busy ? "Drafting…" : sub?.notice ? "Redraft" : "Draft with AI"}
@@ -158,7 +160,7 @@ function SubmissionRow({ jobId, step }: { jobId: string; step: Step }) {
           </div>
         </div>
       ) : (
-        sub?.notice && (
+        sub?.notice && canEdit && (
           <div className="mt-3 flex flex-wrap items-end gap-2">
             <label className="block">
               <span className="mb-1 block text-[12px] text-ink-soft">
