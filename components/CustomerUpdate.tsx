@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import { useStore } from "./store";
+import { usePrefs } from "./prefs";
 import { Button, Card, ErrorRetry } from "./ui";
 import { IconSparkles } from "./icons";
 
 export function CustomerUpdate({ jobId }: { jobId: string }) {
   const { getJob, draftCustomerUpdate, markUpdateSent } = useStore();
+  const { canEdit } = usePrefs();
   const job = getJob(jobId);
   const update = job?.booking?.customerUpdate;
 
@@ -54,12 +56,14 @@ export function CustomerUpdate({ jobId }: { jobId: string }) {
           state of this shipment. Review, copy, and send it yourself. (Mock — no
           email leaves this demo.)
         </p>
-        <div className="mt-3">
-          <Button onClick={draft} disabled={busy}>
-            <IconSparkles width={15} height={15} />
-            {busy ? "Drafting…" : update ? "Re-draft update" : "Draft update with AI"}
-          </Button>
-        </div>
+        {canEdit && (
+          <div className="mt-3">
+            <Button onClick={draft} disabled={busy}>
+              <IconSparkles width={15} height={15} />
+              {busy ? "Drafting…" : update ? "Re-draft update" : "Draft update with AI"}
+            </Button>
+          </div>
+        )}
       </Card>
 
       {error && <ErrorRetry message={error} onRetry={draft} busy={busy} />}
@@ -79,9 +83,11 @@ export function CustomerUpdate({ jobId }: { jobId: string }) {
                   ● sent
                 </span>
               ) : (
-                <Button size="sm" onClick={() => markUpdateSent(jobId)}>
-                  Mark sent
-                </Button>
+                canEdit && (
+                  <Button size="sm" onClick={() => markUpdateSent(jobId)}>
+                    Mark sent
+                  </Button>
+                )
               )}
             </div>
           </div>

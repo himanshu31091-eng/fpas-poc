@@ -200,7 +200,7 @@ export function Housing() {
                         <span className="text-ink-faint">{u.type}</span>
                       )}
                     </div>
-                    {flow.actionKey && (
+                    {flow.actionKey && canEdit && (
                       <button
                         onClick={() => advance(u.id)}
                         className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-lg border border-line-strong bg-white px-2.5 py-1.5 font-mono text-[11px] font-medium text-ink-soft transition-colors hover:border-primary/40 hover:text-ink"

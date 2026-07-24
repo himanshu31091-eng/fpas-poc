@@ -21,7 +21,7 @@ const CONTOURS = ["L", "R", "747"];
 
 export function LoadPlan({ jobId }: { jobId: string }) {
   const { getJob, updateLoadPlan, updateBooking, sendToAirline } = useStore();
-  const { t } = usePrefs();
+  const { t, canEdit } = usePrefs();
   const job = getJob(jobId);
 
   const [airline, setAirline] = useState<string>(
@@ -52,6 +52,7 @@ export function LoadPlan({ jobId }: { jobId: string }) {
   const docGaps = filled.filter((r) => !r.hc || !r.pp).length;
 
   function setRows(next: LoadPlanRow[]) {
+    if (!canEdit) return; // Viewer is read-only
     updateLoadPlan(jobId, next);
   }
   function addRow() {
@@ -78,20 +79,23 @@ export function LoadPlan({ jobId }: { jobId: string }) {
   }
 
   function addGroom() {
-    if (!groom.name.trim()) return;
+    if (!canEdit || !groom.name.trim()) return;
     updateBooking(jobId, {
       grooms: [...grooms, { name: groom.name.trim(), passport: groom.passport.trim() }],
     });
     setGroom({ name: "", passport: "" });
   }
   function removeGroom(i: number) {
+    if (!canEdit) return;
     updateBooking(jobId, { grooms: grooms.filter((_, idx) => idx !== i) });
   }
   function setSpx(patch: Partial<typeof spx>) {
+    if (!canEdit) return;
     updateBooking(jobId, { spx: { ...spx, ...patch } });
   }
 
   async function send() {
+    if (!canEdit) return;
     setSending(true);
     setError(null);
     try {
@@ -132,10 +136,12 @@ export function LoadPlan({ jobId }: { jobId: string }) {
       <Card className="overflow-hidden">
         <div className="flex items-center justify-between border-b border-line px-4 py-3">
           <span className="text-sm font-semibold text-ink">{t("lp.loadingList")}</span>
-          <Button variant="ghost" size="sm" onClick={addRow}>
-            <IconPlus width={15} height={15} />
-            {t("lp.addHorse")}
-          </Button>
+          {canEdit && (
+            <Button variant="ghost" size="sm" onClick={addRow}>
+              <IconPlus width={15} height={15} />
+              {t("lp.addHorse")}
+            </Button>
+          )}
         </div>
         {rows.length === 0 ? (
           <p className="px-4 py-8 text-center text-sm text-ink-soft">
@@ -203,13 +209,15 @@ export function LoadPlan({ jobId }: { jobId: string }) {
                       <DocTick on={!!r.pp} onClick={() => update(r.id, { pp: !r.pp })} />
                     </td>
                     <td className="px-2 py-1.5 text-right">
-                      <button
-                        onClick={() => remove(r.id)}
-                        className="text-ink-faint hover:text-red"
-                        title={t("lp.remove")}
-                      >
-                        <IconTrash width={15} height={15} />
-                      </button>
+                      {canEdit && (
+                        <button
+                          onClick={() => remove(r.id)}
+                          className="text-ink-faint hover:text-red"
+                          title={t("lp.remove")}
+                        >
+                          <IconTrash width={15} height={15} />
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -239,29 +247,33 @@ export function LoadPlan({ jobId }: { jobId: string }) {
               </span>
               <span className="flex-1 text-[13px] text-ink">{g.name}</span>
               <span className="font-mono text-[11px] text-ink-soft">{g.passport}</span>
-              <button
-                onClick={() => removeGroom(i)}
-                className="text-ink-faint hover:text-red"
-                title={t("lp.remove")}
-              >
-                <IconTrash width={14} height={14} />
-              </button>
+              {canEdit && (
+                <button
+                  onClick={() => removeGroom(i)}
+                  className="text-ink-faint hover:text-red"
+                  title={t("lp.remove")}
+                >
+                  <IconTrash width={14} height={14} />
+                </button>
+              )}
             </div>
           ))}
         </div>
-        <div className="mt-2 flex flex-wrap items-end gap-2">
-          <Cell value={groom.name} onChange={(v) => setGroom({ ...groom, name: v })} w="w-48" />
-          <input
-            value={groom.passport}
-            onChange={(e) => setGroom({ ...groom, passport: e.target.value })}
-            placeholder={t("lp.passportId")}
-            className="w-40 rounded-md border border-line-strong bg-white px-2 py-1 font-mono text-[13px] text-ink focus:outline-none focus:ring-2 focus:ring-primary/30"
-          />
-          <Button variant="ghost" size="sm" onClick={addGroom}>
-            <IconPlus width={15} height={15} />
-            {t("lp.addGroom")}
-          </Button>
-        </div>
+        {canEdit && (
+          <div className="mt-2 flex flex-wrap items-end gap-2">
+            <Cell value={groom.name} onChange={(v) => setGroom({ ...groom, name: v })} w="w-48" />
+            <input
+              value={groom.passport}
+              onChange={(e) => setGroom({ ...groom, passport: e.target.value })}
+              placeholder={t("lp.passportId")}
+              className="w-40 rounded-md border border-line-strong bg-white px-2 py-1 font-mono text-[13px] text-ink focus:outline-none focus:ring-2 focus:ring-primary/30"
+            />
+            <Button variant="ghost" size="sm" onClick={addGroom}>
+              <IconPlus width={15} height={15} />
+              {t("lp.addGroom")}
+            </Button>
+          </div>
+        )}
       </Card>
 
       {/* SPX security declaration */}
@@ -282,7 +294,8 @@ export function LoadPlan({ jobId }: { jobId: string }) {
           </label>
           <button
             onClick={() => setSpx({ declared: !spx.declared })}
-            className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[12px] font-medium transition-all ${
+            disabled={!canEdit}
+            className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[12px] font-medium transition-all disabled:opacity-60 ${
               spx.declared
                 ? "bg-green-soft text-green ring-1 ring-green/40"
                 : "border border-line-strong bg-white text-ink-soft hover:text-ink"
@@ -318,7 +331,7 @@ export function LoadPlan({ jobId }: { jobId: string }) {
               ))}
             </select>
           </label>
-          <Button onClick={send} disabled={sending || rows.length === 0}>
+          <Button onClick={send} disabled={sending || rows.length === 0 || !canEdit}>
             {sending ? t("lp.drafting") : t("lp.draftSend")}
           </Button>
         </div>

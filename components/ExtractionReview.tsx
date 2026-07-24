@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useStore } from "./store";
+import { usePrefs } from "./prefs";
 import { BrandLoader, Button, Card, ConfidenceBadge, ErrorRetry } from "./ui";
 import type { ExtractedField } from "@/lib/types";
 
@@ -13,6 +14,7 @@ export function ExtractionReview({
   onConfirmed?: () => void;
 }) {
   const { getJob, ui, runExtraction, confirmBooking } = useStore();
+  const { canEdit } = usePrefs();
   const job = getJob(jobId);
   const state = ui[jobId] ?? {};
   const extraction = job?.extraction ?? null;
@@ -46,12 +48,14 @@ export function ExtractionReview({
     return (
       <Card className="p-10 text-center">
         <p className="text-sm text-ink-soft">
-          No extraction yet for this job. Run the assistant over the source
-          message to pull structured fields.
+          No extraction yet for this job.
+          {canEdit ? " Run the assistant over the source message to pull structured fields." : ""}
         </p>
-        <div className="mt-4">
-          <Button onClick={() => runExtraction(jobId)}>Run AI extraction →</Button>
-        </div>
+        {canEdit && (
+          <div className="mt-4">
+            <Button onClick={() => runExtraction(jobId)}>Run AI extraction →</Button>
+          </div>
+        )}
       </Card>
     );
   }
@@ -94,6 +98,7 @@ export function ExtractionReview({
               <input
                 value={f.value}
                 onChange={(e) => update(f.key, e.target.value)}
+                disabled={!canEdit}
                 placeholder={f.confidence === "low" ? "— missing —" : ""}
                 className={`w-full rounded-md border px-2.5 py-1.5 font-mono text-[13px] text-ink focus:outline-none focus:ring-2 focus:ring-primary/30 ${
                   f.confidence === "low"
@@ -117,21 +122,23 @@ export function ExtractionReview({
         </p>
       )}
 
-      <div className="mt-5 flex items-center justify-between gap-3">
-        <Button variant="ghost" onClick={() => runExtraction(jobId)}>
-          Re-run extraction
-        </Button>
-        <div className="flex items-center gap-3">
-          <span className="text-[12px] text-ink-faint">
-            {job.booking
-              ? "Re-confirming overwrites the booking fields."
-              : "Confirming creates the import job with these values."}
-          </span>
-          <Button onClick={confirm}>
-            {job.booking ? "Update booking" : "Confirm & create booking →"}
+      {canEdit && (
+        <div className="mt-5 flex items-center justify-between gap-3">
+          <Button variant="ghost" onClick={() => runExtraction(jobId)}>
+            Re-run extraction
           </Button>
+          <div className="flex items-center gap-3">
+            <span className="text-[12px] text-ink-faint">
+              {job.booking
+                ? "Re-confirming overwrites the booking fields."
+                : "Confirming creates the import job with these values."}
+            </span>
+            <Button onClick={confirm}>
+              {job.booking ? "Update booking" : "Confirm & create booking →"}
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
